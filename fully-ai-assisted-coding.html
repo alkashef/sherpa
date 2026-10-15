@@ -323,6 +323,19 @@
 
   .flow .arrow { align-self: center; color: var(--faint); font-size: 1.4rem; }
 
+  /* Rows of name boxes under a flow: the same widths as the steps above, the arrows kept but hidden */
+  .flow.tags { margin-top: -4px; }
+
+  .flow.tags .step { background: var(--blue-100); border-color: transparent; padding: 8px 12px; text-align: center; }
+
+  .flow.tags .step.wide { flex-grow: 1.4; }
+
+  .flow.tags .arrow { visibility: hidden; }
+
+  .flow.tags small { display: inline; margin: 0 8px 0 0; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
+
+  .flow.tags code { font-size: .95rem; color: var(--blue-900); }
+
   /* Slide 3: plain bullets under the flow */
   .bullets { list-style: disc; padding-left: 1.2em; }
 
@@ -380,6 +393,30 @@
 
   .muted { color: var(--muted); }
 
+  /* Example slides: UI snapshots and headline numbers */
+  .shots { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+
+  .shots figure { background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+
+  .shots img { display: block; width: 100%; height: auto; border-bottom: 1px solid var(--line); }
+
+  .shots figcaption { padding: 8px 14px; font-size: .85rem; color: var(--muted); }
+
+  .stats { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); }
+
+  .stats .card { padding: 12px 16px; }
+
+  .stats b { display: block; font-size: clamp(1.3rem, 2.4vw, 1.8rem); line-height: 1.1; color: var(--blue-700); }
+
+  .stats span { font-size: .85rem; color: var(--muted); }
+
+  /* Statement slides: one line, large, centered */
+  .statement { align-items: center; text-align: center; }
+
+  .statement h1 { font-size: clamp(2.2rem, 6vw, 4.6rem); max-width: 18ch; }
+
+  .statement .then { font-size: clamp(1.4rem, 3vw, 2.4rem); font-weight: 700; color: var(--blue-500); }
+
   /* Narrow screens: no side panel; the controls span the width */
   @media (max-width: 860px) {
     nav, .panel-toggle { display: none; }
@@ -416,6 +453,11 @@
     <li><a href="#get"><span>6</span>What you get</a></li>
     <li><a href="#essentials"><span>7</span>High quality by default</a></li>
     <li><a href="#tools"><span>8</span>Tools, not prompts</a></li>
+    <li><a href="#example"><span>9</span>Example: CV Matcher</a></li>
+    <li><a href="#gates"><span>10</span>Where humans decide</a></li>
+    <li><a href="#result"><span>11</span>What it produced</a></li>
+    <li><a href="#bugs"><span>12</span>Bug-free?</a></li>
+    <li><a href="#iterate"><span>13</span>Iterate</a></li>
   </ol>
   <p class="signature">Ahmad Alkashef &middot; September 2026</p>
 </nav>
@@ -423,7 +465,7 @@
 <div class="controls">
   <button type="button" id="back" aria-label="Previous slide" disabled>&larr; Back</button>
   <div class="progress" aria-hidden="true"><span></span></div>
-  <span class="count" id="count">1 / 8</span>
+  <span class="count" id="count">1 / 13</span>
   <button type="button" id="next" aria-label="Next slide">Next &rarr;</button>
 </div>
 
@@ -491,28 +533,45 @@
   <div class="flow">
     <div class="step main gate">
       <b>Spec</b><small>What</small><em>A human approves</em>
-      <p>Requirements with IDs. The AI can help write it, interview style: <code>/write-spec</code>.</p>
+      <p>Requirements with IDs. The AI can help write it, interview style.</p>
       <p>But a human <strong>must</strong> review and approve it. This is the single most important step and the single most important quality gate. It is done by a human, not by the AI.</p>
     </div>
     <div class="arrow">&rarr;</div>
     <div class="step main">
       <b>Design</b><small>How</small><em>A human designs</em>
-      <p>Architecture, data, decisions. <code>/write-design</code> helps.</p>
+      <p>Architecture, data, decisions. The AI helps.</p>
       <p>Done by a human; the AI assists. It needs senior software engineering experience.</p>
     </div>
     <div class="arrow">&rarr;</div>
     <div class="step main">
       <b>Plan</b><small>Implementation</small><em>The AI builds</em>
       <p>Fully built by the AI.</p>
-      <p>Milestones with their tests, model, effort and status: <code>/write-plan</code>.</p>
+      <p>Milestones with their tests, model, effort and status.</p>
     </div>
+  </div>
+
+  <div class="flow tags" aria-label="Skill names">
+    <div class="step wide"><small>Skill</small><code>/write-spec</code></div>
+    <div class="arrow" aria-hidden="true">&rarr;</div>
+    <div class="step"><small>Skill</small><code>/write-design</code></div>
+    <div class="arrow" aria-hidden="true">&rarr;</div>
+    <div class="step"><small>Skill</small><code>/write-plan</code></div>
+  </div>
+
+  <div class="flow tags" aria-label="File names">
+    <div class="step wide"><small>File</small><code>docs/spec.md</code></div>
+    <div class="arrow" aria-hidden="true">&rarr;</div>
+    <div class="step"><small>File</small><code>docs/design.md</code></div>
+    <div class="arrow" aria-hidden="true">&rarr;</div>
+    <div class="step"><small>File</small><code>docs/plan.md</code></div>
   </div>
 
   <ul class="bullets">
     <li><b>One fact, one file</b>
       <ul>
-        <li>No copies to drift apart.</li>
-        <li>Finished work leaves the plan.</li>
+        <li>Each fact is written in one place only. Other files point to it by ID instead of copying it.</li>
+        <li>A finished milestone is deleted from the plan. Git history keeps the record.</li>
+        <li><b>Benefit:</b> the files can't contradict each other, and the AI reads only what is still true and still to do.</li>
       </ul>
     </li>
     <li><b>Works by hand too</b>
@@ -723,6 +782,113 @@
   <p class="note">If a tool can check it, it goes in the tool's config. <b>CLAUDE.md</b> keeps only what no tool can check, in under 200 lines.</p>
 
   <p class="footnote"><sup>1</sup> <b>Linter:</b> a program that reads your code without running it and flags style problems, likely bugs and code smells against a fixed set of rules. Many can also fix what they find. Examples: ruff for Python, ESLint for JavaScript.</p>
+</section>
+
+<!-- 9. Example: the workflow applied -->
+<section id="example">
+  <div class="kicker">The workflow, applied</div>
+  <h2>Example: CV Matcher, from an empty folder in one day</h2>
+  <p class="lead">A demo app that reads CVs and job descriptions, has an LLM extract facts, ranks the CVs by meaning (embeddings in a vector store), and recommends whom to interview. Built with this workflow, step by step.</p>
+
+  <div class="flow">
+    <div class="step main">
+      <b>project-init</b><small>12:57, one command</small>
+      <p>Empty folder to a pushed repository: rules, docs, hooks, checks.</p>
+    </div>
+    <div class="arrow">&rarr;</div>
+    <div class="step main gate">
+      <b>Spec</b><small>What</small><em>A human approves</em>
+      <p>A <code>/write-spec</code> interview: 34 requirements with IDs, 2 worked examples. The user cut 6 to fit a one-hour build, then approved: <q>i approve the specs</q>.</p>
+    </div>
+    <div class="arrow">&rarr;</div>
+    <div class="step main">
+      <b>Design</b><small>How</small><em>A human designs</em>
+      <p>14 decisions: FastAPI, OpenAI, a Chroma vector store. Five UI mockups. Approved by the user, with one rule exception written down.</p>
+    </div>
+    <div class="arrow">&rarr;</div>
+    <div class="step main">
+      <b>Plan</b><small>Implementation</small><em>The AI builds</em>
+      <p>13 milestones, each with its tests, model and effort. <code>milestones-runner.py</code> ran all 13, one fresh session each.</p>
+    </div>
+  </div>
+
+  <ul class="bullets">
+    <li><b>The build itself was short, because the documents had already settled what to build</b>
+      <ul>
+        <li>Thirteen milestones, about 84 minutes of AI time in total, between 20:39 and 00:34. Twelve ran on Sonnet, the pipeline on Opus.</li>
+        <li>More than two hours of that window were spent waiting for a person (next slide).</li>
+      </ul>
+    </li>
+  </ul>
+</section>
+
+<!-- 10. Example: where the humans stayed in control -->
+<section id="gates">
+  <div class="kicker">The workflow, applied</div>
+  <h2>The AI stops and asks. A human decides.</h2>
+
+  <table>
+    <tr><th>Moment</th><th>What the AI could not decide alone</th><th>The human&rsquo;s answer</th></tr>
+    <tr>
+      <td>Spec</td>
+      <td>Which requirements matter, and what is out of scope.</td>
+      <td>Cut 6 requirements to keep the build to about an hour, then approved the whole spec.</td>
+    </tr>
+    <tr>
+      <td>Design</td>
+      <td>A failed LLM call must not hide the other results (ERR-002), but the rules say never to catch an error in order to continue.</td>
+      <td>Approved one deliberate exception (DEC-008), written in the design. The alternative was to withdraw ERR-002.</td>
+    </tr>
+    <tr>
+      <td>M7 blocked<br><span class="muted">21:26</span></td>
+      <td>The milestone needs FastAPI installed. An unattended run may not install packages.</td>
+      <td>Approved the install in <code>plan.md</code> at 23:33. The runner continued; M7 took 2 minutes.</td>
+    </tr>
+    <tr>
+      <td>M11 blocked<br><span class="muted">23:54</span></td>
+      <td>The lint config rejects the CSS class names the rules require, and points at the wrong file paths. Editing it needs approval.</td>
+      <td>Chose option 2 of 2: hyphenated class names, docs updated, ESLint paths fixed. Committed at 00:09; the runner then finished M11 to M13 in 23 minutes.</td>
+    </tr>
+  </table>
+
+  <p class="note">Both times the AI took no shortcut: no lint-disable comment, no workaround for the refused install. It stopped, wrote the exact question into the plan, and waited.</p>
+</section>
+
+<!-- 11. Example: what it produced -->
+<section id="result">
+  <div class="kicker">The workflow, applied</div>
+  <h2>What it produced: a complete, tested app</h2>
+
+  <div class="stats">
+    <div class="card"><b>131</b><span>tests pass, including browser tests, each named after the requirement it verifies</span></div>
+    <div class="card"><b>99%</b><span>branch coverage, against a gate of 80%</span></div>
+    <div class="card"><b>3,440</b><span>lines of code (1,800 Python, 1,640 front end), with 2,330 lines of tests</span></div>
+    <div class="card"><b>13 of 13</b><span>milestones done: pipeline, vector ranking, API, front end</span></div>
+  </div>
+
+  <div class="shots">
+    <figure>
+      <img src="images/cv-matcher-job-view.png" alt="The job view of the app: a job description is selected and the candidates are ranked, best first, with a similarity score, an interview recommendation and calculated attributes.">
+      <figcaption><b>Job view.</b> Candidates ranked by similarity, with the LLM&rsquo;s recommendation and the calculated attributes.</figcaption>
+    </figure>
+    <figure>
+      <img src="images/cv-matcher-candidate-view.png" alt="The candidate view of the app: the extracted and calculated attributes beside the raw CV text.">
+      <figcaption><b>Candidate view.</b> The attributes beside the raw CV, so the manager can check the source.</figcaption>
+    </figure>
+  </div>
+
+  <p class="footnote">Screens from the real front end, served with sample data standing in for the LLM results. Every check passes: ruff, mypy, pytest, ESLint, Stylelint, Prettier and tsc. The one step no automated test covers is a run against the real OpenAI service. That check is the user&rsquo;s.</p>
+</section>
+
+<!-- 12. The question -->
+<section id="bugs" class="statement">
+  <h1>Will the software be bug-free?</h1>
+  <p class="then">No. What do we do then?</p>
+</section>
+
+<!-- 13. The answer -->
+<section id="iterate" class="statement">
+  <h1>Iterate!</h1>
 </section>
 
 </main>
