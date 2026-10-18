@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Demo Steps</title>
+</head>
+<body>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  /* Layout: six phases on a vertical rail. Each phase holds its own numbered steps (1.1, 1.2 ...).
+     A fixed contents panel on the left lists phases and steps. Palette follows the deck: blue ink, cool grey ground. */
+  :root {
+    --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-code: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+
+    --bg: #f3f5f8;
+    --card: #ffffff;
+    --ink: #1b2a3a;
+    --muted: #5d6b7a;
+    --line: #d6dee7;
+    --accent: #2f6fae;
+    --accent-ink: #1f4e79;
+    --accent-soft: #e4edf7;
+    --dir-bg: #e3f2ea;
+    --dir-fg: #1d5a3c;
+    --cmd-bg: #0f2a47;
+    --cmd-fg: #e8f0f9;
+    --term-bg: #0f2a47;
+    --term-fg: #e8f0f9;
+    --term-dim: #9cc3ea;
+    --warn-bg: #fdefd2;
+    --warn-fg: #8a4b08;
+
+    --mark: #d92d20;
+    --panel-w: 300px;
+    --panel: var(--panel-w);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1620; --card: #142231; --ink: #e6edf5; --muted: #9aa9ba; --line: #263649;
+      --accent: #6aa6e0; --accent-ink: #a9cff5; --accent-soft: #1b3350;
+      --dir-bg: #173628; --dir-fg: #8fd2ae;
+      --cmd-bg: #2a3d54; --cmd-fg: #e6edf5;
+      --term-bg: #08111b; --term-fg: #e6edf5; --term-dim: #6aa6e0;
+      --warn-bg: #3a2c12; --warn-fg: #f0b45a;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1620; --card: #142231; --ink: #e6edf5; --muted: #9aa9ba; --line: #263649;
+    --accent: #6aa6e0; --accent-ink: #a9cff5; --accent-soft: #1b3350;
+    --dir-bg: #173628; --dir-fg: #8fd2ae;
+    --cmd-bg: #2a3d54; --cmd-fg: #e6edf5;
+    --term-bg: #08111b; --term-fg: #e6edf5; --term-dim: #6aa6e0;
+    --warn-bg: #3a2c12; --warn-fg: #f0b45a;
+    color-scheme: dark;
+  }
+  body.folded { --panel: 0px; }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 1.0625rem/1.55 var(--font-body);
+    padding-block: 48px 72px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .wrap { max-width: 800px; margin: 0 auto; }
+  h1 {
+    margin: 0 0 36px;
+    font-size: clamp(1.9rem, 4vw, 2.6rem);
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    color: var(--accent-ink);
+    text-wrap: balance;
+  }
+
+  /* Phases */
+  .phases { list-style: none; margin: 0; padding: 0; counter-reset: phase; }
+  .phases > li {
+    counter-increment: phase;
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    column-gap: 20px;
+    padding-bottom: 44px;
+    scroll-margin-top: 24px;
+  }
+  .phases > li::before {
+    content: counter(phase);
+    grid-column: 1; grid-row: 1;
+    width: 2.75rem; height: 2.75rem;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font: 500 1.05rem/1 var(--font-code);
+  }
+  :root[data-theme="dark"] .phases > li::before { color: #0d1620; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .phases > li::before { color: #0d1620; } }
+  .phases > li:last-child { padding-bottom: 0; }
+  .phases > li > h2 {
+    grid-column: 2; grid-row: 1;
+    margin: 0;
+    min-height: 2.75rem;
+    display: flex; align-items: center;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: -.005em;
+    text-wrap: balance;
+  }
+  .phases > li > .steps { grid-column: 2; grid-row: 2; }
+
+  /* Steps inside a phase */
+  .steps { list-style: none; margin: 8px 0 0; padding: 0; counter-reset: sub; }
+  .steps > li {
+    counter-increment: sub;
+    display: grid;
+    grid-template-columns: 1.7rem 2.6rem minmax(0, 1fr);
+    column-gap: 4px;
+    padding: 14px 0;
+    border-top: 1px solid var(--line);
+    scroll-margin-top: 24px;
+  }
+  .steps > li:first-child { border-top: 0; }
+  .steps > li::before {
+    content: counter(phase) "." counter(sub);
+    font: 500 .82rem/1.95 var(--font-code);
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .steps > li::before { grid-column: 2; grid-row: 1; }
+  .sbody { grid-column: 3; grid-row: 1; min-width: 0; }
+
+  /* Bookmark: pale outline, turns red when set. Only one step holds it at a time. */
+  .bm {
+    grid-column: 1; grid-row: 1; align-self: start;
+    width: 1.5rem; height: 1.75rem; margin-top: .25rem; padding: 0;
+    display: flex; align-items: flex-start; justify-content: center;
+    border: 0; border-radius: 4px; background: transparent;
+    color: color-mix(in srgb, var(--muted) 38%, transparent);
+    cursor: pointer;
+  }
+  .bm svg { width: 14px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
+  .bm:hover { color: color-mix(in srgb, var(--muted) 75%, transparent); }
+  .bm[aria-pressed="true"] { color: var(--mark); }
+  .bm[aria-pressed="true"] svg { fill: currentColor; }
+  .bm:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .sbody > p { margin: 0; }
+  .sbody > * + * { margin-top: 12px; }
+
+  /* Micro steps inside one step: a, b, c */
+  .micro { list-style: none; margin: 0; padding: 0; counter-reset: m; display: flex; flex-direction: column; gap: 8px; }
+  .sbody > .micro { margin-top: 0; }
+  .sbody > p + .micro { margin-top: 10px; }
+  .micro > li { counter-increment: m; display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); column-gap: 6px; }
+  .micro > li::before { content: counter(m, lower-alpha) "."; grid-column: 1; grid-row: 1; font: 500 .85rem/1.85 var(--font-code); color: var(--accent); }
+  .micro > li > * { grid-column: 2; margin: 0; }
+  .micro > li > * + * { margin-top: 8px; }
+  .shortcut {
+    display: inline-block;
+    margin-right: .5em;
+    padding: 1px 9px;
+    border-radius: 999px;
+    background: var(--warn-bg);
+    color: var(--warn-fg);
+    font-size: .8rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+    vertical-align: .08em;
+  }
+
+  /* Inline styles: file, folder, command, setting, link */
+  .file, .dir, .cmd, .ui, .slash {
+    font-family: var(--font-code);
+    font-size: .88em;
+    padding: .08em .45em;
+    border-radius: 5px;
+    white-space: nowrap;
+  }
+  .file { background: var(--accent-soft); color: var(--accent-ink); }
+  .dir  { background: var(--dir-bg); color: var(--dir-fg); }
+  .cmd  { background: var(--cmd-bg); color: var(--cmd-fg); }
+  .ui {
+    font-family: var(--font-body);
+    font-size: .92em;
+    font-weight: 500;
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: .05em .55em;
+  }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px; overflow-wrap: anywhere; }
+  a:hover { color: var(--accent-ink); }
+
+  /* Copy blocks */
+  .blk {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 12px 12px 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--card);
+  }
+  .blk .val { flex: 1; min-width: 0; margin: 0; overflow-wrap: anywhere; }
+  .blk .val b { font-weight: 600; color: var(--accent-ink); }
+  .prompt .val { white-space: pre-line; font-size: 1rem; }
+  .slash { padding: 0; background: none; color: var(--accent-ink); font-weight: 500; font-size: .95em; }
+  .term { background: var(--term-bg); border-color: var(--term-bg); color: var(--term-fg); align-items: center; }
+  .term .val { font: 400 .95rem/1.5 var(--font-code); white-space: pre-wrap; }
+  .term .val::before { content: "> "; color: var(--term-dim); }
+
+  .copy {
+    flex: none;
+    font: 500 .78rem/1 var(--font-body);
+    letter-spacing: .02em;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+  }
+  .copy:hover { color: var(--accent-ink); border-color: var(--accent); background: var(--accent-soft); }
+  .copy:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .copy.ok { color: var(--dir-fg); border-color: var(--dir-fg); }
+  .term .copy { color: var(--term-dim); border-color: rgba(156, 195, 234, .35); }
+  .term .copy:hover { background: rgba(156, 195, 234, .14); color: var(--term-fg); border-color: var(--term-dim); }
+
+  /* Several lines inside one copy block (steps 1.6 and 2.2) */
+  .lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .prompt .lines { white-space: normal; }
+  .lines > li + li { border-top: 1px solid var(--line); padding-top: 8px; }
+  ul.lines > li { position: relative; padding-left: 1.4rem; }
+  ul.lines > li::before { content: "-"; position: absolute; left: .35rem; color: var(--accent); font-family: var(--font-code); }
+  .answers { counter-reset: ans; }
+  .answers > li { display: flex; align-items: flex-start; gap: 12px; }
+  .answers > li::before {
+    counter-increment: ans;
+    content: counter(ans);
+    flex: none;
+    width: 1.5rem; height: 1.5rem;
+    border-radius: 5px;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    display: flex; align-items: center; justify-content: center;
+    font: 500 .8rem/1 var(--font-code);
+  }
+
+  /* Contents panel: fixed on the left, folds away. Below 900px it floats over the page. */
+  #toc {
+    position: fixed; top: 0; bottom: 0; left: 0;
+    width: var(--panel-w);
+    z-index: 20;
+    background: var(--card);
+    border-right: 1px solid var(--line);
+    overflow-y: auto;
+    padding: 40px 14px 20px max(14px, env(safe-area-inset-left, 0px));
+    display: flex; flex-direction: column; gap: 20px;
+    transition: transform .25s ease, visibility 0s;
+  }
+  body.folded #toc { transform: translateX(-100%); visibility: hidden; transition: transform .25s ease, visibility 0s .25s; }
+  #toc ol { list-style: none; margin: 0; padding: 0; }
+  #toc .title { font-weight: 700; font-size: .88rem; color: var(--accent-ink); line-height: 1.25; white-space: nowrap; }
+  #toc .title small { display: block; margin-top: 2px; font-size: .7rem; font-weight: 400; color: var(--muted); }
+  #toc .signature { margin: auto 0 0; font-size: .65rem; color: var(--muted); letter-spacing: .02em; }
+  #toc .grp { margin-top: 2px; }
+  #toc .grp:first-child { margin-top: 0; }
+  #toc a {
+    display: grid; grid-template-columns: 2.1rem minmax(0, 1fr); gap: 6px; align-items: start;
+    padding: 5px 8px; border-radius: 6px;
+    color: var(--muted); text-decoration: none;
+    font-size: .82rem; line-height: 1.4;
+  }
+  #toc a.g { font-size: .92rem; font-weight: 600; color: var(--ink); padding-block: 6px; }
+  #toc .grp.on > a.g { color: var(--accent-ink); }
+  #toc a:hover { background: var(--bg); color: var(--ink); }
+  #toc a:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  #toc a[aria-current="true"] { background: var(--accent-soft); color: var(--accent-ink); }
+  #toc .n { font: 500 .74rem/1.75 var(--font-code); color: var(--accent); text-align: right; font-variant-numeric: tabular-nums; }
+  #toc a.g .n { font-size: .85rem; line-height: 1.6; }
+  #toc a.sc .n { color: var(--warn-fg); }
+  #toc .t { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+  #toc a.g .t { -webkit-line-clamp: 2; }
+  #fold {
+    position: fixed; top: 12px; z-index: 30;
+    left: calc(var(--panel-w) - 44px);
+    width: 32px; height: 32px; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--line); border-radius: 8px;
+    background: var(--card); color: var(--muted); cursor: pointer;
+    transition: left .25s ease, color .15s, border-color .15s;
+  }
+  body.folded #fold { left: max(12px, env(safe-area-inset-left, 0px)); }
+  #fold:hover { color: var(--accent-ink); border-color: var(--accent); }
+  #fold:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #fold svg { transition: transform .25s ease; }
+  body.folded #fold svg { transform: rotate(180deg); }
+  @media (min-width: 901px) {
+    body { padding-left: calc(max(16px, env(safe-area-inset-left, 0px)) + var(--panel)); transition: padding-left .25s ease; }
+  }
+  @media (max-width: 900px) {
+    body { padding-top: 64px; }
+    #toc { box-shadow: 0 0 40px rgba(0, 0, 0, .25); }
+    body.folded #toc { box-shadow: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #toc, #fold, #fold svg, body, .copy { transition: none !important; }
+  }
+
+  @media (max-width: 480px) {
+    body { padding-block: 64px 48px; font-size: 1rem; }
+    .phases > li { grid-template-columns: 2.25rem minmax(0, 1fr); column-gap: 12px; }
+    .phases > li::before { width: 2.25rem; height: 2.25rem; font-size: .95rem; }
+    .phases > li > h2 { min-height: 2.25rem; font-size: 1.3rem; }
+    .steps > li { grid-template-columns: 1.5rem 2.2rem minmax(0, 1fr); column-gap: 2px; }
+    .blk { padding-left: 12px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .copy { transition: background .15s, color .15s, border-color .15s; }
+  }
+</style>
+
+<nav id="toc" aria-label="Contents">
+  <div class="title">Fully AI-Assisted Coding<small>Demo steps</small></div>
+  <ol></ol>
+  <p class="signature">Ahmad Alkashef &middot; October 2026</p>
+</nav>
+<button id="fold" type="button" aria-controls="toc" aria-expanded="true" aria-label="Fold or unfold the contents panel">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg>
+</button>
+
+<main class="wrap">
+  <h1>Demo steps</h1>
+
+  <ol class="phases">
+
+    <li>
+      <h2>Init project</h2>
+      <ol class="steps">
+        <li><div class="sbody">
+          <p>Follow the instructions in <a href="https://github.com/alkashef/project-init" target="_blank" rel="noopener">https://github.com/alkashef/project-init</a> to set up the SDD skills on your machine.</p>
+        </div></li>
+        <li><div class="sbody">
+          <p>Create a new folder on your local machine called <span class="dir">sdd-demo</span>.</p>
+        </div></li>
+        <li><div class="sbody">
+          <ol class="micro">
+            <li><p>Open VS Code</p></li>
+            <li><p>Open <span class="dir">sdd-demo</span> in it</p></li>
+          </ol>
+        </div></li>
+        <li><div class="sbody">
+          <ol class="micro">
+            <li><p>Open Claude Code inside VS Code</p></li>
+            <li><p>Set <span class="ui">Sonnet 5.5 / high</span></p></li>
+            <li><p>Set <span class="ui">bypass permissions</span></p></li>
+          </ol>
+        </div></li>
+        <li><div class="sbody">
+          <p>Run the <span class="cmd">/project-init</span> skill.</p>
+        </div></li>
+        <li><div class="sbody">
+          <p>Answer the skill questions.</p>
+          <div class="blk prompt"><ol class="lines answers val">
+            <li>sdd-demo</li>
+            <li>CV matcher</li>
+            <li>All except a CLI, static-site, MCP, Docker.</li>
+            <li>public</li>
+          </ol><button class="copy" type="button">Copy</button></div>
+        </div></li>
+        <li><div class="sbody">
+          <p>After <span class="dir">sdd-demo</span> is set up, follow the steps in the Claude Code window.</p>
+        </div></li>
+        <li><div class="sbody">
+          <ol class="micro">
+            <li><p>Open GitHub</p></li>
+            <li><p>You should find the project repo and its files checked in</p></li>
+          </ol>
+        </div></li>
+      </ol>
+    </li>
+
+    <li>
+      <h2>Develop specs</h2>
+      <ol class="steps">
+        <li><div class="sbody">
+          <ol class="micro">
+            <li><p>Start a new Claude Code session</p></li>
+            <li><p>Run the <span class="cmd">/write-spec</span> skill</p></li>
+          </ol>
+        </div></li>
+        <li><div class="sbody">
+          <p>Answer the interview questions:</p>
+          <div class="blk prompt"><ul class="lines val">
+            <li><b>Users:</b> hiring manager, a recruiter</li>
+            <li><b>Last time:</b> yes, they did it by hand, and it took them a long time. They had to read all the CVs and find the suitable ones for each job description.</li>
+            <li><b>Where it went wrong:</b> the recruiter tries to match by keyword (e.g., Python, Java, etc.) without enough technical understanding of the job, and they miss critical information that the hiring manager could see as a red flag: very short tenures in previous jobs.</li>
+          </ul><button class="copy" type="button">Copy</button></div>
+        </div></li>
+        <li><div class="sbody">
+          <ol class="micro">
+            <li><p>Review edits to the <span class="file">spec.md</span></p></li>
+            <li><p>Iterate</p></li>
+          </ol>
+        </div></li>
+        <li><div class="sbody">
+          <p><span class="shortcut">A shortcut</span></p>
+          <ol class="micro">
+            <li><p>Copy a finished <span class="file">spec.md</span></p></li>
+            <li>
+              <p>Tell Claude you did so:</p>
+              <div class="blk prompt"><p class="val">I manually developed all the specs and saved them into spec.md.
+Consider them approved.</p><button class="copy" type="button">Copy</button></div>
+            </li>
+          </ol>
+        </div></li>
+      </ol>
+    </li>
+
+    <li>
+      <h2>Design your app</h2>
+      <ol class="steps">
+        <li><div class="sbody">
+          <ol class="micro">
+            <li><p>Open a new Claude Code session</p></li>
+            <li><p>Run <span class="cmd">/write-design</span></p></li>
+          </ol>
+        </div></li>
+        <li><div class="sbody">
+          <p>Answer the interview questions:</p>
+          <div class="blk prompt"><p class="val">I have an OpenAI API.
+You can send CV and JD text to OpenAI.</p><button class="copy" type="button">Copy</button></div>
+        </div></li>
+        <li><div class="sbody">
+          <p><span class="shortcut">A shortcut</span></p>
+          <ol class="micro">
+            <li><p>Copy a finished <span class="file">design.md</span></p></li>
+            <li><p>Copy the CV and JD data into the <span class="dir">data</span> folder</p></li>
+            <li>
+              <p>Tell Claude you did so:</p>
+              <div class="blk prompt"><p class="val">I developed the full design in design.md
+and added the CV and JD data in the data folder.</p><button class="copy" type="button">Copy</button></div>
+            </li>
+          </ol>
+        </div></li>
+      </ol>
+    </li>
+
+    <li>
+      <h2>Design your UI</h2>
+      <ol class="steps">
+        <li><div class="sbody">
+          <p>Do the UI design:</p>
+          <div class="blk prompt"><p class="val"><span class="slash">/design</span> given spec.md and design.md, develop a UI design for this app. Use fresh, vibrant colors and minimal design.</p><button class="copy" type="button">Copy</button></div>
+        </div></li>
+        <li><div class="sbody">
+          <p>Apply changes to the UI in the browser.</p>
+        </div></li>
+        <li><div class="sbody">
+          <ol class="micro">
+            <li><p>Return to VS Code</p></li>
+            <li>
+              <p>Tell Claude you approved the UI design:</p>
+              <div class="blk prompt"><p class="val">UI design approved,
+and save the UI design to docs\frontend\ to be used in the build.</p><button class="copy" type="button">Copy</button></div>
+            </li>
+          </ol>
+        </div></li>
+      </ol>
+    </li>
+
+    <li>
+      <h2>Plan your build</h2>
+      <ol class="steps">
+        <li><div class="sbody">
+          <ol class="micro">
+            <li><p>Open a new session</p></li>
+            <li><p>Run the <span class="cmd">/write-plan</span> skill</p></li>
+          </ol>
+        </div></li>
+        <li><div class="sbody">
+          <ol class="micro">
+            <li><p>Review the plan</p></li>
+            <li><p>Approve the plan</p></li>
+          </ol>
+        </div></li>
+      </ol>
+    </li>
+
+    <li>
+      <h2>Build your app</h2>
+      <ol class="steps">
+        <li><div class="sbody">
+          <p>Run the milestones runner:</p>
+          <div class="blk term"><code class="val">python scripts\milestones-runner.py</code><button class="copy" type="button">Copy</button></div>
+        </div></li>
+        <li><div class="sbody">
+          <p>If the milestone runner blocked a milestone:</p>
+          <ol class="micro">
+            <li><p>Paste its log to Claude AI to solve it for you</p></li>
+            <li><p>Approve the milestone in <span class="file">plan.md</span></p></li>
+            <li><p>Commit</p></li>
+            <li><p>Run the milestone runner again</p></li>
+          </ol>
+        </div></li>
+      </ol>
+    </li>
+
+  </ol>
+</main>
+
+<script>
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.copy');
+    if (!btn) return;
+    var src = btn.parentElement.querySelector('.val');
+    var text = src.innerText.trim();
+    if (src.classList.contains('lines')) {
+      /* Keep the list markers of the original text: "1." for a numbered list, "-" for a bulleted list. */
+      var numbered = src.tagName === 'OL';
+      text = [].map.call(src.children, function (li, i) {
+        return (numbered ? (i + 1) + '. ' : '- ') + li.innerText.trim();
+      }).join('\n');
+    }
+    function done() {
+      btn.textContent = 'Copied';
+      btn.classList.add('ok');
+      setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('ok'); }, 1400);
+    }
+    function fallback() {
+      try {
+        var r = document.createRange();
+        r.selectNodeContents(src);
+        var s = window.getSelection();
+        s.removeAllRanges();
+        s.addRange(r);
+        document.execCommand('copy');
+        done();
+      } catch (err) { /* selection stays so the viewer can copy by hand */ }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else {
+      fallback();
+    }
+  });
+
+  /* Contents panel: built from the phase titles and step text, so edits update the panel. */
+  (function () {
+    var body = document.body;
+    var toc = document.getElementById('toc');
+    var list = toc.querySelector('ol');
+    var fold = document.getElementById('fold');
+    var phases = [].slice.call(document.querySelectorAll('.phases > li'));
+    var mq = window.matchMedia('(max-width: 900px)');
+    var calm = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var steps = [], links = [], groupOf = [], groups = [];
+    var cur = -1, queued = false;
+
+    function link(href, num, text, cls) {
+      var a = document.createElement('a');
+      a.href = href;
+      if (cls) a.className = cls;
+      a.innerHTML = '<span class="n"></span><span class="t"></span>';
+      a.firstChild.textContent = num;
+      a.lastChild.textContent = text;
+      return a;
+    }
+
+    phases.forEach(function (ph, i) {
+      ph.id = 'phase-' + (i + 1);
+      var g = document.createElement('li');
+      g.className = 'grp';
+      var a = link('#' + ph.id, i + 1, ph.querySelector('h2').textContent.trim(), 'g');
+      g.appendChild(a);
+      list.appendChild(g);
+      links.push(a);
+    });
+
+    function setFolded(f, save) {
+      body.classList.toggle('folded', f);
+      fold.setAttribute('aria-expanded', String(!f));
+      if (save && !mq.matches) { try { localStorage.setItem('demo-steps-folded', f ? '1' : '0'); } catch (e) {} }
+    }
+    var saved = null;
+    try { saved = localStorage.getItem('demo-steps-folded'); } catch (e) {}
+    setFolded(mq.matches ? true : saved === '1', false);
+    fold.addEventListener('click', function () { setFolded(!body.classList.contains('folded'), true); });
+    if (mq.addEventListener) mq.addEventListener('change', function () { setFolded(mq.matches, false); });
+
+    list.addEventListener('click', function (e) {
+      var a = e.target.closest('a');
+      if (!a) return;
+      e.preventDefault();
+      var target = document.querySelector(a.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: calm.matches ? 'auto' : 'smooth', block: 'start' });
+      if (mq.matches) setFolded(true, false);
+    });
+
+    function update() {
+      queued = false;
+      var y = window.innerHeight * 0.35, idx = 0;
+      for (var i = 0; i < phases.length; i++) { if (phases[i].getBoundingClientRect().top <= y) idx = i; }
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) idx = phases.length - 1;
+      if (idx === cur) return;
+      if (cur >= 0) links[cur].removeAttribute('aria-current');
+      links[idx].setAttribute('aria-current', 'true');
+      cur = idx;
+      var r = links[idx].getBoundingClientRect(), t = toc.getBoundingClientRect();
+      if (r.top < t.top + 56) toc.scrollTop -= (t.top + 56 - r.top);
+      else if (r.bottom > t.bottom - 16) toc.scrollTop += (r.bottom - t.bottom + 16);
+    }
+    function queue() { if (!queued) { queued = true; requestAnimationFrame(update); } }
+    window.addEventListener('scroll', queue, { passive: true });
+    window.addEventListener('resize', queue);
+    update();
+  })();
+
+  /* Bookmarks: one button for each step. At most one is red. The choice is kept in this browser only. */
+  (function () {
+    var key = 'demo-steps-bookmark', marked = null;
+    var items = [];
+    [].slice.call(document.querySelectorAll('.phases > li')).forEach(function (ph, i) {
+      [].slice.call(ph.querySelectorAll('.steps > li')).forEach(function (li, j) {
+        items.push({ li: li, label: (i + 1) + '.' + (j + 1) });
+      });
+    });
+    function set(label, save) {
+      marked = label;
+      items.forEach(function (it) { it.btn.setAttribute('aria-pressed', String(it.label === label)); });
+      if (!save) return;
+      try { if (label) localStorage.setItem(key, label); else localStorage.removeItem(key); } catch (e) {}
+    }
+    items.forEach(function (it) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'bm';
+      b.setAttribute('aria-pressed', 'false');
+      b.setAttribute('aria-label', 'Bookmark step ' + it.label);
+      b.innerHTML = '<svg viewBox="0 0 14 18" aria-hidden="true"><path d="M2 1h10v15.5L7 12.5 2 16.5z"/></svg>';
+      b.addEventListener('click', function () { set(marked === it.label ? null : it.label, true); });
+      it.li.insertBefore(b, it.li.firstChild);
+      it.btn = b;
+    });
+    var saved = null;
+    try { saved = localStorage.getItem(key); } catch (e) {}
+    set(items.some(function (it) { return it.label === saved; }) ? saved : null, false);
+  })();
+</script>
+</body>
+</html>

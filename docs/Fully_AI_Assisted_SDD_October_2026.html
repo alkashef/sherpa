@@ -1,0 +1,1217 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="A complete engineering report on fully AI-assisted spec-driven development: zero human-written code, production workflows, evidence, glossary, and references. Current to October 16, 2026."><meta name="color-scheme" content="light"><title>Fully AI-assisted SDD · October 2026</title><style>
+:root{--nav:#122e39;--paper:#fffefb;--canvas:#f3f2ec;--ink:#173640;--body:#2c4149;--muted:#597078;--accent:#1b6f68;--line:#dce4df;--soft:#edf5f1;--amber:#946014;--sidebar:286px}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:28px}body{margin:0;background:var(--canvas);color:var(--body);font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.65}a{color:var(--accent);text-underline-offset:3px}a:hover{color:#0f4e48}a:focus-visible,summary:focus-visible,.table-wrap:focus-visible{outline:3px solid #b77821;outline-offset:4px}strong{color:var(--ink)}
+.skip{position:fixed;left:10px;top:-80px;z-index:20;background:white;padding:10px 18px}.skip:focus{top:10px}.sidebar{position:fixed;inset:0 auto 0 0;width:var(--sidebar);background:var(--nav);color:#dce9e6;display:flex;flex-direction:column;z-index:5}.brand{padding:32px 24px 23px;border-bottom:1px solid #34505a}.brand-mark{font-size:26px;letter-spacing:5px;font-weight:800;color:white}.brand p{font-size:12px;line-height:1.55;margin:9px 0 0;color:#bed3d3}.brand-tag{display:inline-block;margin-top:15px;border:1px solid #51766f;border-radius:5px;padding:3px 8px;font-size:10px;letter-spacing:1.2px;color:#c3e6db}.nav-scroll{overflow:auto;padding:18px 13px 30px;scrollbar-width:thin;scrollbar-color:#5c7d80 transparent}.nav-label{font-size:10px;letter-spacing:1.8px;text-transform:uppercase;padding:0 12px 10px;color:#a9c4c4}.nav-main,.nav-stage{display:flex;align-items:baseline;text-decoration:none;color:#e2eeeb;border-radius:5px;line-height:1.45}.nav-main{font-size:13px;padding:10px 11px}.nav-main span{font-family:monospace;font-size:11px;min-width:28px;color:#95b8b2}.nav-main:hover,.nav-stage:hover{background:#244752;color:white}.nav-stage{font-size:11.7px;padding:6px 10px 6px 19px;color:#bbd1d1}.nav-stage span{min-width:23px;font-family:monospace;color:#7fa9a2}.nav-group{margin:3px 0 7px;border-left:1px solid #3e5d64;padding-left:3px}.nav-group summary{cursor:pointer;list-style:none;display:block}.nav-group summary::-webkit-details-marker{display:none}.nav-group summary:after{content:'−';float:right;margin:-29px 13px 0 0;color:#93b8b0}.nav-group:not([open]) summary:after{content:'+'}.nav-group .group-title{padding-right:30px}.sidebar-foot{margin-top:auto;border-top:1px solid #34505a;padding:15px 24px;font-size:10px;color:#a9c4c4;letter-spacing:.5px}.mobile-nav{display:none}
+main{margin-left:var(--sidebar);max-width:1400px}.content-shell{max-width:1160px;padding:48px 60px 80px;margin:0 auto}.hero{padding:45px 46px 39px;background:var(--paper);border:1px solid var(--line);border-top:5px solid var(--accent);box-shadow:0 12px 35px #193b4210;border-radius:2px 2px 12px 12px}.eyebrow{color:var(--accent);font-size:11px;letter-spacing:2.5px;font-weight:700;margin-bottom:20px}.hero h1{font-size:clamp(34px,3.25vw,50px);line-height:1.12;letter-spacing:-1.8px;color:var(--ink);margin:0 0 21px;max-width:780px;text-wrap:balance}.hero>p{font-size:15px;line-height:1.7}.hero>p:first-of-type{font-size:18px}.hero>p:nth-of-type(2){padding:19px 22px;border-left:3px solid var(--accent);background:var(--soft);margin:24px 0 18px}.hero>p:last-child{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:17px;margin-bottom:0}.hero>p:last-child strong{font-weight:400;color:var(--muted)}
+.chapter{background:var(--paper);border:1px solid var(--line);padding:36px 44px 42px;margin-top:28px;border-radius:10px}.chapter:target{border-color:var(--accent)}h2{font-size:28px;letter-spacing:-.7px;line-height:1.22;color:var(--ink);margin:0 0 25px;padding-bottom:19px;border-bottom:2px solid var(--accent);text-wrap:balance}h3{font-size:21px;line-height:1.3;color:var(--ink);margin:36px 0 15px;letter-spacing:-.3px}h4{font-size:17px;color:var(--ink);margin:29px 0 12px}h2,h3,h4{scroll-margin-top:28px}p{margin:0 0 17px}p:last-child{margin-bottom:0}.chapter>p{max-width:900px}h3+p{margin-top:0}.stage-title{border-top:1px solid var(--line);padding-top:34px;margin-top:42px;display:flex;gap:15px;align-items:center}.stage-title>span:last-child{font-size:23px}.stage-number{min-width:45px;height:45px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;font-size:18px;letter-spacing:0}.stage-title:target .stage-number{background:#9b681a}.stage-field{padding-left:0}.field-label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:1.3px;color:var(--accent);margin-bottom:5px}.stage-field:has(.field-label){margin-bottom:20px}
+.table-wrap{overflow:auto;margin:21px 0 26px;border:1px solid var(--line);border-radius:7px;scrollbar-width:thin}table{border-collapse:collapse;table-layout:fixed;width:100%;font-size:13.4px;line-height:1.55}thead{background:#173f49;color:white}th{font-weight:600;text-align:left;padding:13px 14px;vertical-align:top}td{padding:13px 14px;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:break-word}tbody tr:last-child td{border-bottom:0}tbody tr:nth-child(even){background:#f5f8f4}td:first-child{font-weight:500;color:var(--ink)}td strong{font-weight:700}.chapter table:has(th:nth-child(3)) th:first-child{width:24%}.chapter table:has(th:nth-child(3)) th:not(:first-child){width:38%}#contents+ .table-wrap th:first-child{width:39%}code{font-family:Consolas,Menlo,monospace;font-size:.9em;color:#215850;background:#eaf1ed;border:1px solid #dce7e0;border-radius:4px;padding:1px 4px;overflow-wrap:anywhere}blockquote{background:#edf4f1;border:1px solid #ccdfd7;border-left:4px solid var(--accent);border-radius:0 8px 8px 0;padding:19px 22px;margin:23px 0 29px;font-size:14px;line-height:1.7}blockquote p{margin:0}blockquote strong:first-child{display:block;color:var(--accent);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px}.citation{font-size:10px;vertical-align:super;font-weight:700;text-decoration:none;white-space:nowrap}.citation:hover{text-decoration:underline}
+figure{margin:28px 0 30px;background:#f7faf7;border:1px solid #cfddd6;border-radius:9px;overflow:hidden}.figure-top{padding:17px 20px 12px;display:flex;align-items:baseline;gap:14px;border-bottom:1px solid #e0e9e2}.figure-top span{font-size:9px;letter-spacing:1.5px;color:var(--accent);font-weight:700;white-space:nowrap}.figure-top strong{font-size:13px}.diagram-scroll{padding:13px 5px 0;overflow-x:auto}.diagram-scroll svg{display:block;width:100%;height:auto;min-width:530px}figcaption{font-size:12px;line-height:1.55;color:var(--muted);padding:12px 20px 17px;border-top:1px solid #e0e9e2}
+.references{display:grid;gap:0}.reference{display:grid;grid-template-columns:30px 1fr;gap:12px;padding:20px 0;border-bottom:1px solid var(--line);scroll-margin-top:30px}.reference:last-child{border-bottom:0}.ref-number{color:var(--accent);font-size:12px;font-weight:700;line-height:1.6;font-family:monospace;padding-top:2px}.reference h3{margin:0 0 7px;font-size:15px;letter-spacing:0}.reference p{font-size:12px;line-height:1.7;margin:0 0 5px;color:var(--muted)}.reference p strong{font-weight:400;color:var(--muted)}.reference a{font-size:11px;overflow-wrap:anywhere;display:block;line-height:1.65}.reference:target{background:#e9f2ec;box-shadow:0 0 0 10px #e9f2ec}.style-note{font-size:11px;color:var(--muted)}hr{border:0;border-top:1px solid var(--line);margin:32px 0 22px}.chapter>hr+p{font-size:12px;color:var(--muted)}.end-mark{padding:28px 0 0;text-align:center;font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted)}
+@media(min-width:1700px){.content-shell{padding-top:65px}.hero h1{font-size:52px}}
+@media(max-width:1200px){:root{--sidebar:250px}.content-shell{padding:30px 28px 60px}.chapter{padding:30px}.hero{padding:32px}.brand{padding-left:22px}.hero h1{font-size:39px}.stage-title>span:last-child{font-size:21px}table{font-size:12.5px}td,th{padding:11px}}
+@media(max-width:900px){:root{--sidebar:218px}.content-shell{padding:20px 17px 45px}.chapter{padding:24px 20px}.hero{padding:28px 24px}.hero h1{font-size:35px}.brand{padding:24px 18px 18px}.nav-main{font-size:12px}.nav-stage{font-size:11px}.figure-top{display:block}.figure-top span{display:block;margin-bottom:6px}h2{font-size:25px}.table-wrap{margin-left:0;margin-right:0}.chapter table:has(th:nth-child(3)){min-width:600px}}
+@media(max-width:700px){html{scroll-padding-top:14px}.sidebar{position:relative;width:100%;display:block}.brand{padding:23px 21px 19px;display:flex;align-items:center;justify-content:space-between;gap:15px}.brand p{margin:0;font-size:11px;text-align:right}.brand-tag{display:none}.nav-scroll{display:none}.mobile-nav{display:block;border-bottom:1px solid #34505a}.mobile-nav summary{padding:14px 21px;cursor:pointer;font-size:13px;color:white}.mobile-links{padding:0 14px 15px;display:grid;grid-template-columns:1fr 1fr;gap:2px 8px}.sidebar-foot{display:none}main{margin-left:0}.content-shell{padding:18px 12px 35px}.hero{padding:25px 22px}.hero h1{font-size:35px;letter-spacing:-1px}.eyebrow{font-size:9px;letter-spacing:1.8px}.hero>p:first-of-type{font-size:16px}.hero>p{font-size:14px}.hero>p:nth-of-type(2){padding:14px 16px}.chapter{padding:25px 20px;margin-top:18px;border-radius:8px;font-size:14px}h2{font-size:24px}h3{font-size:19px}.stage-title{gap:11px;align-items:flex-start}.stage-title>span:last-child{font-size:20px}.stage-number{min-width:35px;height:35px;font-size:14px;border-radius:7px}table{font-size:12px}.chapter table{min-width:520px}#contents+ .table-wrap table{min-width:460px}blockquote{padding:16px 17px;font-size:13px}.field-label{font-size:10px}.diagram-scroll svg{min-width:590px}figcaption{font-size:11px}.reference{grid-template-columns:22px 1fr;gap:8px}.reference h3{font-size:14px}.reference a{font-size:10px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{@page{size:A4;margin:17mm 16mm}html{scroll-behavior:auto}body{background:white;color:#172f36;font-size:10pt;line-height:1.45}.sidebar,.skip,.end-mark{display:none}main{margin:0;max-width:none}.content-shell{padding:0;max-width:none}.hero{padding:0 0 18pt;border:0;border-bottom:2pt solid #1b6f68;border-radius:0;box-shadow:none}.hero h1{font-size:30pt;letter-spacing:-.7pt}.eyebrow{font-size:8pt}.hero>p{font-size:10pt}.hero>p:first-of-type{font-size:12pt}.hero>p:nth-of-type(2){padding:11pt 13pt}.chapter{border:0;border-radius:0;padding:0;margin:25pt 0 0}.chapter h2{font-size:20pt;padding-bottom:10pt;break-after:avoid}.chapter h3{font-size:14pt;break-after:avoid}.chapter h4{break-after:avoid}.stage-title{padding-top:18pt;margin-top:26pt}.stage-title>span:last-child{font-size:15pt}.stage-number{min-width:28pt;height:28pt;font-size:12pt}.field-label{font-size:8pt}.stage-field{margin-bottom:11pt}p{orphans:3;widows:3}.table-wrap{overflow:visible;border-radius:0;margin:12pt 0 16pt;break-inside:auto}table{font-size:8.5pt!important;line-height:1.4;min-width:0!important}thead{display:table-header-group;background:#edf4f1!important;color:#173640!important}td,th{padding:7pt!important}tr{break-inside:avoid}figure{break-inside:avoid;background:white}.diagram-scroll svg{min-width:0!important}.figure-top{padding:9pt 12pt}.figure-top strong{font-size:9pt}.figure-top span{font-size:7pt}figcaption{font-size:8pt;padding:8pt 12pt}blockquote{break-inside:avoid;font-size:9pt;padding:12pt 14pt}.reference{break-inside:avoid;padding:10pt 0}.reference h3{font-size:10pt;margin-bottom:4pt}.reference p{font-size:8pt}.reference a{font-size:7.5pt}.style-note{font-size:8pt}a{color:#1b6f68}code{font-size:8pt}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body><a class="skip" href="#report">Skip to report</a><aside class="sidebar" aria-label="Report navigation"><div class="brand"><div class="brand-mark">SDD<span style="color:#75bda8">.</span></div><p>100% AI-written code<br>October 2026</p><span class="brand-tag">ENGINEERING REPORT</span></div><nav class="nav-scroll" aria-label="Table of contents"><div class="nav-label">Contents</div><a class="nav-main" href="#contents"><span>1</span>Contents</a><a class="nav-main" href="#introduction"><span>2</span>Introduction</a><a class="nav-main" href="#assumptions"><span>3</span>Assumptions</a><a class="nav-main" href="#overview"><span>4</span>SDD at a high level</a><details class="nav-group" open><summary><span class="nav-main group-title"><span>5</span>SDD in detail</span></summary><a class="nav-stage" href="#workflow"><span>↳</span>Workflow overview</a><a class="nav-stage" href="#stage-01"><span>01</span>Define the outcome and boundaries</a><a class="nav-stage" href="#stage-02"><span>02</span>Inspect the system and establish a baseline</a><a class="nav-stage" href="#stage-03"><span>03</span>Specify behavior and acceptance criteria</a><a class="nav-stage" href="#stage-04"><span>04</span>Design the system and its contracts</a><a class="nav-stage" href="#stage-05"><span>05</span>Plan small, verifiable increments</a><a class="nav-stage" href="#stage-06"><span>06</span>Establish tests and expected results</a><a class="nav-stage" href="#stage-07"><span>07</span>Implement one bounded change across files</a><a class="nav-stage" href="#stage-08"><span>08</span>Verify the integrated result</a><a class="nav-stage" href="#stage-09"><span>09</span>Diagnose defects and recover deliberately</a><a class="nav-stage" href="#stage-10"><span>10</span>Review and refactor for maintainability</a><a class="nav-stage" href="#stage-11"><span>11</span>Validate intended use and production readiness</a><a class="nav-stage" href="#stage-12"><span>12</span>Document, release, and hand over</a><a class="nav-stage" href="#stage-13"><span>13</span>Maintain the specification through later changes</a><a class="nav-stage" href="#system-types"><span>↳</span>Adapt by system type</a></details><a class="nav-main" href="#concepts"><span>6</span>Concepts and glossary</a><a class="nav-main" href="#references"><span>7</span>References</a><a class="nav-main" href="#checklist"><span>A1</span>Workflow checklist</a><a class="nav-main" href="#production"><span>A2</span>Prototype vs. production</a><a class="nav-main" href="#quality"><span>A3</span>High-quality code</a></nav><details class="mobile-nav"><summary>Contents · open navigation</summary><nav class="mobile-links" aria-label="Mobile contents"><a class="nav-main" href="#contents"><span>1</span>Contents</a><a class="nav-main" href="#introduction"><span>2</span>Introduction</a><a class="nav-main" href="#assumptions"><span>3</span>Assumptions</a><a class="nav-main" href="#overview"><span>4</span>SDD at a high level</a><a class="nav-main" href="#workflow"><span>5</span>SDD in detail</a><a class="nav-main" href="#concepts"><span>6</span>Concepts and glossary</a><a class="nav-main" href="#references"><span>7</span>References</a><a class="nav-main" href="#checklist"><span>A1</span>Workflow checklist</a><a class="nav-main" href="#production"><span>A2</span>Prototype vs. production</a><a class="nav-main" href="#quality"><span>A3</span>High-quality code</a></nav></details><div class="sidebar-foot">13 stages · 25 primary sources</div></aside><main id="report"><div class="content-shell"><header class="hero"><div class="eyebrow">SOFTWARE ENGINEERING / OCTOBER 16, 2026</div><h1>Fully AI-assisted, spec-driven development</h1>
+<p><strong>100% AI-written project code. Zero human-written code.</strong></p>
+<p><strong>Recommendation:</strong> Keep an approved specification as the reference for every change. Let AI write all implementation artifacts. Accept each increment only after tests, review, and use-case evidence support it.</p>
+<p>This workflow removes manual code writing. Humans still define outcomes, resolve trade-offs, judge evidence, and accept releases.</p>
+<p><strong>Evidence cutoff: October 16, 2026.</strong> Audience: software engineers, technical product managers, systems architects, and other engineers.</p>
+</header><section class="chapter" aria-labelledby="contents"><h2 id="contents">1. Table of contents</h2>
+
+<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable reference table"><table>
+<thead>
+<tr>
+<th scope="col">Section</th>
+<th scope="col">What it answers</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="#introduction">2. Introduction</a></td>
+<td>What does fully AI-assisted SDD mean, and what can current tools support?</td>
+</tr>
+<tr>
+<td><a href="#assumptions">3. Assumptions</a></td>
+<td>What must the team, tools, and environment supply?</td>
+</tr>
+<tr>
+<td><a href="#overview">4. SDD at a high level</a></td>
+<td>How do specifications, decisions, code, and evidence stay connected?</td>
+</tr>
+<tr>
+<td><a href="#workflow">5. SDD in detail</a></td>
+<td>What does each workflow stage require from AI and humans?</td>
+</tr>
+<tr>
+<td><a href="#concepts">6. Concepts, terms, and principles</a></td>
+<td>What do the technical terms mean?</td>
+</tr>
+<tr>
+<td><a href="#references">7. References</a></td>
+<td>Which primary sources support the report?</td>
+</tr>
+<tr>
+<td><a href="#checklist">Appendix 1. End-to-end checklist</a></td>
+<td>What must be complete before the next gate?</td>
+</tr>
+<tr>
+<td><a href="#production">Appendix 2. Prototype versus production</a></td>
+<td>What evidence changes the classification?</td>
+</tr>
+<tr>
+<td><a href="#quality">Appendix 3. High-quality code</a></td>
+<td>What should reviewers assess, and how?</td>
+</tr>
+</tbody></table></div>
+</section><section class="chapter" aria-labelledby="introduction"><h2 id="introduction">2. Introduction</h2>
+
+<h3 id="scope">2.1 Subject and scope</h3>
+
+<p><strong>Spec-driven development (SDD)</strong> uses explicit specifications to direct design, implementation, tests, and later changes. Specifications remain active references throughout the software life cycle.</p>
+<p>In this report, AI writes every new or changed line of project code. This includes application code, tests, database queries, migration scripts, build scripts, and executable configuration. AI also drafts specifications, design records, plans, and operating instructions. Humans supply facts, make decisions, request changes in plain language, and approve results.</p>
+<p>The scope includes production applications, microservices, scripts, engineering workflows, data workflows, and long-lived enterprise systems. The workflow applies to new projects and changes to existing systems. It does not require a particular language, editor, model, or SDD toolkit.</p>
+<p>The report excludes vibe coding, alternative meta-level development frameworks, forecasts, employment effects, and prototype development. Security and compliance are outside its assessment. The production criteria below address the engineering areas within this scope.</p>
+<p><strong>Zero manual coding is an authorship constraint.</strong> It does not make a release correct, remove technical judgment, or require an unattended process.</p>
+<h3 id="current-state">2.2 The state of the practice in October 2026</h3>
+
+<p>Current tools support the mechanics needed for this workflow. Tool documentation establishes capabilities. It does not establish that every generated system meets production requirements.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable reference table"><table>
+<thead>
+<tr>
+<th scope="col">Observed capability</th>
+<th scope="col">Primary-source evidence</th>
+<th scope="col">What the evidence does not establish</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Specifications can drive plans, tasks, implementation, and checks.</td>
+<td>GitHub introduced Spec Kit in September 2025. Its current SDD guide includes clarification, analysis, implementation, and convergence checks. <a class="citation" href="#ref-01" aria-label="Reference 1">[1]</a> <a class="citation" href="#ref-02" aria-label="Reference 2">[2]</a></td>
+<td>A convergence label does not prove the specification is complete or the product fits its purpose.</td>
+</tr>
+<tr>
+<td>Requirements, design, and tasks can persist as separate project files.</td>
+<td>Kiro documents these artifacts. Its Feature Specs support requirements-first and design-first paths. <a class="citation" href="#ref-03" aria-label="Reference 3">[3]</a> <a class="citation" href="#ref-24" aria-label="Reference 24">[24]</a></td>
+<td>A generated document does not become an approved requirement merely because the tool created it.</td>
+</tr>
+<tr>
+<td>Coding tools can make coordinated changes across files and run checks.</td>
+<td>Claude Code documents repository search, file editing, command execution, and feedback from tool results. <a class="citation" href="#ref-04" aria-label="Reference 4">[4]</a></td>
+<td>Access to the whole repository does not mean the model reads or understands every file.</td>
+</tr>
+<tr>
+<td>Tools can help derive tests from requirements.</td>
+<td>Kiro documents property-based tests. Its capability table limits this feature to its IDE. <a class="citation" href="#ref-22" aria-label="Reference 22">[22]</a></td>
+<td>Sampled tests do not prove correctness for every possible input.</td>
+</tr>
+</tbody></table></div>
+<p><strong>Engineering judgment:</strong> A zero-manual-code workflow is feasible where the available AI tools can implement the work and the team can establish adequate evidence. It is not a universal delivery guarantee.</p>
+<p>The sources reviewed here do not establish a general success rate for fully AI-written, production SDD across these system types. This report makes no numerical claim about quality gains, delivery speed, or the probability of success. A blocked implementation remains blocked until AI produces an acceptable result or the team approves a different design or scope.</p>
+<h3 id="read-report">2.3 How to read this report</h3>
+
+<p>Section 4 gives the whole process. Section 5 explains thirteen stages with the same decision and evidence structure. Section 6 defines terms. The appendices give concise review aids.</p>
+<p><strong>Evidence labels:</strong> Statements about tools cite their documentation. The recommended workflow is an engineering synthesis of those capabilities and established software engineering methods. All example requirements, identifiers, thresholds, and outcomes are illustrative. No example reports an executed software project.</p>
+<p>References include publication or update dates where the source gives them. “Undated” means that the cited page gives no publication date. All sources were checked on October 16, 2026. Living documentation can change after that date.</p>
+</section><section class="chapter" aria-labelledby="assumptions"><h2 id="assumptions">3. Assumptions</h2>
+
+<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable reference table"><table>
+<thead>
+<tr>
+<th scope="col">Assumption</th>
+<th scope="col">Practical consequence</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Humans know the intended work and can reach its subject experts.</td>
+<td>AI can organize requirements, but cannot invent authoritative business rules.</td>
+</tr>
+<tr>
+<td>The team has access to architecture, testing, and code-review competence.</td>
+<td>A product manager can direct the process. A qualified technical reviewer assesses decisions beyond that manager’s expertise.</td>
+</tr>
+<tr>
+<td>The AI tool can inspect files, edit multiple files, run commands, and read results.</td>
+<td>A text-only chat cannot complete the whole local workflow without another execution mechanism.</td>
+</tr>
+<tr>
+<td>A suitable runtime and representative test environment are available.</td>
+<td>AI can generate setup files and run installation or build steps. An unavailable dependency remains an explicit blocker.</td>
+</tr>
+<tr>
+<td>Humans can inspect outputs and, when needed, read code.</td>
+<td>Reading, questioning, and rejecting code do not require writing code. AI performs all requested edits.</td>
+</tr>
+<tr>
+<td>The team can define expected results independently of the generated implementation.</td>
+<td>Business examples, reference calculations, interface contracts, and operating limits can serve as test oracles.</td>
+</tr>
+<tr>
+<td>The repository retains versions of the specification, implementation, and evidence.</td>
+<td>A decision or result remains available after a conversation ends.</td>
+</tr>
+<tr>
+<td>Production targets are specific to the intended use.</td>
+<td>A weekly script needs different operating evidence from a continuously available service.</td>
+</tr>
+</tbody></table></div>
+<p><strong>Authorship boundary:</strong> “100%” applies to the project code produced or changed through this workflow. Existing code and third-party libraries retain their original authorship. A team must not describe an inherited repository as entirely AI-authored because AI changed part of it.</p>
+<p><strong>No manual coding fallback:</strong> Humans can approve installation, run an AI-supplied command, or supply data through an interface. They do not write code, tests, SQL, shell scripts, configuration syntax, or patches. If a tool asks for such an edit, ask AI to perform it or create the complete artifact.</p>
+</section><section class="chapter" aria-labelledby="overview"><h2 id="overview">4. SDD at a high level</h2>
+
+<h3 id="operating-model">4.1 The operating model</h3>
+
+<p>The specification states required behavior and measurable constraints. The design explains how the system will meet them. The plan divides the design into reviewable work. AI implements each increment and supplies evidence. Humans assess the evidence against the approved intent.</p>
+<p>SDD does not require one large specification before all development starts. Establish the system boundaries first. Then specify, design, implement, and accept a bounded change. New evidence can require a specification or design change before implementation continues.</p>
+<figure><div class="figure-top"><span>FIGURE 01</span><strong>The specification stays active through the life cycle</strong></div><div class="diagram-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 446" role="img" aria-labelledby="workflow-title workflow-desc"><title id="workflow-title">The iterative SDD life cycle</title><desc id="workflow-desc">Specify, design, and plan, then implement, verify and review, and accept and release. A later change returns to the specification. Failed checks require repair at the responsible stage.</desc><defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9z" fill="#557277"/></marker><marker id="amber-arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9z" fill="#a96812"/></marker></defs><g font-family="Arial, sans-serif"><g><rect x="46" y="34" width="250" height="115" rx="12" fill="#ffffff" stroke="#c5d8d7"/><text x="66" y="61" fill="#42666b" font-size="12" font-weight="700" letter-spacing="1.4">01 · HUMAN APPROVAL</text><text x="66" y="92" fill="#15343e" font-size="21" font-weight="700">Specify</text><text x="66" y="117" fill="#3f555e" font-size="14">Behavior and acceptance</text></g><g><rect x="355" y="34" width="250" height="115" rx="12" fill="#ffffff" stroke="#c5d8d7"/><text x="375" y="61" fill="#42666b" font-size="12" font-weight="700" letter-spacing="1.4">02 · HUMAN APPROVAL</text><text x="375" y="92" fill="#15343e" font-size="21" font-weight="700">Design</text><text x="375" y="117" fill="#3f555e" font-size="14">Structure and contracts</text></g><g><rect x="664" y="34" width="250" height="115" rx="12" fill="#ffffff" stroke="#c5d8d7"/><text x="684" y="61" fill="#42666b" font-size="12" font-weight="700" letter-spacing="1.4">03 · HUMAN APPROVAL</text><text x="684" y="92" fill="#15343e" font-size="21" font-weight="700">Plan</text><text x="684" y="117" fill="#3f555e" font-size="14">Bounded tasks and checks</text></g><g><rect x="664" y="218" width="250" height="115" rx="12" fill="#eef7f5" stroke="#c5d8d7"/><text x="684" y="245" fill="#42666b" font-size="12" font-weight="700" letter-spacing="1.4">04 · AI EXECUTION</text><text x="684" y="276" fill="#15343e" font-size="21" font-weight="700">Implement</text><text x="684" y="301" fill="#3f555e" font-size="14">Coordinated file changes</text></g><g><rect x="355" y="218" width="250" height="115" rx="12" fill="#eef7f5" stroke="#c5d8d7"/><text x="375" y="245" fill="#42666b" font-size="12" font-weight="700" letter-spacing="1.4">05 · EVIDENCE</text><text x="375" y="276" fill="#15343e" font-size="21" font-weight="700">Verify &amp; review</text><text x="375" y="301" fill="#3f555e" font-size="14">Tests and inspection</text><text x="375" y="320" fill="#3f555e" font-size="14">Measured quality targets</text></g><g><rect x="46" y="218" width="250" height="115" rx="12" fill="#e3f1ec" stroke="#c5d8d7"/><text x="66" y="245" fill="#42666b" font-size="12" font-weight="700" letter-spacing="1.4">06 · HUMAN DECISION</text><text x="66" y="276" fill="#15343e" font-size="21" font-weight="700">Accept &amp; release</text><text x="66" y="301" fill="#3f555e" font-size="14">Fitness for intended use</text></g><g fill="none" stroke="#557277" stroke-width="2.1" marker-end="url(#arrow)"><path d="M300 92H347"/><path d="M609 92H656"/><path d="M789 153V210"/><path d="M660 276H613"/><path d="M351 276H304"/><path d="M42 276H20V92H38"/></g><text x="480" y="375" text-anchor="middle" font-size="16" fill="#79511d" font-weight="700">Failed check: repair the responsible artifact, then repeat the affected checks.</text><text x="480" y="407" text-anchor="middle" font-size="14" fill="#466269">Each new change starts from the accepted specification and release baseline.</text></g></svg></div><figcaption>Original synthesis. This is a repeating workflow. The stages do not require one complete design before all development starts.</figcaption></figure>
+
+<p><strong>A failed check returns work to the artifact that contains the error.</strong> A code defect needs a code change. A missing business rule needs a requirement decision. Repeated code generation cannot resolve an undecided business rule.</p>
+<h3 id="artifacts">4.2 The minimum set of durable artifacts</h3>
+
+<p>File names below are examples. A small script can combine documents. A large system can divide them by component or feature.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable reference table"><table>
+<thead>
+<tr>
+<th scope="col">Artifact</th>
+<th scope="col">Required content</th>
+<th scope="col">Authority</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>spec.md</code></td>
+<td>Goals, scope, behavior, exclusions, requirement IDs, acceptance examples, and measurable quality targets</td>
+<td>Approved intended behavior</td>
+</tr>
+<tr>
+<td><code>design.md</code> and decision records</td>
+<td>Components, interfaces, data, dependencies, failure handling, and decision reasons</td>
+<td>Approved implementation constraints</td>
+</tr>
+<tr>
+<td><code>plan.md</code></td>
+<td>Ordered tasks, dependencies, requirement links, checks, and stop conditions</td>
+<td>Authorized work for the increment</td>
+</tr>
+<tr>
+<td><code>acceptance.md</code> and test assets</td>
+<td>Expected results, fixtures, test levels, and test-to-requirement links</td>
+<td>Approved basis for assessment</td>
+</tr>
+<tr>
+<td>Source, build, and dependency files</td>
+<td>Implementation, tests, version constraints, and reproducible setup</td>
+<td>The actual software under assessment</td>
+</tr>
+<tr>
+<td><code>evidence.md</code></td>
+<td>Commit, environment, commands, results, defects, and untested areas</td>
+<td>What the team actually observed</td>
+</tr>
+<tr>
+<td><code>handover.md</code></td>
+<td>Setup, operation, recovery, interfaces, known limits, and ownership</td>
+<td>Instructions checked against the release</td>
+</tr>
+</tbody></table></div>
+<p>A chat message does not silently replace an approved artifact. Ask AI to record a proposed change, show its effects, and wait for the required decision. Version the accepted specification with the corresponding code. Spec Kit documents a living-spec approach with downstream updates after specification changes. <a class="citation" href="#ref-20" aria-label="Reference 20">[20]</a></p>
+<h3 id="coding-agent">4.3 A coding agent, precisely defined</h3>
+
+<p>A <strong>coding agent</strong> is a software system that observes a development environment, selects actions toward a task, uses tools, and responds to their results. Its autonomy is bounded by the task, available tools, and stop conditions. This definition draws on established agent concepts and current tool behavior. <a class="citation" href="#ref-04" aria-label="Reference 4">[4]</a> <a class="citation" href="#ref-21" aria-label="Reference 21">[21]</a></p>
+<p>A language model that only returns a code block is not, by that fact alone, a coding agent. “Agentic” describes the action-and-feedback behavior. It does not establish intelligence, correctness, or independence from human decisions.</p>
+<figure><div class="figure-top"><span>FIGURE 02</span><strong>A coding agent uses an action-and-feedback loop</strong></div><div class="diagram-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 438" role="img" aria-labelledby="agent-title agent-desc"><title id="agent-title">A bounded coding agent loop</title><desc id="agent-desc">An approved task bounds the loop. The agent observes files and results, selects an action, invokes a tool, then assesses the result. It repeats, reports evidence, or stops when blocked. Humans decide acceptance.</desc><defs><marker id="agent-arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9z" fill="#557277"/></marker></defs><g font-family="Arial, sans-serif"><rect x="24" y="14" width="912" height="366" rx="16" fill="#f1f7f5" stroke="#c5d8d7" stroke-dasharray="6 5"/><text x="480" y="49" text-anchor="middle" fill="#42666b" font-size="14" font-weight="700">BOUNDARY: APPROVED TASK · AVAILABLE TOOLS · STOP CONDITIONS</text><g><rect x="65" y="75" width="330" height="112" rx="12" fill="#ffffff" stroke="#c5d8d7"/><text x="85" y="102" fill="#42666b" font-size="12" font-weight="700" letter-spacing="1.4">OBSERVE</text><text x="85" y="133" fill="#15343e" font-size="21" font-weight="700">Read the current state</text><text x="85" y="158" fill="#3f555e" font-size="14">Files, instructions, and prior results</text></g><g><rect x="565" y="75" width="330" height="112" rx="12" fill="#ffffff" stroke="#c5d8d7"/><text x="585" y="102" fill="#42666b" font-size="12" font-weight="700" letter-spacing="1.4">SELECT</text><text x="585" y="133" fill="#15343e" font-size="21" font-weight="700">Choose the next action</text><text x="585" y="158" fill="#3f555e" font-size="14">A bounded step toward the task</text></g><g><rect x="565" y="230" width="330" height="112" rx="12" fill="#ffffff" stroke="#c5d8d7"/><text x="585" y="257" fill="#42666b" font-size="12" font-weight="700" letter-spacing="1.4">ACT</text><text x="585" y="288" fill="#15343e" font-size="21" font-weight="700">Invoke a tool</text><text x="585" y="313" fill="#3f555e" font-size="14">Read, edit, build, or test</text></g><g><rect x="65" y="230" width="330" height="112" rx="12" fill="#ffffff" stroke="#c5d8d7"/><text x="85" y="257" fill="#42666b" font-size="12" font-weight="700" letter-spacing="1.4">ASSESS</text><text x="85" y="288" fill="#15343e" font-size="21" font-weight="700">Inspect the tool result</text><text x="85" y="313" fill="#3f555e" font-size="14">Continue, report evidence, or stop</text></g><g fill="none" stroke="#557277" stroke-width="2.1" marker-end="url(#agent-arrow)"><path d="M400 131H556"/><path d="M730 191V222"/><path d="M560 287H403"/><path d="M230 226V195"/></g><text x="480" y="415" text-anchor="middle" font-size="16" fill="#15343e" font-weight="700">The loop can execute work. Human owners still decide acceptance.</text></g></svg></div><figcaption>Tool results supply observations. A model’s unsupported claim of success supplies no equivalent evidence.</figcaption></figure>
+
+<p>One coding agent can work across many files. Several prompts with different role labels do not necessarily create a multi-agent system. Multiple independently controlled agents can divide work, but shared interfaces and integration still need explicit ownership. More agents are not a requirement of SDD.</p>
+<h3 id="two-questions">4.4 Two distinct questions about correctness</h3>
+
+<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable reference table"><table>
+<thead>
+<tr>
+<th scope="col">Question</th>
+<th scope="col">Activity</th>
+<th scope="col">Typical evidence</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Does the software meet the approved specification?</td>
+<td><strong>Verification</strong></td>
+<td>Tests, analysis, code inspection, and measured constraints</td>
+</tr>
+<tr>
+<td>Does the specified software serve the intended use?</td>
+<td><strong>Validation</strong></td>
+<td>Representative user tasks, domain review, and accepted outcomes</td>
+</tr>
+</tbody></table></div>
+<p>A system can pass its tests and still solve the wrong problem. NASA’s systems engineering guidance distinguishes these two activities. Both belong in this workflow. <a class="citation" href="#ref-08" aria-label="Reference 8">[8]</a></p>
+<p><strong>The test oracle problem:</strong> A test needs a basis for deciding what is correct. Generating both code and expected results from one mistaken assumption can produce a false pass. Domain examples and independently checked expected results reduce that circularity. A second AI review can find defects, but does not guarantee independent judgment. <a class="citation" href="#ref-09" aria-label="Reference 9">[9]</a></p>
+<h3 id="traceability">4.5 Traceability through one production change</h3>
+
+<p>Consider an existing data-import service that must handle repeated requests without duplicate writes. The following is a requirements example, not a prototype build.</p>
+<figure><div class="figure-top"><span>FIGURE 03</span><strong>Keep both traceability and an independent basis for correctness</strong></div><div class="diagram-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 370" role="img" aria-labelledby="trace-title trace-desc"><title id="trace-title">Traceability and independent expected results</title><desc id="trace-desc">The requirement links to a design decision and implementation task. The task links to tests and evidence. Independently checked domain examples supply the expected results for those tests.</desc><defs><marker id="trace-arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9z" fill="#557277"/></marker><marker id="trace-gold" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9z" fill="#a96812"/></marker></defs><g font-family="Arial, sans-serif"><g><rect x="35" y="24" width="260" height="112" rx="12" fill="#ffffff" stroke="#c5d8d7"/><text x="55" y="51" fill="#42666b" font-size="12" font-weight="700" letter-spacing="1.4">INTENT</text><text x="55" y="82" fill="#15343e" font-size="21" font-weight="700">REQ-017 / REQ-018</text><text x="55" y="107" fill="#3f555e" font-size="14">Repeated import behavior</text></g><g><rect x="350" y="24" width="260" height="112" rx="12" fill="#ffffff" stroke="#c5d8d7"/><text x="370" y="51" fill="#42666b" font-size="12" font-weight="700" letter-spacing="1.4">STRUCTURE</text><text x="370" y="82" fill="#15343e" font-size="21" font-weight="700">DEC-006</text><text x="370" y="107" fill="#3f555e" font-size="14">Transaction and stored result</text></g><g><rect x="665" y="24" width="260" height="112" rx="12" fill="#ffffff" stroke="#c5d8d7"/><text x="685" y="51" fill="#42666b" font-size="12" font-weight="700" letter-spacing="1.4">CHANGE</text><text x="685" y="82" fill="#15343e" font-size="21" font-weight="700">TASK-012</text><text x="685" y="107" fill="#3f555e" font-size="14">Coordinated implementation</text></g><g><rect x="35" y="217" width="260" height="112" rx="12" fill="#e3f1ec" stroke="#c5d8d7"/><text x="55" y="244" fill="#42666b" font-size="12" font-weight="700" letter-spacing="1.4">OBSERVATION</text><text x="55" y="275" fill="#15343e" font-size="21" font-weight="700">EVID-009</text><text x="55" y="300" fill="#3f555e" font-size="14">Version, conditions, outcomes</text></g><g><rect x="350" y="217" width="260" height="112" rx="12" fill="#eef7f5" stroke="#c5d8d7"/><text x="370" y="244" fill="#42666b" font-size="12" font-weight="700" letter-spacing="1.4">CHECK</text><text x="370" y="275" fill="#15343e" font-size="21" font-weight="700">TEST-031–035</text><text x="370" y="300" fill="#3f555e" font-size="14">Inputs, assertions, actual results</text></g><g><rect x="665" y="217" width="260" height="112" rx="12" fill="#fff5e5" stroke="#c5d8d7"/><text x="685" y="244" fill="#42666b" font-size="12" font-weight="700" letter-spacing="1.4">INDEPENDENT BASIS</text><text x="685" y="275" fill="#15343e" font-size="21" font-weight="700">Domain examples</text><text x="685" y="300" fill="#3f555e" font-size="14">Human-approved expectations</text></g><g fill="none" stroke="#557277" stroke-width="2.1" marker-end="url(#trace-arrow)"><path d="M299 80H342"/><path d="M614 80H657"/><path d="M795 140V170H480V209"/><path d="M346 273H303"/></g><path d="M661 273H618" fill="none" stroke="#a96812" stroke-width="2.1" marker-end="url(#trace-gold)"/><text x="720" y="195" text-anchor="middle" fill="#466269" font-size="13">Tests assess the changed implementation.</text></g></svg></div><figcaption>Traceability shows the connections. Independent expected results help prevent code and tests from sharing the same mistaken assumption.</figcaption></figure>
+
+<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable reference table"><table>
+<thead>
+<tr>
+<th scope="col">Record</th>
+<th scope="col">Illustrative content</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>REQ-017</strong></td>
+<td>When the service receives the same import ID and payload within 24 hours, it must return the original result without another write.</td>
+</tr>
+<tr>
+<td><strong>REQ-018</strong></td>
+<td>If an import ID repeats with a different payload within 24 hours, the service must reject the request without a write.</td>
+</tr>
+<tr>
+<td><strong>DEC-006</strong></td>
+<td>Store the request identifier, payload identity, and result with the write in one transactional design. Review crash and concurrency behavior.</td>
+</tr>
+<tr>
+<td><strong>TASK-012</strong></td>
+<td>Implement duplicate detection, result retrieval, and conflict handling across storage, service, and interface files.</td>
+</tr>
+<tr>
+<td><strong>TEST-031–035</strong></td>
+<td>Check sequential repeats, simultaneous repeats, changed payloads, restart recovery, and expiration of the 24-hour window.</td>
+</tr>
+<tr>
+<td><strong>EVID-009</strong></td>
+<td>Record the tested commit, database version, input fixtures, commands, and results. Mark tests that did not run.</td>
+</tr>
+</tbody></table></div>
+<p>These requirements still need decisions about payload equivalence, the time reference, expiration behavior, and concurrent requests. AI must expose these questions before the team approves the design. Every production change needs its own complete definition.</p>
+</section><section class="chapter" aria-labelledby="workflow"><h2 id="workflow">5. SDD in detail</h2>
+
+<h3 id="stage-guide">How the stages fit together</h3>
+
+<p>The stages describe responsibilities, not a one-way sequence. Review each increment. Prepare tests before implementation where practical. Maintain documents as work changes. Repeat the relevant stages for defects and later requirements.</p>
+<p><strong>Common prompt contract:</strong> Identify the authoritative artifacts and versions. State the allowed change and required output. State what must remain unchanged. Define checks, evidence, and stop conditions. Treat any unapproved assumption that changes behavior as a question.</p>
+<p>Prompts below use plain language. Humans can supply the values in brackets through conversation. AI writes all files and executable syntax.</p>
+<h3 class="stage-title" id="stage-01"><span class="stage-number">01</span><span>5.1 Define the outcome and boundaries</span></h3>
+
+<p class="stage-field"><strong class="field-label">Purpose</strong> Establish the problem, intended users, accepted scope, and decision owners before AI proposes software.</p>
+<p class="stage-field"><strong class="field-label">Recommended practices</strong> Describe real tasks and their outcomes. Record the current problem, operating environment, exclusions, and delivery constraints. Assign product, technical, and release decisions to named people or roles. One person can hold several roles.</p>
+<p class="stage-field"><strong class="field-label">Give or ask the AI</strong> Supply process descriptions, examples of inputs and outputs, existing obligations, and the reason for the change. Ask for a concise scope statement, a terms list, and questions ranked by their effect on the design. AI must distinguish supplied facts from proposed assumptions.</p>
+<p class="stage-field"><strong class="field-label">Human decision and check</strong> Approve the outcome and boundaries. Decide what a failed delivery would look like. Reject features that AI adds without a requirement.</p>
+<p class="stage-field"><strong class="field-label">Common mistake → recovery</strong> “Build an enterprise-ready application” has no measurable meaning. Replace it with observable tasks, operating limits, and acceptance conditions. If the scope expands, revise the approved boundary before planning more work.</p>
+<p class="stage-field"><strong class="field-label">Exit evidence</strong> An approved scope statement, decision owners, and an open-question list with owners.</p>
+<blockquote>
+<p><strong>Reusable prompt:</strong> Draft the scope from these facts: [facts]. Separate requirements, assumptions, and questions. Include intended users, outcomes, constraints, and exclusions. Ask the highest-impact unresolved question first. Do not design or implement the system yet.</p>
+</blockquote>
+<h3 class="stage-title" id="stage-02"><span class="stage-number">02</span><span>5.2 Inspect the system and establish a baseline</span></h3>
+
+<p class="stage-field"><strong class="field-label">Purpose</strong> Give AI a factual starting point and make existing behavior reproducible.</p>
+<p class="stage-field"><strong class="field-label">Recommended practices</strong> Ask AI to inspect the repository, interfaces, build files, dependencies, tests, and relevant documents. Require file references for findings. Record runtime versions and current test results. For an existing system, identify callers, stored data, compatibility obligations, and known defects. For a new system, establish the approved build and test environment.</p>
+<p class="stage-field"><strong class="field-label">Give or ask the AI</strong> Supply repository access, current specifications, sample data, interface documents, and environment constraints. Ask AI to create setup files and run the baseline checks. Keep persistent instructions short. Store detailed behavior in the specification, then reference the relevant sections for each task.</p>
+<p class="stage-field"><strong class="field-label">Human decision and check</strong> Confirm that the inspected system and environment are the right ones. Decide which observed behaviors must remain. A characterization test records existing behavior. It does not prove that behavior is desirable.</p>
+<p class="stage-field"><strong class="field-label">Common mistake → recovery</strong> AI guesses a library interface or treats old comments as current truth. Require the installed version, source location, or official documentation. If existing tests fail, record the failure before a new change so that it cannot hide a new regression.</p>
+<p class="stage-field"><strong class="field-label">Exit evidence</strong> A system map, version record, baseline results, and explicit unknowns. Claude Code documents repository exploration and planning before edits. <a class="citation" href="#ref-23" aria-label="Reference 23">[23]</a></p>
+<blockquote>
+<p><strong>Reusable prompt:</strong> Inspect [repository and documents] without changing application behavior. Map the relevant files, interfaces, dependencies, and tests. Run the existing checks. Cite evidence for each finding. Record baseline failures and missing access. Generate any required setup artifacts for review.</p>
+</blockquote>
+<h3 class="stage-title" id="stage-03"><span class="stage-number">03</span><span>5.3 Specify behavior and acceptance criteria</span></h3>
+
+<p class="stage-field"><strong class="field-label">Purpose</strong> Turn intent into requirements that the team can assess without guessing.</p>
+<p class="stage-field"><strong class="field-label">Recommended practices</strong> Give each requirement a stable ID. Describe one behavior with its conditions and observable result. Include normal, boundary, invalid-input, and failure cases. State priority and exclusions. Specify measurable quality attributes, such as completion time, data precision, capacity, and recovery behavior.</p>
+<p class="stage-field"><strong class="field-label">Give or ask the AI</strong> Supply business rules, units, calendars, representative data, and independently checked examples. Ask AI to find contradictions, missing states, vague terms, and assumptions. Use decision tables or state diagrams when prose becomes ambiguous. EARS supplies patterns for structured natural-language requirements. Its syntax helps clarity but does not establish completeness. <a class="citation" href="#ref-06" aria-label="Reference 6">[6]</a></p>
+<p class="stage-field"><strong class="field-label">Human decision and check</strong> Approve behavior and expected results. Resolve terms such as “duplicate,” “latest,” “success,” and “business day.” Decide numerical thresholds. AI can propose them, but must label them as proposals.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable reference table"><table>
+<thead>
+<tr>
+<th scope="col">Weak statement</th>
+<th scope="col">Testable replacement, using illustrative values</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>The import must be fast.</td>
+<td>For the approved 100,000-row fixture, the import must finish within 60 seconds on environment E-01.</td>
+</tr>
+<tr>
+<td>Handle errors gracefully.</td>
+<td>If any row has an invalid date, reject the file, identify the row, and leave stored data unchanged.</td>
+</tr>
+<tr>
+<td>Preserve precision.</td>
+<td>Convert inputs to the approved unit, then round the result to two decimals using the stated rounding rule.</td>
+</tr>
+</tbody></table></div>
+<p class="stage-field"><strong class="field-label">Common mistake → recovery</strong> A polished document hides unanswered questions. Review examples and contradictions before wording. Block only the affected work when a requirement lacks a decision.</p>
+<p class="stage-field"><strong class="field-label">Exit evidence</strong> Approved requirements, examples, measurable constraints, and a list of unresolved items outside the authorized increment.</p>
+<blockquote>
+<p><strong>Reusable prompt:</strong> Draft requirements from [approved scope and facts]. Assign stable IDs. Include conditions, results, boundary cases, and acceptance examples. Flag contradictions and missing decisions. Propose measurable quality targets separately. Do not invent business rules or implement code.</p>
+</blockquote>
+<h3 class="stage-title" id="stage-04"><span class="stage-number">04</span><span>5.4 Design the system and its contracts</span></h3>
+
+<p class="stage-field"><strong class="field-label">Purpose</strong> Choose a technical structure that meets the requirements and supports later changes.</p>
+<p class="stage-field"><strong class="field-label">Recommended practices</strong> Compare a small number of viable designs against the most important constraints. Describe component responsibilities, dependencies, data ownership, state transitions, and failure handling. Choose the language, framework, major libraries, and supported versions. Record decision reasons and rejected alternatives. Attribute-Driven Design offers a foundation for decisions driven by significant requirements. <a class="citation" href="#ref-07" aria-label="Reference 7">[7]</a></p>
+<p class="stage-field"><strong class="field-label">Give or ask the AI</strong> Supply the specification, existing architecture, platform restrictions, expected workloads, and team operating limits. Ask for component and sequence diagrams, interface contracts, a data model, and a requirement-to-design map. For an HTTP interface, AI can generate an OpenAPI description from the approved contract. <a class="citation" href="#ref-10" aria-label="Reference 10">[10]</a></p>
+<p class="stage-field"><strong class="field-label">Human decision and check</strong> Approve trade-offs about consistency, latency, complexity, compatibility, and operating cost. Check whether the design explains failures between steps. Ask who owns each piece of state and how incomplete work recovers.</p>
+<p class="stage-field"><strong class="field-label">Common mistake → recovery</strong> AI adds services, queues, or abstraction layers because they appear in familiar patterns. Require a requirement that justifies each major component. If uncertainty blocks a decision, use source inspection, calculation, or tests against the real dependency. Record the limit until evidence resolves it.</p>
+<p class="stage-field"><strong class="field-label">Exit evidence</strong> Approved design records, contracts, dependency choices, and an explicit treatment of the important failure paths.</p>
+<blockquote>
+<p><strong>Reusable prompt:</strong> Propose the simplest design that meets [requirement IDs] within [constraints]. Compare the viable alternatives. Include component responsibilities, contracts, data rules, failure behavior, and dependency versions. Link decisions to requirements. Identify unresolved trade-offs for human approval before implementation.</p>
+</blockquote>
+<h3 class="stage-title" id="stage-05"><span class="stage-number">05</span><span>5.5 Plan small, verifiable increments</span></h3>
+
+<p class="stage-field"><strong class="field-label">Purpose</strong> Convert the approved design into work that AI can finish and humans can assess.</p>
+<p class="stage-field"><strong class="field-label">Recommended practices</strong> Plan vertical slices that deliver observable behavior across the needed layers. State dependencies and order. Include test work, data changes, documentation, and release implications. Separate behavior changes from unrelated refactoring. Keep each increment small enough for a meaningful review, without imposing an arbitrary line limit.</p>
+<p class="stage-field"><strong class="field-label">Give or ask the AI</strong> Request a task table with requirement IDs, affected components, likely files, dependencies, tests, and completion evidence. Ask for gaps between the specification, design, and plan. A file list is a starting assumption, not permission to ignore a necessary related change.</p>
+<p class="stage-field"><strong class="field-label">Human decision and check</strong> Approve the sequence, scope, and evidence for each task. Confirm that early increments use the intended architecture and meet the quality criteria applicable to their behavior. An incomplete product can contain production-quality increments.</p>
+<p class="stage-field"><strong class="field-label">Common mistake → recovery</strong> A single task says “implement the backend.” Divide it by externally observable behavior. If tasks are too interdependent for separate review, revise the interface boundaries or combine the tightly coupled work.</p>
+<p class="stage-field"><strong class="field-label">Exit evidence</strong> An approved plan with no unexplained requirement gaps and no hidden implementation decisions. Spec Kit’s current process includes artifact analysis before implementation and a later convergence check. <a class="citation" href="#ref-02" aria-label="Reference 2">[2]</a></p>
+<blockquote>
+<p><strong>Reusable prompt:</strong> Derive an incremental plan from [approved specification and design]. For each task, list requirement IDs, dependencies, affected components, tests, and completion evidence. Include integration and documentation work. Identify inconsistencies. Stop before implementation until I approve the plan.</p>
+</blockquote>
+<h3 class="stage-title" id="stage-06"><span class="stage-number">06</span><span>5.6 Establish tests and expected results</span></h3>
+
+<p class="stage-field"><strong class="field-label">Purpose</strong> Define how the team will detect incorrect behavior before it accepts the implementation.</p>
+<p class="stage-field"><strong class="field-label">Recommended practices</strong> Derive acceptance tests from approved examples. Ask AI to create unit, integration, and contract tests where each adds useful evidence. Include rejected inputs, boundaries, interrupted work, repeated operations, and concurrency when relevant. Use property-based tests for rules that hold across a range of inputs. Hypothesis is one implementation for Python. <a class="citation" href="#ref-12" aria-label="Reference 12">[12]</a></p>
+<p class="stage-field"><strong class="field-label">Give or ask the AI</strong> Supply expected outputs, reference calculations, invariants, and representative fixtures. Ask which requirements each test checks and which remain uncovered. Require assertions about observable results. For defect repairs, show the regression test failing for the intended reason before the repair and passing after it.</p>
+<p class="stage-field"><strong class="field-label">Human decision and check</strong> Approve expected results and tolerances. Check that mocks do not replace the behavior under assessment. Ask whether a deliberately wrong result would fail the test. AI can create a controlled mutation or a known-bad input to check that property.</p>
+<p class="stage-field"><strong class="field-label">Common mistake → recovery</strong> AI copies its implementation logic into the expected-result calculation. Replace that calculation with independently checked examples or a distinct reference method. A compile error is not evidence that a behavioral test detects the intended defect.</p>
+<p class="stage-field"><strong class="field-label">Exit evidence</strong> A reviewed test design, AI-written test assets, credible expected results, and a clear coverage map. The oracle problem remains even when test generation is automated. <a class="citation" href="#ref-09" aria-label="Reference 9">[9]</a></p>
+<blockquote>
+<p><strong>Reusable prompt:</strong> Create tests for [requirement IDs] from [approved examples and rules]. Explain each expected result and its source. Include relevant failure and boundary cases. Identify uncovered behavior and weak mocks. Show that the tests detect the targeted incorrect behavior. Do not change approved expectations to fit code.</p>
+</blockquote>
+<h3 class="stage-title" id="stage-07"><span class="stage-number">07</span><span>5.7 Implement one bounded change across files</span></h3>
+
+<p class="stage-field"><strong class="field-label">Purpose</strong> Produce the complete implementation of one authorized increment.</p>
+<p class="stage-field"><strong class="field-label">Recommended practices</strong> Work from an identified repository baseline. Ask AI to read the relevant specification, design, contracts, and current files before editing. Let it coordinate changes across interfaces, implementation, storage, tests, and build files. Require minimal necessary changes and preserve unrelated work. Run focused checks during implementation.</p>
+<p class="stage-field"><strong class="field-label">Give or ask the AI</strong> Identify the task and approved artifacts. State allowed changes, compatibility requirements, evidence, and stop conditions. If AI needs a new dependency or a changed contract, require a proposal before it makes that decision. All source and configuration edits remain AI work.</p>
+<p class="stage-field"><strong class="field-label">Human decision and check</strong> Inspect the change summary and actual diff. Check whether AI changed tests, dependencies, public interfaces, or behavior outside the task. Resolve genuine design questions. Do not repair a small defect manually. Describe it and ask AI to correct it.</p>
+<p class="stage-field"><strong class="field-label">Common mistake → recovery</strong> AI changes many unrelated files or repeatedly rewrites the same component. Stop the task, inspect the diff, preserve valid work, and restore the last accepted state where needed. Narrow the task or revisit the design. Tool checkpoints do not replace version control. <a class="citation" href="#ref-19" aria-label="Reference 19">[19]</a></p>
+<p class="stage-field"><strong class="field-label">Exit evidence</strong> A coherent diff, focused check results, requirement links, and explicit blockers. No unapproved behavior change remains hidden in the patch.</p>
+<blockquote>
+<p><strong>Reusable prompt:</strong> Implement [task ID] against [approved artifact versions]. Preserve [contracts and behavior]. Change only what this task requires. Run [checks]. Report the files changed, results, and unresolved issues. Stop if completion requires an unapproved requirement, dependency, or design change.</p>
+</blockquote>
+<p><strong>Claude Code example.</strong> Use Plan Mode for repository inspection and the proposed approach. After approval, ask Claude to implement the named task and run its checks. Ask it to create or update project instructions through conversation. The user does not need to edit <code>CLAUDE.md</code> or source files. <a class="citation" href="#ref-05" aria-label="Reference 5">[5]</a> <a class="citation" href="#ref-23" aria-label="Reference 23">[23]</a></p>
+<p><strong>When work runs in parallel.</strong> Start only after shared contracts are stable. Give each agent a separate work area and bounded task. Assign one integration owner. Review overlapping changes and run the combined suite after integration. A passing result from each isolated branch does not establish that the combined result passes.</p>
+<h3 class="stage-title" id="stage-08"><span class="stage-number">08</span><span>5.8 Verify the integrated result</span></h3>
+
+<p class="stage-field"><strong class="field-label">Purpose</strong> Establish whether the actual software meets the authorized requirements in the tested environment.</p>
+<p class="stage-field"><strong class="field-label">Recommended practices</strong> Combine the changes, then build and test the combined version. Use real dependencies for important integration behavior. Check output artifacts as well as exit codes. Record the tested commit, environment, commands, fixtures, and results. Distinguish passed, failed, skipped, and not-run checks.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable reference table"><table>
+<thead>
+<tr>
+<th scope="col">Check</th>
+<th scope="col">What it can establish</th>
+<th scope="col">Important limit</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Build, type check, and static analysis</td>
+<td>Structural consistency and selected defect patterns</td>
+<td>Successful compilation does not establish correct behavior.</td>
+</tr>
+<tr>
+<td>Unit tests</td>
+<td>Local rules and boundaries</td>
+<td>Isolated substitutes can hide integration failures.</td>
+</tr>
+<tr>
+<td>Integration and contract tests</td>
+<td>Real component behavior and interface expectations</td>
+<td>A contract test does not exercise the whole business workflow.</td>
+</tr>
+<tr>
+<td>End-to-end tests</td>
+<td>Selected complete workflows</td>
+<td>A small set covers only selected paths.</td>
+</tr>
+<tr>
+<td>Property and reference-result tests</td>
+<td>General rules or agreement with a trusted basis</td>
+<td>Input limits and oracle quality still restrict the conclusion.</td>
+</tr>
+<tr>
+<td>Load, interruption, and recovery tests</td>
+<td>Behavior under specified operating conditions</td>
+<td>Results apply to the tested workloads and environments.</td>
+</tr>
+</tbody></table></div>
+<p>Pact documents contract testing for interactions between applications. This supplements the broader verification plan. <a class="citation" href="#ref-11" aria-label="Reference 11">[11]</a></p>
+<p class="stage-field"><strong class="field-label">Give or ask the AI</strong> Ask for a requirement-to-result table and raw output locations. Require measurements for performance claims. When an environment prevents a check, ask AI to mark the evidence gap instead of reporting success.</p>
+<p class="stage-field"><strong class="field-label">Human decision and check</strong> Confirm that tests ran against the release candidate. Inspect important failures, assertions, skipped tests, and unexpected changes to thresholds. Check both results and the reason those results are sufficient.</p>
+<p class="stage-field"><strong class="field-label">Common mistake → recovery</strong> “All tests passed” omits that half the suite did not run. Request the full test inventory and execution status. High coverage is a useful gap indicator, but does not establish adequate assertions or correct requirements. <a class="citation" href="#ref-13" aria-label="Reference 13">[13]</a></p>
+<p class="stage-field"><strong class="field-label">Exit evidence</strong> A reproducible evidence record with no unexplained failure or missing mandatory check.</p>
+<blockquote>
+<p><strong>Reusable prompt:</strong> Verify the combined change at [commit] against [requirement IDs]. Run the approved checks in [environment]. Report each command, outcome, measured value, and evidence location. Separate passed, failed, skipped, and not-run checks. Do not claim verification for a check you could not run.</p>
+</blockquote>
+<h3 class="stage-title" id="stage-09"><span class="stage-number">09</span><span>5.9 Diagnose defects and recover deliberately</span></h3>
+
+<p class="stage-field"><strong class="field-label">Purpose</strong> Correct the cause of a failure without weakening the requirement or damaging accepted behavior.</p>
+<p class="stage-field"><strong class="field-label">Recommended practices</strong> Reproduce the failure with the smallest useful case. Record expected and actual behavior. Ask AI to form a causal hypothesis and run a discriminating check before editing. Classify the problem as a requirement, design, code, test, data, or environment defect. Change the responsible artifact and rerun affected checks.</p>
+<p class="stage-field"><strong class="field-label">Give or ask the AI</strong> Supply logs, inputs, versions, reproduction steps, and the relevant requirement. Ask for the first failing boundary and evidence for the proposed cause. Keep failed attempts and their lessons in a short defect record.</p>
+<p class="stage-field"><strong class="field-label">Human decision and check</strong> Decide whether the original expected behavior remains correct. Approve any requirement or design change. Verify that AI did not delete an assertion, suppress an error, or broaden a tolerance merely to get a pass.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable reference table"><table>
+<thead>
+<tr>
+<th scope="col">Failure pattern</th>
+<th scope="col">Recovery</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>No clear expected result</td>
+<td>Return to the requirement and its decision owner.</td>
+</tr>
+<tr>
+<td>Intermittent failure</td>
+<td>Inspect uncontrolled state, timing, order, and shared resources. Preserve the failing evidence.</td>
+</tr>
+<tr>
+<td>Repeated fixes produce new defects</td>
+<td>Restore an accepted baseline and reassess the design or task boundary.</td>
+</tr>
+<tr>
+<td>AI repeats an unsuccessful approach</td>
+<td>Start a new session from the saved defect record and current artifacts.</td>
+</tr>
+</tbody></table></div>
+<p>pytest documents uncontrolled state and test-order effects as common causes of flaky tests. Repeated reruns alone do not repair those causes. <a class="citation" href="#ref-25" aria-label="Reference 25">[25]</a></p>
+<p class="stage-field"><strong class="field-label">Exit evidence</strong> A supported cause, an AI-written repair, and a regression check that detects the original defect. Record any remaining limitation.</p>
+<blockquote>
+<p><strong>Reusable prompt:</strong> Reproduce [failure] against [requirement and environment]. State expected and actual behavior. Rank possible causes and test the leading hypothesis. Repair the cause with the smallest coherent change. Preserve acceptance criteria. Show the regression result and affected-suite results.</p>
+</blockquote>
+<p><strong>Claude Code recovery limit.</strong> Its checkpoint documentation excludes file changes made through Bash from rewind coverage. Use repository history for code recovery. Treat external data recovery as a separate operation. <a class="citation" href="#ref-19" aria-label="Reference 19">[19]</a></p>
+<h3 class="stage-title" id="stage-10"><span class="stage-number">10</span><span>5.10 Review and refactor for maintainability</span></h3>
+
+<p class="stage-field"><strong class="field-label">Purpose</strong> Check whether the change is understandable, structurally sound, and suitable for future modification.</p>
+<p class="stage-field"><strong class="field-label">Recommended practices</strong> Review the actual diff against the specification and design. Ask a separate reviewer to seek counterexamples and unjustified complexity. Check error paths, data handling, dependencies, and tests. Require each finding to identify the affected requirement, file, consequence, and proposed remedy. Google’s review guidance addresses design, function, complexity, tests, naming, comments, and documentation. <a class="citation" href="#ref-14" aria-label="Reference 14">[14]</a></p>
+<p class="stage-field"><strong class="field-label">Give or ask the AI</strong> Supply the approved artifacts, diff, and evidence. Ask for findings before edits. Then authorize a bounded repair or refactoring task. Refactoring changes internal structure while preserving observable behavior. Treat a changed external result as a behavior change with its own approval. <a class="citation" href="#ref-15" aria-label="Reference 15">[15]</a></p>
+<p class="stage-field"><strong class="field-label">Human decision and check</strong> Assess high-impact findings and the explanation of critical paths. A reviewer must understand what the change does. If AI explanations remain unclear, request smaller changes or a clearer design. Writing zero code does not prevent a qualified human from reading the code.</p>
+<p class="stage-field"><strong class="field-label">Common mistake → recovery</strong> The same AI declares its own code “production-ready” without evidence. Require concrete findings and test results. Another model can broaden review, but shared assumptions can still produce shared mistakes. Reject cosmetic rewrites that increase review work without a stated benefit.</p>
+<p class="stage-field"><strong class="field-label">Exit evidence</strong> Findings are resolved or explicitly accepted. Refactoring preserves the approved behavior and passes affected checks.</p>
+<blockquote>
+<p><strong>Reusable prompt:</strong> Review [diff] against [specification, design, and evidence]. Report concrete defects, unnecessary complexity, and maintenance risks. Cite files and observable consequences. Do not edit yet. After approval, refactor only [scope], preserve external behavior, and rerun the affected checks.</p>
+</blockquote>
+<h3 class="stage-title" id="stage-11"><span class="stage-number">11</span><span>5.11 Validate intended use and production readiness</span></h3>
+
+<p class="stage-field"><strong class="field-label">Purpose</strong> Establish that the delivered behavior serves real tasks under the agreed operating conditions.</p>
+<p class="stage-field"><strong class="field-label">Recommended practices</strong> Use representative workflows, data sizes, timing, and failures. Observe actual outputs with a domain expert. Check the quality targets that unit tests cannot establish. Evaluate installation, repeated use, interruptions, recovery, and operational visibility. Choose reliability targets from the intended use. Service-level objectives make such targets measurable. <a class="citation" href="#ref-17" aria-label="Reference 17">[17]</a></p>
+<p class="stage-field"><strong class="field-label">Give or ask the AI</strong> Ask AI to prepare and execute acceptance scenarios, collect outputs, measure constraints, and identify unsupported claims. For an engineering calculation, compare units and numerical results with an approved reference. For a data workflow, reconcile counts, totals, rejected records, and rerun behavior.</p>
+<p class="stage-field"><strong class="field-label">Human decision and check</strong> Domain owners decide whether the results are useful and correct. Technical owners judge operating evidence. The release owner accepts the candidate or records the blocking gaps. AI can summarize the evidence, but cannot supply an absent business decision.</p>
+<p class="stage-field"><strong class="field-label">Common mistake → recovery</strong> A successful demonstration with a small fixture substitutes for operating evidence. Test the actual constraints in the release candidate. If the user task is wrong, change the specification and repeat affected stages.</p>
+<p class="stage-field"><strong class="field-label">Exit evidence</strong> Accepted user scenarios and measured production criteria. Failed or untested mandatory criteria block release. Appendix 2 defines this boundary within the report’s scope.</p>
+<blockquote>
+<p><strong>Reusable prompt:</strong> Assess [release candidate] for [approved user tasks and operating conditions]. Execute the acceptance scenarios and measure each quality target. Show actual outputs and unresolved gaps. Separate specification conformance from fitness for the intended use. Do not label untested criteria as passed.</p>
+</blockquote>
+<h3 class="stage-title" id="stage-12"><span class="stage-number">12</span><span>5.12 Document, release, and hand over</span></h3>
+
+<p class="stage-field"><strong class="field-label">Purpose</strong> Deliver software that another person can install, operate, diagnose, and change from retained information.</p>
+<p class="stage-field"><strong class="field-label">Recommended practices</strong> Ask AI to update usage instructions, interface references, design decisions, release notes, and recovery procedures. Generate all packaging and release scripts. Test the documented setup from a clean environment. Identify the exact release artifact and the source revision that produced it. Reliable release processes require repeatable builds and intentional configuration changes. <a class="citation" href="#ref-18" aria-label="Reference 18">[18]</a></p>
+<p class="stage-field"><strong class="field-label">Give or ask the AI</strong> Request a handover package with setup, execution, monitoring, failure diagnosis, data recovery, known limits, and ownership. Require a walkthrough by someone who did not implement the change. For a script, include scheduling, inputs, outputs, exit statuses, and safe rerun instructions.</p>
+<p class="stage-field"><strong class="field-label">Human decision and check</strong> Confirm that the documentation matches the release. Approve deployment at the planned decision point. Verify initial operation against the same acceptance criteria. Confirm that an owner can respond when the software fails.</p>
+<p class="stage-field"><strong class="field-label">Common mistake → recovery</strong> AI describes commands it did not run or claims that restoring old code reverses a data migration. Exercise setup and recovery in the representative environment. Record which data changes require a separate recovery procedure.</p>
+<p class="stage-field"><strong class="field-label">Exit evidence</strong> A versioned release, checked instructions, tested recovery procedures, ownership, and retained evidence.</p>
+<blockquote>
+<p><strong>Reusable prompt:</strong> Prepare the handover for [release]. Update all affected documents and generate the release artifacts. Test setup from a clean environment. Check recovery procedures against the actual data changes. Record known limits and owners. Present the release evidence before the deployment decision.</p>
+</blockquote>
+<h3 class="stage-title" id="stage-13"><span class="stage-number">13</span><span>5.13 Maintain the specification through later changes</span></h3>
+
+<p class="stage-field"><strong class="field-label">Purpose</strong> Preserve alignment as the system, dependencies, and requirements evolve.</p>
+<p class="stage-field"><strong class="field-label">Recommended practices</strong> Start each change from the current released baseline. Ask AI to map effects across requirements, contracts, consumers, data, tests, and operating instructions. Preserve stable IDs and mark superseded decisions. Revalidate relevant behavior after dependency upgrades. Use compatibility stages when old and new consumers must coexist.</p>
+<p class="stage-field"><strong class="field-label">Give or ask the AI</strong> Supply the change request and current artifacts. Ask for the proposed specification diff before implementation. Request a transition plan for interfaces and data. Expand–migrate–contract can separate adding a replacement interface, moving consumers, and removing the old interface. <a class="citation" href="#ref-16" aria-label="Reference 16">[16]</a></p>
+<p class="stage-field"><strong class="field-label">Human decision and check</strong> Approve changed intent and compatibility commitments. Decide what happens to existing data and clients. Check that new tests supplement existing obligations unless the approved specification explicitly replaces them.</p>
+<p class="stage-field"><strong class="field-label">Common mistake → recovery</strong> Code changes accumulate while the specification becomes stale. Stop the affected work and reconcile the differences. Separate intended changes, existing defects, and accidental drift. Do not revise the specification merely to describe whatever the code currently does.</p>
+<p class="stage-field"><strong class="field-label">Exit evidence</strong> A consistent new baseline of specification, design, code, tests, evidence, and documentation. Retain the prior release and the reasons for change.</p>
+<blockquote>
+<p><strong>Reusable prompt:</strong> Assess [change request] against the current release and approved artifacts. Identify affected requirement IDs, contracts, data, tests, and documents. Draft the specification changes and transition plan. Preserve existing commitments unless I approve their replacement. Implement only after the changed baseline is approved.</p>
+</blockquote>
+<h3 id="system-types">5.14 Adapt the same workflow to different systems</h3>
+
+<p>The artifacts scale with the problem. The obligation to define behavior and establish evidence remains.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable reference table"><table>
+<thead>
+<tr>
+<th scope="col">System type</th>
+<th scope="col">Specification emphasis</th>
+<th scope="col">Evidence that matters</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>User-facing application</td>
+<td>User tasks, state transitions, validation rules, responsiveness, and accessibility needs</td>
+<td>Full workflows, persisted state, error recovery, and visual interaction checks</td>
+</tr>
+<tr>
+<td>Microservice</td>
+<td>Interface contracts, timeouts, retries, duplicate handling, concurrency, and compatibility</td>
+<td>Consumer/provider checks, real dependency tests, interruption tests, and workload measurements</td>
+</tr>
+<tr>
+<td>Operational script</td>
+<td>Inputs, file effects, exit statuses, reruns, interruption, and resource limits</td>
+<td>Representative files, malformed inputs, repeat execution, and a clean-environment run</td>
+</tr>
+<tr>
+<td>Engineering workflow</td>
+<td>Units, assumptions, equations, numerical tolerance, and valid input ranges</td>
+<td>Reference calculations, boundary analysis, conservation rules, and reproducibility</td>
+</tr>
+<tr>
+<td>Data workflow</td>
+<td>Schemas, missing values, duplicates, ordering, time rules, reconciliation, and schema changes</td>
+<td>Counts and totals, representative distributions, reruns, backfills, and recovery</td>
+</tr>
+<tr>
+<td>Long-lived enterprise system</td>
+<td>Existing contracts, data migration, dependency life cycles, and incremental replacement</td>
+<td>Regression evidence, transition checks, compatibility results, and complete handover</td>
+</tr>
+</tbody></table></div>
+</section><section class="chapter" aria-labelledby="concepts"><h2 id="concepts">6. Underlying concepts, terms, and principles</h2>
+
+<h3 id="principles">6.1 Principles that govern the workflow</h3>
+
+<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable reference table"><table>
+<thead>
+<tr>
+<th scope="col">Principle</th>
+<th scope="col">Consequence</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Intent precedes implementation.</td>
+<td>Approve behavior before AI makes changes that depend on it.</td>
+</tr>
+<tr>
+<td>Evidence precedes acceptance.</td>
+<td>A plausible explanation is not an executed test result.</td>
+</tr>
+<tr>
+<td>The specification can change through an explicit decision.</td>
+<td>Preserve the reason and update affected artifacts.</td>
+</tr>
+<tr>
+<td>Correctness needs an external basis.</td>
+<td>Check expected results against domain knowledge, contracts, or trusted references.</td>
+</tr>
+<tr>
+<td>Small increments improve fault isolation.</td>
+<td>Review a coherent behavior change and its related files together.</td>
+</tr>
+<tr>
+<td>Independence comes in degrees.</td>
+<td>A second AI review supplements other evidence. It does not guarantee an independent oracle.</td>
+</tr>
+<tr>
+<td>Quality targets depend on use.</td>
+<td>Define operating conditions and thresholds before judging results.</td>
+</tr>
+<tr>
+<td>Failure is information about a specific layer.</td>
+<td>Diagnose the requirement, design, code, test, data, or environment before repair.</td>
+</tr>
+<tr>
+<td>Durable artifacts carry project memory.</td>
+<td>A new session starts from the repository state and saved decisions, not assumed chat memory.</td>
+</tr>
+</tbody></table></div>
+<h3 id="glossary">6.2 Glossary</h3>
+
+<p>Definitions below use each term in the sense intended by this report.</p>
+<h4>Specification and decisions</h4>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable reference table"><table>
+<thead>
+<tr>
+<th scope="col">Term</th>
+<th scope="col">Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Acceptance criterion</td>
+<td>A condition that must hold before the responsible person accepts a result.</td>
+</tr>
+<tr>
+<td>Artifact</td>
+<td>A retained project item, such as a specification, source file, test, or evidence record.</td>
+</tr>
+<tr>
+<td>Baseline</td>
+<td>An identified, accepted version of the artifacts used as the starting point for work.</td>
+</tr>
+<tr>
+<td>Constraint</td>
+<td>A limit on behavior or implementation, such as a required platform or maximum processing time.</td>
+</tr>
+<tr>
+<td>Decision record</td>
+<td>A record of a technical choice, its reasons, alternatives, and consequences. Often called an architectural decision record.</td>
+</tr>
+<tr>
+<td>EARS</td>
+<td>Easy Approach to Requirements Syntax. Patterns that structure natural-language requirements around conditions and responses.</td>
+</tr>
+<tr>
+<td>Functional requirement</td>
+<td>A required behavior, such as rejecting a malformed input.</td>
+</tr>
+<tr>
+<td>Invariant</td>
+<td>A condition that must remain true across the specified operations or states.</td>
+</tr>
+<tr>
+<td>Nonfunctional requirement</td>
+<td>A required quality or constraint, such as latency, capacity, or maintainability.</td>
+</tr>
+<tr>
+<td>Quality attribute</td>
+<td>A system characteristic that matters to its use, such as reliability or modifiability.</td>
+</tr>
+<tr>
+<td>Quality-attribute scenario</td>
+<td>A condition, stimulus, and measurable response used to make a quality requirement concrete.</td>
+</tr>
+<tr>
+<td>Specification</td>
+<td>An explicit description of required behavior and constraints against which work can be assessed.</td>
+</tr>
+<tr>
+<td>Formal specification</td>
+<td>A specification expressed with mathematically defined syntax and semantics. A Markdown document does not meet this definition by itself.</td>
+</tr>
+<tr>
+<td>Executable specification</td>
+<td>A machine-runnable representation of specified behavior, such as acceptance scenarios connected to tests. Prose alone does not execute.</td>
+</tr>
+<tr>
+<td>Spec drift</td>
+<td>A difference between approved intent and the artifacts or behavior that should represent it.</td>
+</tr>
+<tr>
+<td>Traceability</td>
+<td>Links between requirements, decisions, tasks, implementation, tests, and evidence.</td>
+</tr>
+</tbody></table></div>
+<h4>AI and development tools</h4>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable reference table"><table>
+<thead>
+<tr>
+<th scope="col">Term</th>
+<th scope="col">Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Artificial intelligence (AI)</td>
+<td>The broader field and systems used here to interpret instructions and produce development artifacts.</td>
+</tr>
+<tr>
+<td>Large language model (LLM)</td>
+<td>A trained model that generates text or structured outputs from its input. Its output can contain errors.</td>
+</tr>
+<tr>
+<td>Coding agent</td>
+<td>A software system that selects development actions, invokes tools, and uses results to pursue a bounded task.</td>
+</tr>
+<tr>
+<td>Agentic</td>
+<td>Describes a system’s use of action selection and environmental feedback with some autonomy.</td>
+</tr>
+<tr>
+<td>Multi-agent system</td>
+<td>Multiple interacting agents with separately controlled actions. A set of role names in one prompt is not sufficient.</td>
+</tr>
+<tr>
+<td>Prompt</td>
+<td>Instructions and relevant information sent to an AI model or coding tool.</td>
+</tr>
+<tr>
+<td>Context</td>
+<td>The instructions, files, conversation, and tool results available to the model for a particular response.</td>
+</tr>
+<tr>
+<td>Context window</td>
+<td>The finite amount of input and output information a model can process in one interaction.</td>
+</tr>
+<tr>
+<td>Markdown</td>
+<td>A plain-text format for headings, links, lists, and other document structure.</td>
+</tr>
+<tr>
+<td>Compaction</td>
+<td>A condensed representation of conversation history. It can omit details and does not replace authoritative project files.</td>
+</tr>
+<tr>
+<td>Tool call</td>
+<td>An action request to software that reads, edits, executes, or inspects something outside the model’s text output.</td>
+</tr>
+<tr>
+<td>Checkpoint</td>
+<td>A saved tool or conversation state with defined restoration limits.</td>
+</tr>
+<tr>
+<td>Plan Mode</td>
+<td>A tool mode for inspection and proposed work before implementation. Exact permitted operations depend on the tool.</td>
+</tr>
+<tr>
+<td>Integrated development environment (IDE)</td>
+<td>An application that combines code navigation, editing, execution, and other development tools.</td>
+</tr>
+</tbody></table></div>
+<h4>Implementation and integration</h4>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable reference table"><table>
+<thead>
+<tr>
+<th scope="col">Term</th>
+<th scope="col">Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Application programming interface (API)</td>
+<td>A defined interface through which software components interact.</td>
+</tr>
+<tr>
+<td>HTTP</td>
+<td>Hypertext Transfer Protocol. A protocol for exchanging requests and responses, commonly used by web services.</td>
+</tr>
+<tr>
+<td>SQL</td>
+<td>Structured Query Language. A language used to define, query, and change data in many database systems.</td>
+</tr>
+<tr>
+<td>Microservice</td>
+<td>A separately deployable service with a bounded responsibility and explicit interfaces.</td>
+</tr>
+<tr>
+<td>Cohesion / coupling</td>
+<td>Cohesion concerns how closely a component’s responsibilities belong together. Coupling concerns dependencies between components.</td>
+</tr>
+<tr>
+<td>Payload</td>
+<td>The data carried in a request, response, or message.</td>
+</tr>
+<tr>
+<td>State / state transition</td>
+<td>State is the condition of a system at a point in time. A transition changes that condition.</td>
+</tr>
+<tr>
+<td>Contract</td>
+<td>The agreed input, output, error, and interaction rules at a component boundary.</td>
+</tr>
+<tr>
+<td>OpenAPI</td>
+<td>A language-independent specification format for HTTP APIs. It does not express every business rule by itself.</td>
+</tr>
+<tr>
+<td>Schema</td>
+<td>The defined structure, types, and constraints of data.</td>
+</tr>
+<tr>
+<td>Migration</td>
+<td>A controlled change to stored data, its structure, or an interface’s consumers.</td>
+</tr>
+<tr>
+<td>Dependency</td>
+<td>Another component, library, tool, or service that the software requires.</td>
+</tr>
+<tr>
+<td>Lockfile</td>
+<td>A file that records resolved dependency versions for repeatable installation.</td>
+</tr>
+<tr>
+<td>Version control</td>
+<td>A system that records file revisions and supports comparison and recovery. Git is one example.</td>
+</tr>
+<tr>
+<td>Commit</td>
+<td>An identified revision in version control.</td>
+</tr>
+<tr>
+<td>Branch / worktree</td>
+<td>A branch tracks a line of revisions. A worktree gives a branch a separate working directory.</td>
+</tr>
+<tr>
+<td>Diff</td>
+<td>The actual additions, changes, and deletions between file versions.</td>
+</tr>
+<tr>
+<td>Vertical slice</td>
+<td>A bounded behavior implemented across all layers it needs.</td>
+</tr>
+<tr>
+<td>Refactoring</td>
+<td>Internal restructuring that preserves observable behavior.</td>
+</tr>
+<tr>
+<td>Regression</td>
+<td>Previously accepted behavior that fails after a change.</td>
+</tr>
+<tr>
+<td>Compatibility</td>
+<td>The ability to continue meeting existing interface or data expectations after a change.</td>
+</tr>
+<tr>
+<td>Idempotency</td>
+<td>Repeating an operation has the same intended effect as one execution within its stated conditions.</td>
+</tr>
+<tr>
+<td>Transaction</td>
+<td>A group of data operations with defined consistency and commit behavior.</td>
+</tr>
+<tr>
+<td>Concurrency</td>
+<td>Operations that progress during overlapping time periods and can interact through shared state.</td>
+</tr>
+<tr>
+<td>Rollback</td>
+<td>Restoration of an earlier software or data state. Code rollback and data rollback can require different procedures.</td>
+</tr>
+<tr>
+<td>Backfill</td>
+<td>Processing historical data to populate or correct a dataset under a defined rule.</td>
+</tr>
+</tbody></table></div>
+<h4>Testing and release evidence</h4>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable reference table"><table>
+<thead>
+<tr>
+<th scope="col">Term</th>
+<th scope="col">Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Verification</td>
+<td>Assessment of whether the software meets its specified requirements.</td>
+</tr>
+<tr>
+<td>Validation</td>
+<td>Assessment of whether the software fits its intended use.</td>
+</tr>
+<tr>
+<td>Test oracle</td>
+<td>The basis for deciding whether an observed result is correct.</td>
+</tr>
+<tr>
+<td>Assertion</td>
+<td>An executable test condition that checks an expected property or result. AI writes it in this workflow.</td>
+</tr>
+<tr>
+<td>Fixture</td>
+<td>A controlled input or environment used for a test.</td>
+</tr>
+<tr>
+<td>Mock</td>
+<td>A substitute that imitates a dependency in a test. Its behavior can differ from the real dependency.</td>
+</tr>
+<tr>
+<td>Unit test</td>
+<td>A check of a small part of the software with limited dependencies.</td>
+</tr>
+<tr>
+<td>Integration test</td>
+<td>A check of interactions between real components or dependencies.</td>
+</tr>
+<tr>
+<td>Contract test</td>
+<td>A check that an interaction conforms to agreed consumer and provider expectations.</td>
+</tr>
+<tr>
+<td>End-to-end test</td>
+<td>A check of a complete selected workflow through the system.</td>
+</tr>
+<tr>
+<td>Characterization test</td>
+<td>A test that records current behavior, especially before changing an existing system.</td>
+</tr>
+<tr>
+<td>Property-based test</td>
+<td>A test that generates inputs to seek violations of a stated general property.</td>
+</tr>
+<tr>
+<td>Metamorphic test</td>
+<td>A test of an expected relation between results when inputs change in a defined way.</td>
+</tr>
+<tr>
+<td>Mutation test</td>
+<td>A check that tests detect deliberate small changes to program behavior.</td>
+</tr>
+<tr>
+<td>Static analysis / linter</td>
+<td>Checks that inspect code without exercising its complete runtime behavior. A linter often checks style and common error patterns.</td>
+</tr>
+<tr>
+<td>Type check</td>
+<td>A check that operations and values obey a language’s type rules.</td>
+</tr>
+<tr>
+<td>Coverage</td>
+<td>A measure of which code or requirements the tests exercise. Coverage alone does not measure assertion quality.</td>
+</tr>
+<tr>
+<td>Flaky test</td>
+<td>A test that can pass or fail without an intended change to the assessed behavior.</td>
+</tr>
+<tr>
+<td>Continuous integration (CI)</td>
+<td>Automated build and test checks applied as changes enter the shared codebase.</td>
+</tr>
+<tr>
+<td>Build</td>
+<td>The process that converts source and configuration into runnable or distributable software.</td>
+</tr>
+<tr>
+<td>Reproducible build</td>
+<td>A build whose inputs and environment are sufficiently controlled to repeat the stated result. Byte-identical output needs stricter controls.</td>
+</tr>
+<tr>
+<td>Release candidate</td>
+<td>An identified version proposed for release and subjected to the required checks.</td>
+</tr>
+<tr>
+<td>Service-level objective (SLO)</td>
+<td>A numerical reliability target measured over defined events or a time window.</td>
+</tr>
+<tr>
+<td>Observability</td>
+<td>The ability to infer relevant internal behavior from outputs such as logs, metrics, and traces.</td>
+</tr>
+<tr>
+<td>Evidence record</td>
+<td>Retained facts about what was checked, on which version, under which conditions, with which results.</td>
+</tr>
+</tbody></table></div>
+</section><section class="chapter" aria-labelledby="references"><h2 id="references">7. References</h2>
+
+<p>These are primary sources: official tool documentation, original method descriptions, research publications, and engineering guidance from its authors. Historical sources support enduring principles. Current tool documentation supports the October 2026 capability statements.</p>
+<p>Dates below refer to publication or the stated page update. Undated pages were checked on October 16, 2026. Reference numbers next to a passage identify its supporting sources. The workflow and examples are this report’s synthesis.</p>
+<div class="references"><article class="reference" id="ref-01"><span class="ref-number">01</span><div><h3>Spec-driven development with AI: Get started with a new open source toolkit</h3><p><strong>Author:</strong> Den Delimarsky · GitHub<br><strong>Date:</strong> September 2, 2025</p><a href="https://github.blog/ai-and-ml/generative-ai/spec-driven-development-with-ai-get-started-with-a-new-open-source-toolkit/">https://github.blog/ai-and-ml/generative-ai/spec-driven-development-with-ai-get-started-with-a-new-open-source-toolkit/</a></div></article>
+<article class="reference" id="ref-02"><span class="ref-number">02</span><div><h3>Spec-Driven Development Quickstart</h3><p><strong>Author:</strong> GitHub · Spec Kit contributors<br><strong>Date:</strong> Undated · living documentation</p><a href="https://github.github.io/spec-kit/quickstart.html">https://github.github.io/spec-kit/quickstart.html</a></div></article>
+<article class="reference" id="ref-03"><span class="ref-number">03</span><div><h3>Specs</h3><p><strong>Author:</strong> Amazon Web Services · Kiro documentation team<br><strong>Date:</strong> Undated · living documentation</p><a href="https://kiro.dev/docs/specs/">https://kiro.dev/docs/specs/</a></div></article>
+<article class="reference" id="ref-04"><span class="ref-number">04</span><div><h3>How Claude Code works</h3><p><strong>Author:</strong> Anthropic<br><strong>Date:</strong> Undated · living documentation</p><a href="https://code.claude.com/docs/en/how-claude-code-works">https://code.claude.com/docs/en/how-claude-code-works</a></div></article>
+<article class="reference" id="ref-05"><span class="ref-number">05</span><div><h3>Best practices for Claude Code</h3><p><strong>Author:</strong> Anthropic<br><strong>Date:</strong> Undated · living documentation</p><a href="https://code.claude.com/docs/en/best-practices">https://code.claude.com/docs/en/best-practices</a></div></article>
+<article class="reference" id="ref-06"><span class="ref-number">06</span><div><h3>EARS: Easy Approach to Requirements Syntax</h3><p><strong>Author:</strong> Alistair Mavin<br><strong>Date:</strong> Undated · method first published in 2009</p><a href="https://alistairmavin.com/ears/">https://alistairmavin.com/ears/</a></div></article>
+<article class="reference" id="ref-07"><span class="ref-number">07</span><div><h3>ADD 3.0: Rethinking Drivers and Decisions in the Design Process</h3><p><strong>Author:</strong> Humberto Cervantes and Rick Kazman · Software Engineering Institute<br><strong>Date:</strong> April 28, 2015</p><a href="https://www.sei.cmu.edu/library/add-30-rethinking-drivers-and-decisions-in-the-design-process/">https://www.sei.cmu.edu/library/add-30-rethinking-drivers-and-decisions-in-the-design-process/</a></div></article>
+<article class="reference" id="ref-08"><span class="ref-number">08</span><div><h3>NASA Systems Engineering Handbook, NASA SP-2016-6105 Rev. 2</h3><p><strong>Author:</strong> NASA · Office of the Chief Engineer<br><strong>Date:</strong> 2016</p><a href="https://www.nasa.gov/wp-content/uploads/2018/09/nasa_systems_engineering_handbook_0.pdf">https://www.nasa.gov/wp-content/uploads/2018/09/nasa_systems_engineering_handbook_0.pdf</a></div></article>
+<article class="reference" id="ref-09"><span class="ref-number">09</span><div><h3>The Oracle Problem in Software Testing: A Survey</h3><p><strong>Author:</strong> Earl T. Barr, Mark Harman, Phil McMinn, Muzammil Shahbaz, and Shin Yoo<br><strong>Date:</strong> May 2015 · IEEE Transactions on Software Engineering, 41(5), 507–525</p><a href="https://discovery.ucl.ac.uk/id/eprint/1471263/">https://discovery.ucl.ac.uk/id/eprint/1471263/</a></div></article>
+<article class="reference" id="ref-10"><span class="ref-number">10</span><div><h3>OpenAPI Specification v3.2.0</h3><p><strong>Author:</strong> OpenAPI Initiative · specification editors and contributors<br><strong>Date:</strong> September 19, 2025</p><a href="https://spec.openapis.org/oas/v3.2.0.html">https://spec.openapis.org/oas/v3.2.0.html</a></div></article>
+<article class="reference" id="ref-11"><span class="ref-number">11</span><div><h3>Introduction: What is contract testing?</h3><p><strong>Author:</strong> Pact contributors<br><strong>Date:</strong> Undated · living documentation</p><a href="https://docs.pact.io/">https://docs.pact.io/</a></div></article>
+<article class="reference" id="ref-12"><span class="ref-number">12</span><div><h3>Welcome to Hypothesis!</h3><p><strong>Author:</strong> Hypothesis contributors<br><strong>Date:</strong> Undated · living documentation</p><a href="https://hypothesis.readthedocs.io/en/latest/">https://hypothesis.readthedocs.io/en/latest/</a></div></article>
+<article class="reference" id="ref-13"><span class="ref-number">13</span><div><h3>Code Coverage Best Practices</h3><p><strong>Author:</strong> Carlos Arguelles, Marko Ivanković, and Adam Bender · Google Testing Blog<br><strong>Date:</strong> August 7, 2020</p><a href="https://testing.googleblog.com/2020/08/code-coverage-best-practices.html">https://testing.googleblog.com/2020/08/code-coverage-best-practices.html</a></div></article>
+<article class="reference" id="ref-14"><span class="ref-number">14</span><div><h3>What to look for in a code review</h3><p><strong>Author:</strong> Google · Engineering Practices<br><strong>Date:</strong> Undated · living guidance</p><a href="https://google.github.io/eng-practices/review/reviewer/looking-for.html">https://google.github.io/eng-practices/review/reviewer/looking-for.html</a></div></article>
+<article class="reference" id="ref-15"><span class="ref-number">15</span><div><h3>Refactoring</h3><p><strong>Author:</strong> Martin Fowler<br><strong>Date:</strong> Undated · reference site</p><a href="https://refactoring.com/">https://refactoring.com/</a></div></article>
+<article class="reference" id="ref-16"><span class="ref-number">16</span><div><h3>Parallel Change</h3><p><strong>Author:</strong> Danilo Sato · martinfowler.com<br><strong>Date:</strong> May 13, 2014</p><a href="https://martinfowler.com/bliki/ParallelChange.html">https://martinfowler.com/bliki/ParallelChange.html</a></div></article>
+<article class="reference" id="ref-17"><span class="ref-number">17</span><div><h3>Implementing SLOs · The Site Reliability Workbook, chapter 2</h3><p><strong>Author:</strong> Steven Thurgood and David Ferguson, with Alex Hidalgo and Betsy Beyer<br><strong>Date:</strong> 2018 · book publication</p><a href="https://sre.google/workbook/implementing-slos/">https://sre.google/workbook/implementing-slos/</a></div></article>
+<article class="reference" id="ref-18"><span class="ref-number">18</span><div><h3>Release Engineering · Site Reliability Engineering, chapter 8</h3><p><strong>Author:</strong> Dinah McNutt · edited by Betsy Beyer and Tim Harvey<br><strong>Date:</strong> 2016 · book publication</p><a href="https://sre.google/sre-book/release-engineering/">https://sre.google/sre-book/release-engineering/</a></div></article>
+<article class="reference" id="ref-19"><span class="ref-number">19</span><div><h3>Checkpointing</h3><p><strong>Author:</strong> Anthropic<br><strong>Date:</strong> Undated · living documentation</p><a href="https://code.claude.com/docs/en/checkpointing">https://code.claude.com/docs/en/checkpointing</a></div></article>
+<article class="reference" id="ref-20"><span class="ref-number">20</span><div><h3>Evolving Specs in Existing Projects</h3><p><strong>Author:</strong> GitHub · Spec Kit contributors<br><strong>Date:</strong> Undated · living documentation</p><a href="https://github.github.io/spec-kit/guides/evolving-specs.html">https://github.github.io/spec-kit/guides/evolving-specs.html</a></div></article>
+<article class="reference" id="ref-21"><span class="ref-number">21</span><div><h3>Intelligent Agents: Theory and Practice</h3><p><strong>Author:</strong> Michael Wooldridge and Nicholas R. Jennings<br><strong>Date:</strong> June 1995 · The Knowledge Engineering Review, 10(2), 115–152</p><a href="https://www.cs.ox.ac.uk/people/michael.wooldridge/pubs/ker95/ker95-html.html">https://www.cs.ox.ac.uk/people/michael.wooldridge/pubs/ker95/ker95-html.html</a></div></article>
+<article class="reference" id="ref-22"><span class="ref-number">22</span><div><h3>Correctness with Property-based tests</h3><p><strong>Author:</strong> Amazon Web Services · Kiro documentation team<br><strong>Date:</strong> Updated August 4, 2026</p><a href="https://kiro.dev/docs/specs/correctness/">https://kiro.dev/docs/specs/correctness/</a></div></article>
+<article class="reference" id="ref-23"><span class="ref-number">23</span><div><h3>Common workflows</h3><p><strong>Author:</strong> Anthropic<br><strong>Date:</strong> Undated · living documentation</p><a href="https://code.claude.com/docs/en/common-workflows">https://code.claude.com/docs/en/common-workflows</a></div></article>
+<article class="reference" id="ref-24"><span class="ref-number">24</span><div><h3>Feature Specs</h3><p><strong>Author:</strong> Amazon Web Services · Kiro documentation team<br><strong>Date:</strong> Updated August 4, 2026</p><a href="https://kiro.dev/docs/specs/feature-specs/">https://kiro.dev/docs/specs/feature-specs/</a></div></article>
+<article class="reference" id="ref-25"><span class="ref-number">25</span><div><h3>Flaky tests</h3><p><strong>Author:</strong> pytest contributors<br><strong>Date:</strong> Undated · living documentation</p><a href="https://docs.pytest.org/en/stable/explanation/flaky.html">https://docs.pytest.org/en/stable/explanation/flaky.html</a></div></article></div>
+
+</section><section class="chapter" aria-labelledby="checklist"><h2 id="checklist">Appendix 1. Concise end-to-end workflow checklist</h2>
+
+<p>Use this checklist for each release or material change. AI creates and updates the artifacts. Humans make the decisions in the right column.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable reference table"><table>
+<thead>
+<tr>
+<th scope="col">Gate</th>
+<th scope="col">Evidence required</th>
+<th scope="col">Human decision</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1. Outcome</td>
+<td>Defined users, tasks, scope, exclusions, and decision owners</td>
+<td>Is this the right problem and boundary?</td>
+</tr>
+<tr>
+<td>2. Baseline</td>
+<td>Current system map, dependencies, environment, and existing test results</td>
+<td>Is the starting point correct?</td>
+</tr>
+<tr>
+<td>3. Specification</td>
+<td>Stable IDs, complete behavior, approved examples, and measurable quality targets</td>
+<td>Are the rules and expected results correct?</td>
+</tr>
+<tr>
+<td>4. Design</td>
+<td>Components, contracts, data rules, dependency choices, and failure behavior</td>
+<td>Are the trade-offs acceptable?</td>
+</tr>
+<tr>
+<td>5. Plan</td>
+<td>Bounded increments, dependencies, tests, and completion evidence</td>
+<td>Is the work ready for implementation?</td>
+</tr>
+<tr>
+<td>6. Test basis</td>
+<td>Credible expected results, fixtures, assertions, and requirement links</td>
+<td>Can these checks detect the important failures?</td>
+</tr>
+<tr>
+<td>7. Implementation</td>
+<td>Complete multi-file change, focused test results, and a reviewable diff</td>
+<td>Does the change stay within its authorization?</td>
+</tr>
+<tr>
+<td>8. Verification</td>
+<td>Combined build and test results, measurements, and explicit gaps</td>
+<td>Does the evidence support specification conformance?</td>
+</tr>
+<tr>
+<td>9. Defect recovery</td>
+<td>Supported causes, repairs, and regression results</td>
+<td>Are the failures actually resolved?</td>
+</tr>
+<tr>
+<td>10. Review</td>
+<td>Resolved findings and behavior-preserving refactoring evidence</td>
+<td>Is the code maintainable and technically sound?</td>
+</tr>
+<tr>
+<td>11. Validation</td>
+<td>Representative user outcomes and operating evidence</td>
+<td>Does the release fit its intended use?</td>
+</tr>
+<tr>
+<td>12. Handover</td>
+<td>Checked setup, release, recovery, documentation, and ownership</td>
+<td>Is the candidate ready to release and operate?</td>
+</tr>
+<tr>
+<td>13. Continuity</td>
+<td>Updated specification, code, tests, evidence, and change history</td>
+<td>Can the next change start from a reliable baseline?</td>
+</tr>
+</tbody></table></div>
+<p><strong>Stop conditions:</strong> A mandatory requirement remains undecided. A required check fails or did not run. AI changed the acceptance criteria without approval. The candidate differs from the tested version. The team cannot explain a material finding.</p>
+<p><strong>Session handover prompt:</strong> Record the current commit, approved artifact versions, completed tasks, open questions, failed attempts, test results, and next bounded task. A new session must read this record and the current files before it resumes work.</p>
+</section><section class="chapter" aria-labelledby="production"><h2 id="production">Appendix 2. The boundary between a prototype and production software</h2>
+
+<p><strong>Production software has evidence that it can serve its intended use under defined operating conditions.</strong> A prototype establishes selected ideas or behaviors. Its evidence can leave substantial operating questions unanswered.</p>
+<p>The difference is not the number of features, lines of code, users, or services. A narrow script can be production software. A large application with a polished interface can remain a prototype. AI authorship does not determine either classification.</p>
+<p>This appendix describes the boundary. It does not recommend a prototype development stage.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable reference table"><table>
+<thead>
+<tr>
+<th scope="col">Dimension</th>
+<th scope="col">Prototype-level evidence</th>
+<th scope="col">Production evidence within this report’s scope</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Purpose and behavior</td>
+<td>Selected successful examples</td>
+<td>Approved requirements and representative acceptance outcomes</td>
+</tr>
+<tr>
+<td>Inputs and state</td>
+<td>Convenient sample inputs</td>
+<td>Realistic ranges, malformed inputs, missing data, boundaries, and state transitions</td>
+</tr>
+<tr>
+<td>Failure handling</td>
+<td>Manual correction or restart</td>
+<td>Specified failure outcomes and tested recovery</td>
+</tr>
+<tr>
+<td>Data correctness</td>
+<td>Results look plausible</td>
+<td>Reconciliation, precision rules, persistence, and migration evidence</td>
+</tr>
+<tr>
+<td>Repeat execution</td>
+<td>One successful run</td>
+<td>Defined duplicate, rerun, interruption, and concurrency behavior where relevant</td>
+</tr>
+<tr>
+<td>Capacity and performance</td>
+<td>A small example runs</td>
+<td>Measured targets under a stated workload and environment</td>
+</tr>
+<tr>
+<td>Integration</td>
+<td>Simulated or selectively checked dependencies</td>
+<td>Contract and real integration evidence for important boundaries</td>
+</tr>
+<tr>
+<td>Delivery</td>
+<td>Runs on the original machine</td>
+<td>Repeatable setup, controlled dependencies, and an identified release artifact</td>
+</tr>
+<tr>
+<td>Maintenance</td>
+<td>Original creator explains the system</td>
+<td>Clear structure, regression protection, current documents, and change history</td>
+</tr>
+<tr>
+<td>Operation</td>
+<td>Someone watches the demonstration</td>
+<td>Useful diagnostics, an owner, and checked operating and recovery instructions</td>
+</tr>
+</tbody></table></div>
+<p><strong>Practical release rule:</strong> Define each applicable production criterion before final acceptance. Record pass, fail, or not tested with its evidence. Explain why a criterion does not apply. An unresolved mandatory criterion blocks the release.</p>
+<p>A production-ready increment can implement only one business capability. It must still meet the production criteria applicable to that capability. Deferring later features does not justify leaving its required behavior unverified.</p>
+</section><section class="chapter" aria-labelledby="quality"><h2 id="quality">Appendix 3. What is high-quality code?</h2>
+
+<p><strong>High-quality code correctly implements the approved behavior and remains understandable, testable, and economical to change.</strong> It meets the system’s operating constraints without unnecessary complexity.</p>
+<p>Code quality is one part of software quality. Good code cannot compensate for wrong requirements or an unsuitable architecture. A useful product can still contain code that is difficult to maintain.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable reference table"><table>
+<thead>
+<tr>
+<th scope="col">Quality dimension</th>
+<th scope="col">What to examine</th>
+<th scope="col">Evidence or review question</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Correctness</td>
+<td>Rules, boundaries, state changes, and failure paths</td>
+<td>Which requirement does this behavior implement? Which check would fail if it were wrong?</td>
+</tr>
+<tr>
+<td>Clarity</td>
+<td>Names, control flow, comments, and local reasoning</td>
+<td>Can a qualified reviewer explain the important path and its assumptions?</td>
+</tr>
+<tr>
+<td>Cohesion and coupling</td>
+<td>Responsibilities within components and dependencies between them</td>
+<td>Does one concept have a clear owner? Does a local change force unrelated changes?</td>
+</tr>
+<tr>
+<td>Simplicity</td>
+<td>Abstractions, branching, duplication, and unused flexibility</td>
+<td>Which present requirement justifies this complexity?</td>
+</tr>
+<tr>
+<td>Testability</td>
+<td>Observable results, controlled inputs, and separable dependencies</td>
+<td>Can tests exercise errors and boundaries without duplicating the implementation?</td>
+</tr>
+<tr>
+<td>Reliability and data integrity</td>
+<td>Partial failures, repeat execution, consistency, and recovery</td>
+<td>What happens after an interruption at each important state boundary?</td>
+</tr>
+<tr>
+<td>Efficiency</td>
+<td>Runtime, memory, storage, and dependency use</td>
+<td>Does measured behavior meet the agreed workload and resource limits?</td>
+</tr>
+<tr>
+<td>Compatibility and changeability</td>
+<td>Interface stability, data evolution, and dependency effects</td>
+<td>Can the planned next change preserve existing obligations?</td>
+</tr>
+<tr>
+<td>Diagnostics and documentation</td>
+<td>Useful error information, explanations, interfaces, and operating instructions</td>
+<td>Can another person diagnose a failure and identify the responsible behavior?</td>
+</tr>
+</tbody></table></div>
+<p>Google’s review guidance supports explicit review of structure and behavior. Refactoring supplies a disciplined way to improve internal design without changing external behavior. <a class="citation" href="#ref-14" aria-label="Reference 14">[14]</a> <a class="citation" href="#ref-15" aria-label="Reference 15">[15]</a></p>
+<p><strong>Weak substitutes for quality:</strong> Large test counts, high coverage, short functions, extensive comments, a successful build, or an AI-generated score. Each can supply limited information. None establishes overall quality by itself.</p>
+<p><strong>A useful review outcome:</strong> List concrete defects and their consequences. Link each finding to evidence. Distinguish release blockers from bounded maintenance work. Use metrics to investigate a problem, then make the decision from the actual requirements and code.</p>
+<blockquote>
+<p><strong>Reusable quality-review prompt:</strong> Assess this change against the approved requirements and design. Examine correctness, clarity, complexity, testability, reliability, efficiency, and future changes. Cite concrete evidence for each finding. Identify release blockers separately. After approval, make the repairs and repeat the affected checks.</p>
+</blockquote>
+<hr>
+<p>Prepared for the stated engineering scope. All example values and records are illustrative. The report uses the ASD-STE100 skill’s simplified technical style, without a claim of formal STE certification.</p>
+<p class="style-note">ASD-STE100 mechanical style check: 0.70 findings per 100 words. This check assesses wording, not technical correctness.</p>
+</section><div class="end-mark">End of report · October 16, 2026</div></div></main></body></html>
