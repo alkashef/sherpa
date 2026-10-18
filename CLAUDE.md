@@ -1,4 +1,4 @@
-# project-init
+# sherpa
 
 ## Purpose
 
@@ -13,11 +13,11 @@ project gets.
 
 ## Environment
 
-Conda environment: `project-init`. Use it for all testing, linting and type checks in this
+Conda environment: `sherpa`. Use it for all testing, linting and type checks in this
 repository. Do not use `base`, another project's environment, or the system Python.
 
-Run commands in it with `conda run -n project-init <command>`, for example
-`conda run -n project-init python skills/project-init/scripts/build_instance.py <folder> --dry-run`.
+Run commands in it with `conda run -n sherpa <command>`, for example
+`conda run -n sherpa python skills/project-init/scripts/build_instance.py <folder> --dry-run`.
 
 ## Git
 

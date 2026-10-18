@@ -1,4 +1,4 @@
-# project-init
+# sherpa
 
 **A Claude Code skill that sets up a new project.** You create an empty folder and open it in VS Code,
 then run the skill. It gives the new project its starting files: `CLAUDE.md` and path-scoped
@@ -103,7 +103,7 @@ secrets, data, models, caches, tests and docs out of the image.
 
 ## Stack
 
-Python 3.12 (this repository's conda environment, `project-init`). The scripts use only the standard library. They were
+Python 3.12 (this repository's conda environment, `sherpa`). The scripts use only the standard library. They were
 checked with ruff 0.17.0 and mypy 2.4.0 using the configs in `assets/`.
 
 ## File structure
@@ -297,7 +297,7 @@ Nothing was deleted. The usual causes:
 
 ## How to contribute
 
-You need this only to change the skill or run its tests. `project-init` here is this repository's
+You need this only to change the skill or run its tests. `sherpa` here is this repository's
 own environment, not a new project's.
 
 ### Set up the environment
@@ -305,20 +305,20 @@ own environment, not a new project's.
 1. Create the environment, once:
 
    ```bat
-   conda create -n project-init python=3.12
+   conda create -n sherpa python=3.12
    ```
 
 2. Activate it and install the tools, once:
 
    ```bat
-   conda activate project-init
+   conda activate sherpa
    pip install ruff==0.17.0 mypy pytest pytest-cov
    ```
 
 3. After that, each time you work here, only activate it:
 
    ```bat
-   conda activate project-init
+   conda activate sherpa
    ```
 
 ### Run the scripts alone
@@ -359,7 +359,7 @@ is about 190 now. The test suite checks this on a build with every module.
 From the repository root:
 
 ```bash
-conda run -n project-init python -m pytest
+conda run -n sherpa python -m pytest
 ```
 
 It runs in about 30 seconds and needs only git. Each test works in its own temporary folder, with
@@ -408,14 +408,14 @@ line in `init_project.py` carries `# noqa: S603` (it exists to run git and gh).
 
 ```bash
 # from skills/project-init/
-conda run -n project-init ruff check --config assets/ruff.toml scripts
-conda run -n project-init ruff format --check --config assets/ruff.toml scripts assets/scripts
-conda run -n project-init mypy --config-file assets/mypy.ini scripts assets/scripts
+conda run -n sherpa ruff check --config assets/ruff.toml scripts
+conda run -n sherpa ruff format --check --config assets/ruff.toml scripts assets/scripts
+conda run -n sherpa mypy --config-file assets/mypy.ini scripts assets/scripts
 # from skills/project-init/assets/
-conda run -n project-init ruff check --config ruff.toml scripts
+conda run -n sherpa ruff check --config ruff.toml scripts
 # from the repository root (bash; MYPYPATH lets mypy find the scripts the tests import)
-conda run -n project-init ruff check --config skills/project-init/assets/ruff.toml tests
-MYPYPATH="skills/project-init/scripts;tests" conda run -n project-init mypy --config-file skills/project-init/assets/mypy.ini tests
+conda run -n sherpa ruff check --config skills/project-init/assets/ruff.toml tests
+MYPYPATH="skills/project-init/scripts;tests" conda run -n sherpa mypy --config-file skills/project-init/assets/mypy.ini tests
 ```
 
 ### Checked in real Claude Code sessions

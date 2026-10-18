@@ -60,9 +60,9 @@ def planned(sandbox: Sandbox) -> Sandbox:
     """A pushed project named after this repository's environment, with two planned milestones.
 
     The runner refuses to start outside the project's environment; the tests run in this
-    repository's environment, `project-init`, so the project takes that name.
+    repository's environment, `sherpa`, so the project takes that name.
     """
-    result = sandbox.init("--name", "project-init", "--with", "python", "--no-conda")
+    result = sandbox.init("--name", "sherpa", "--with", "python", "--no-conda")
     assert result.returncode == 0, result.stderr
     shim(sandbox.fake_bin, "claude", FAKE_CLAUDE)
     root = sandbox.folder.parent
@@ -70,7 +70,7 @@ def planned(sandbox: Sandbox) -> Sandbox:
         {
             "FAKE_CLAUDE_LOG": str(root / "claude.log"),
             # The pre-commit hook finds Python through the active environment.
-            "CONDA_DEFAULT_ENV": "project-init",
+            "CONDA_DEFAULT_ENV": "sherpa",
             "CONDA_PREFIX": sys.prefix,
         }
     )
