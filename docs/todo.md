@@ -1,0 +1,657 @@
+# SDD Workflow - Proposed Ideas
+
+- Approved for recording: October 17, 2026
+- Consolidated: October 17, 2026
+
+These notes record proposed changes. Approval to record them does not authorize implementation.
+The user authorized merging duplicates and grouping conflicting proposals.
+Conflicts remain unresolved. Grouping proposals does not select either position.
+
+## Source and Review Context
+
+Added: October 17, 2026
+Source: Fully_AI_Assisted_SDD_October_2026.html, dated October 16, 2026.
+Each Report reference below gives the section number, title, and HTML anchor.
+These are proposed workflow improvements derived from the report and repository
+comparison. They are not implemented changes or approval to implement them.
+
+Repository reviewed: alkashef/project-init
+Baseline commit: 373622e557e2597e0551d9a400dbb1ff6b5cf493
+Method: document and source inspection. No application checks or tests were run.
+
+Repository path key:
+
+- W: `skills/project-init/assets/docs/workflow.md`
+- G: `skills/project-init/assets/CLAUDE_GOLDEN.md`
+- P: `skills/project-init/assets/.claude/skills/write-plan/SKILL.md`
+- M: `skills/project-init/assets/.claude/skills/write-plan/references/milestone-guide.md`
+- C: `skills/project-init/assets/scripts/check.py`
+- R: `skills/project-init/assets/scripts/milestones-runner.py`
+- S: `skills/project-init/assets/.claude/skills/write-spec/`
+- D: `skills/project-init/assets/.claude/skills/write-design/`
+
+Keep the existing strengths: approved specifications, stable requirement and
+decision IDs, acceptance examples, thin milestones, scope controls, and checks.
+The proposals below extend or reconcile those controls.
+
+## Quality-Impact Ranking
+
+Ranked: October 17, 2026
+
+**Objective:** Rank the 21 existing proposals by their likely additional effect on
+the quality of programs generated through this SDD workflow.
+**Basis:** A fresh review of Fully_AI_Assisted_SDD_October_2026.html
+(October 16, 2026), especially Sections 4.4, 5.6, 5.8-5.11, and Appendix 3.
+
+This order is engineering judgment, not a measured effect size or a ranking
+published by the report. Adjacent ranks are approximate. No project experiment
+established numerical quality gains.
+
+Assess correctness first, then reliability, maintainability, and operating fitness.
+Consider the gap identified in the earlier repository review and whether a
+proposal detects defects, prevents unsupported acceptance, or preserves quality
+through later changes. Broad controls rank above cosmetic or organizational edits.
+The report's engineering scope excludes security and compliance. This ranking
+does not assess those areas or add proposals beyond the listed ideas.
+
+This ranks additions to the current workflow. Approved specifications and design
+remain prerequisites, even though they are not new entries in this list.
+The order ranks expected impact, not implementation sequence, effort, or value
+per hour. Several proposals work together and their benefits must not be added.
+In particular, rank 4 needs the check inventory at rank 5 and credible tests.
+Do not remove the lower-ranked controls merely because their direct impact is smaller.
+
+Context can change the order:
+
+- Existing systems raise the importance of baseline and compatibility controls.
+- Services and persistent data raise the importance of recovery contracts.
+- High-stakes calculations raise the importance of independent reference results.
+- The unresolved import and class restrictions remain unresolved.
+  Rank 7 reflects the quality criteria, not an endorsement of either disputed rule.
+
+New proposal added: October 17, 2026. USER-09 enters at rank 9.
+Existing entries from the previous rank 9 onward move down one position.
+This placement reflects the additional value beyond the existing design skill.
+
+Stable IDs:
+
+- USER-01 through USER-08 identify the previous consolidated user/merged entries.
+- USER-09 identifies the new system overview and design-check proposal.
+- REPORT IDs retain their prior meanings.
+- Rank numbers indicate priority only. References below use stable IDs.
+- Historical [High] and [Medium] labels inside proposals belong to the earlier
+  review. The new rank and impact assessment govern this ordering.
+
+---
+
+## 21 Proposals in Descending Order of Expected Quality Impact
+
+Source labels distinguish the user's proposals from report-derived extensions.
+Report-derived proposals adapt the report to the reviewed repository.
+They do not imply that the report mandates a particular skill or file layout.
+
+### - [ ] Rank 01 | USER-03 | Test generation with independent expected results
+
+**Expected impact:** Very high.
+**Ranking reason:** Prevents code and tests from agreeing on the same wrong business rule. Adds meaningful boundary and failure coverage.
+**Ranking basis:** Sections 4.4 (#two-questions) and 5.6 (#stage-06).
+
+> Derive tests, including edge cases, from the specification and design.
+> Implement this capability as a skill.
+> Source: User, original idea 3.
+
+Report-derived extension [High]; former REPORT-03:
+
+- **Current:** S already captures domain-reviewed examples. W says to write tests,
+  and M requests one test name per requirement ID. Neither defines a full test
+  design step that records the source of each expected result.
+- **Proposal:** Use approved examples,
+  domain rules, reference calculations, and invariants to derive tests.
+  Allow several tests per requirement. Include relevant boundaries, invalid input,
+  failures, repeated operations, interruptions, and concurrency. Propose missing
+  business decisions as questions rather than inventing the expected behavior.
+  Record each expected result's source. Do not copy the implementation's calculation
+  into the expected-result calculation. Use property or mutation checks where useful.
+- **Report:** Section 5.6, "Establish tests and expected results" (#stage-06).
+  Also Section 4.4, "Two distinct questions about correctness" (#two-questions).
+- **Why:** Generated code and generated tests can agree on the same wrong assumption.
+
+---
+
+### - [ ] Rank 02 | REPORT-04 | Real integration and end-to-end evidence
+
+**Expected impact:** Very high.
+**Ranking reason:** Exposes defects in real dependencies and combined workflows that isolated fakes cannot detect.
+**Ranking basis:** Section 5.8 (#stage-08) and Appendix 2 (#production).
+
+- **Current:** G's Testing section requires fakes at external boundaries and prohibits
+  tests that need real networks, clocks, or external servers. Its HTTP API section
+  uses the framework test client without starting a server.
+- **Proposal:** Keep fast, isolated unit tests. Add integration, contract, and end-to-end
+  checks where they establish behavior that fakes cannot establish.
+  Use controlled test services, temporary storage, approved fixtures, and isolated
+  environments. Never use production data or services without authorization.
+  For interfaces that matter, exercise the actual integration or deployment path.
+  Mark unavailable integration checks as not run, with the remaining evidence gap.
+- **Report:** Section 5.8, "Verify the integrated result" (#stage-08).
+  Also Section 5.6 (#stage-06) and Appendix 2 (#production), Integration.
+- **Why:** A fake or in-process test client cannot establish every external interaction.
+
+---
+
+### - [ ] Rank 03 | USER-02 | Code review with tracked findings and repairs
+
+**Expected impact:** Very high.
+**Ranking reason:** Finds design, logic, failure-path, and maintenance defects that passing tests can miss.
+**Ranking basis:** Section 5.10 (#stage-10) and Appendix 3 (#quality).
+
+> Add a dedicated skill for code review.
+> Source: User, original idea 2.
+
+Report-derived extension [High]; former REPORT-08:
+
+- **Current:** W moves from implementation and checks to documentation and commit.
+  The generated project skills cover specification, design, and planning, but no
+  dedicated review skill is supplied.
+- **Proposal:** Review the actual diff
+  against approved requirements, design, contracts, and verification evidence.
+  List each finding with its requirement or decision reference, file location,
+  consequence, severity, and proposed remedy. Seek counterexamples, failure paths,
+  weak tests, and unjustified complexity.
+  Report findings before edits. Track resolution or explicit acceptance of each
+  material finding. Treat behavior-preserving refactoring separately from a change
+  to approved behavior. A second AI review supplements human judgment and tests.
+- **Report:** Section 5.10, "Review and refactor for maintainability" (#stage-10).
+  Also Appendix 3 (#quality).
+- **Why:** A clean lint result and the implementer's success report do not replace review.
+
+---
+
+### - [ ] Rank 04 | REPORT-07 | Require evidence before milestone completion
+
+**Expected impact:** Very high.
+**Ranking reason:** Makes verification and review part of the completion decision, so unsupported success cannot advance the workflow.
+**Ranking basis:** Sections 5.8 (#stage-08), 5.11 (#stage-11), and Appendix 1 (#checklist).
+
+- **Current:** R's `failure_reason()` checks that the row disappeared or became blocked,
+  the Git tree is clean, and commits were pushed. Hooks provide checks, but the
+  runner does not inspect a required verification record.
+- **Proposal:** Require an evidence record linked to the completed implementation
+  revision, including mandatory check outcomes and required review disposition.
+  Check that the code and configuration being accepted match the tested revision.
+  Keep distinct states for execution complete, verification complete, and accepted
+  for release. A pushed commit must not imply production acceptance.
+- **Report:** Section 5.8 (#stage-08) and Section 5.11 (#stage-11).
+  Also Appendix 1 (#checklist), Stop conditions.
+- **Why:** Plan removal and clean Git state establish process state, not correctness.
+
+---
+
+### - [ ] Rank 05 | REPORT-06 | Explicit check inventory and truthful results
+
+**Expected impact:** Very high.
+**Ranking reason:** Prevents absent, skipped, or unexecuted checks from passing as verified success. Supplies the evidence required by rank 4.
+**Ranking basis:** Section 5.8 (#stage-08) and Appendix 1 (#checklist).
+
+- **Current:** C discovers checks from files and patterns. `check_all()` reports
+  "All checks passed." if the discovered checks produce no failures.
+  G's task report asks for a passed-test count but no full execution inventory.
+- **Proposal:** Define required checks for the approved increment. Report each check as
+  passed, failed, skipped, not run, or not applicable, with a reason and evidence.
+  Record commands, environment, fixtures, observed outputs, and the tested revision.
+  Distinguish "no applicable checks" from verified success. Block completion when
+  a required check is missing or did not run.
+  Keep quick edit checks separate from the complete verification gate.
+- **Report:** Section 5.8, "Verify the integrated result" (#stage-08).
+  Also Appendix 1 (#checklist), Verification and Stop conditions.
+- **Why:** No discovered failure is weaker evidence than completion of required checks.
+
+---
+
+### - [ ] Rank 06 | REPORT-09 | Validate real user tasks and operating targets
+
+**Expected impact:** High.
+**Ranking reason:** Detects software that matches a specification but fails its intended use or realistic workload.
+**Ranking basis:** Sections 4.4 (#two-questions), 5.11 (#stage-11), and Appendix 2 (#production).
+
+- **Current:** S includes user scenarios and quality targets. W has no explicit stage
+  where a domain owner evaluates the release against representative real tasks.
+- **Proposal:** Add a validation and release decision after technical verification.
+  Use representative workflows, input sizes, outputs, and failure conditions.
+  Assess usefulness and correctness with the appropriate domain owner.
+  Measure applicable performance, reliability, recovery, and usability targets.
+  Record accepted criteria, failed criteria, untested criteria, and justified
+  exclusions. Unresolved mandatory criteria block release.
+- **Report:** Section 4.4, "Two distinct questions about correctness" (#two-questions).
+  Also Section 5.11, "Validate intended use and production readiness" (#stage-11),
+  and Appendix 2 (#production).
+- **Why:** Software can meet its specification while solving the wrong problem.
+
+---
+
+### - [ ] Rank 07 | USER-08 | Outcome-based quality and unresolved coding conventions
+
+**Expected impact:** High.
+**Ranking reason:** Gives generation and review useful quality targets beyond style metrics. The unresolved import and class restrictions have no assumed benefit.
+**Ranking basis:** Sections 5.4 (#stage-04), 5.10 (#stage-10), and Appendix 3 (#quality).
+
+> Sources: original user ideas 8, 9, and 10, the user's later simplicity
+> instruction, plus former REPORT-14.
+> The user's quality question and the report-derived quality criteria complement each other.
+> The universal import and class rules conflict with the report-derived proposal
+> to allow justified, language-specific or project-specific exceptions.
+
+**USER PROPOSAL - original idea 8: Rethink software quality**
+
+- Reconsider what software quality means and how the workflow should assess it.
+
+**USER PROPOSAL - October 17, 2026: Avoid complex patterns**
+
+- Add an instruction to CLAUDE.md about not using complex patterns.
+- Source: User. This is an extension of USER-08, not a separate ranked entry.
+
+Proposed operational wording for CLAUDE.md:
+
+> Use the simplest design that meets the approved specification and design.
+> Do not introduce complex patterns, extra abstraction layers, or speculative
+> flexibility without a concrete requirement and a stated reason.
+> Prefer clear control flow and direct component interactions.
+> When complexity is necessary, explain which requirement needs it and why
+> a simpler alternative is inadequate. Record that decision in the design.
+
+Interpretation:
+
+- "Complex" has no fixed meaning across languages or systems.
+- The wording above turns the user's intent into a requirement-based check.
+- A pattern's name alone does not establish that it is unnecessary.
+- This refinement does not authorize changes to the existing approved design.
+
+Supporting report references:
+
+- Section 5.4 (#stage-04): justify major components through requirements.
+- Section 5.10 (#stage-10): review unjustified complexity.
+- Appendix 3 (#quality): assess simplicity and the need for abstractions.
+- These references support the rationale. The user originated this proposal.
+
+**CONFLICT A - Import placement**
+
+- User proposal - original idea 9:
+  - Add a rule to CLAUDE.md that imports must appear at the top of the file.
+  - Do not place imports inside functions, methods, or other code blocks.
+- Report-derived alternative - former REPORT-14:
+  - Treat import placement as a convention with stated reasons and applicable
+    exceptions. Keep language conventions in the applicable language profile.
+- Conflict: The user proposes a universal ban on imports inside code blocks.
+  The report-derived proposal allows justified exceptions to that ban.
+- Status: Unresolved. Neither position overrides the other.
+
+**CONFLICT B - Class and file structure**
+
+- User proposal - original idea 10. Add these rules to CLAUDE.md:
+  - Each class must have its own file.
+  - A file must not define more than one class.
+  - A class must not span multiple files.
+  - A class file must not contain standalone functions or executable code outside the class.
+  - Imports remain at the top of the file, as specified in Conflict A.
+- Report-derived alternative - former REPORT-14:
+  - Treat one-class-per-file as a convention with stated reasons and applicable
+    exceptions. Put project architecture choices in the approved design.
+- Conflict: The user proposes universal class and file restrictions.
+  The report-derived proposal questions their universal scope and allows justified exceptions.
+  The report does not separately prescribe rules for every class-file detail.
+- Status: Unresolved. Neither position overrides the other.
+
+Report-derived alternative and quality criteria [High]; former REPORT-14:
+
+- **Current:** G combines engineering principles with fixed style and architecture
+  choices. It includes function, parameter, complexity, and coverage limits.
+  Several stack choices and implementation patterns are prescribed in advance.
+- **Proposal:** Keep universal intent, evidence, privacy, scope, and approval rules in
+  the core workflow. Keep language conventions in the applicable language profile,
+  and project architecture choices in the approved design.
+  Assess correctness, clarity, cohesion, simplicity, testability, reliability,
+  efficiency, compatibility, diagnostics, and change cost against the intended use.
+  Use size and coverage metrics as warning signals rather than proof of quality.
+  Review the earlier one-class-per-file and imports-only-at-the-top proposals as
+  conventions with stated reasons and applicable exceptions. The report does not
+  prescribe either rule as a universal quality requirement.
+- **Report:** Section 5.2 (#stage-02), short persistent instructions.
+  Also Section 5.4 (#stage-04), Section 5.10 (#stage-10), and Appendix 3 (#quality).
+- **Why:** More restrictions do not automatically improve software quality.
+  This supports USER-06 and USER-07 and the quality question in this entry.
+  It questions the universal scope of the user's import and class rules above.
+
+---
+
+### - [ ] Rank 08 | REPORT-02 | Trace requirements through design, tests, and results
+
+**Expected impact:** High.
+**Ranking reason:** Exposes omitted requirements and contradictions before execution, then preserves evidence of what the implementation actually satisfies.
+**Ranking basis:** Sections 4.5 (#traceability), 5.5 (#stage-05), and 5.13 (#stage-13).
+
+- **Current:** P checks requirement coverage and references. W deletes completed
+  milestones and leaves the completed record in Git history.
+- **Proposal:** Add a consistency check before execution across the specification,
+  design, plan, and acceptance examples. Identify missing IDs, contradictions,
+  unresolved decisions, and requirements with no planned evidence.
+  When a milestone finishes, retain links from requirement IDs to decisions,
+  tests, the implementation revision, and actual results in a compact evidence
+  record. The active plan can still contain only unfinished work.
+- **Report:** Section 4.5, "Traceability through one production change" (#traceability).
+  Also Sections 4.2 (#artifacts), 5.5 (#stage-05), and 5.13 (#stage-13).
+- **Why:** IDs and historical commits alone do not give a current requirement-to-result
+  view. This extends the existing coverage check rather than replacing it.
+
+---
+
+### - [ ] Rank 09 | USER-09 | System overview skill and design check before code changes
+
+**Expected impact:** High; incremental benefit depends on existing design coverage.
+**Ranking reason:** Makes system boundaries and contracts easier to understand and requires code changes to respect the approved design.
+**Ranking basis:** Sections 5.2 (#stage-02), 5.4 (#stage-04), 5.7 (#stage-07), and 5.13 (#stage-13).
+This is a user proposal. The report references support its engineering rationale,
+not its origin or a requirement to create a separate skill.
+
+Source: User, new proposal on October 17, 2026.
+
+User request:
+
+- Add a skill that generates a high-level description of the system.
+- Include its design, data model and schema where applicable, and interfaces.
+- Explicitly diagram the system components and their interfaces in UML or an
+  equivalent notation. This component-and-interface diagram is required.
+- Guide AI to check the design before touching the code.
+
+Current overlap:
+The existing write-design skill already covers architecture, data structures,
+interfaces, technology choices, and diagrams when useful. It distinguishes
+implemented facts from proposed design and keeps design in docs/design.md.
+The new proposal strengthens accessible system description and explicit use of
+that description during implementation. It does not assume those concerns are absent.
+
+Proposed refinement for discussion:
+
+1. Generate a clear overview of purpose, boundaries, components, responsibilities,
+   dependencies, and important flows from approved requirements and design.
+2. Include the applicable data model: entities, fields and types, identifiers,
+   relationships, constraints, ownership, and persistence boundaries.
+3. Describe public and component interfaces: inputs, outputs, errors, and contracts.
+4. Include an explicit component-and-interface diagram in UML or an equivalent
+   notation. Show named components, responsibilities, connections, and interface
+   boundaries. Identify the contracts or exchanged data on important connections.
+   Link the diagram to the corresponding interface descriptions in the design.
+   Add sequence, class, or data diagrams where they clarify other views.
+   The notation is flexible. The component-and-interface view is required.
+   The user explicitly requested this diagram in the follow-up on October 17, 2026.
+5. Keep the approved design authoritative. Place the overview in that document,
+   or link a derived view to its authoritative sections instead of duplicating facts.
+6. For existing systems, inspect code and schemas as evidence of implemented behavior.
+   Label differences between the current implementation and approved design.
+   Do not silently rewrite the approved design to match the code.
+7. Before changing application code, read the relevant approved specification,
+   design sections, contracts, and current implementation. Identify affected
+   components, interfaces, data, decisions, and constraints.
+8. If the change requires a different design or exposes a contradiction, resolve
+   the affected design decision before edits that depend on it.
+   Do not require repeated approval for decisions already approved.
+9. Keep the overview and diagrams consistent after authorized design changes.
+
+Packaging decision remains open:
+Reuse and extend write-design, or add a dedicated skill that reads its authoritative
+output. Do not create a competing design authority.
+
+Related entries:
+
+- REPORT-02: consistency and traceability across requirements, design, and evidence.
+- REPORT-13: impact assessment and updates through later changes.
+- USER-05: source layout as one design view.
+
+These remain distinct proposals. This entry focuses on the system description
+and the check before code edits.
+
+Supporting report sections:
+
+- Section 5.2, "Inspect the system and establish a baseline" (#stage-02).
+- Section 5.4, "Design the system and its contracts" (#stage-04).
+- Section 5.7, "Implement one bounded change across files" (#stage-07).
+- Section 5.13, "Maintain the specification through later changes" (#stage-13).
+
+Status: Proposed only. No skill or workflow rule is implemented.
+
+---
+
+### - [ ] Rank 10 | REPORT-11 | Diagnose causes before repairs and retain useful work
+
+**Expected impact:** High.
+**Ranking reason:** Reduces speculative edits, repeated failed repairs, and regressions caused by changing the wrong artifact.
+**Ranking basis:** Section 5.9 (#stage-09) and Appendix 1 (#checklist).
+
+- **Current:** W sends failed checks back to implementation. Its blocked path requires
+  leaving every other file unchanged and committing only the plan.
+  That instruction does not explain how to handle a blocker found after useful edits.
+- **Proposal:** Add a defect procedure: reproduce, state expected and actual behavior,
+  classify the responsible artifact, form a causal hypothesis, run a discriminating
+  check, repair, and show regression results.
+  Retain failed attempts and conclusions so another session does not repeat them.
+  Define how to preserve safe partial work separately from the plan-only blocked
+  record. Do not discard user edits or force an unsafe reset to satisfy that rule.
+- **Report:** Section 5.9, "Diagnose defects and recover deliberately" (#stage-09).
+  Also Section 5.7 (#stage-07) and Appendix 1 (#checklist), Session handover prompt.
+- **Why:** Repeated edits without a supported cause can hide the original defect.
+  The partial-work handling is an adaptation of the report to W's blocked procedure.
+
+---
+
+### - [ ] Rank 11 | REPORT-12 | Design and test recovery behavior
+
+**Expected impact:** High; system-dependent.
+**Ranking reason:** Improves behavior after partial failures, retries, and interruptions. Its impact rises for services and persistent data.
+**Ranking basis:** Sections 5.4 (#stage-04), 5.9 (#stage-09), and 5.14 (#system-types).
+
+- **Current:** G's Error handling and LLM sections forbid recovery, fallback, and retry.
+  Its Data and storage section requires a backup before rewriting stored data.
+- **Proposal:** Let the approved specification and design define failure behavior.
+  For relevant transient failures, consider bounded retries, timeouts, cancellation,
+  duplicate protection, and explicit recovery states.
+  State which operations are safe to retry and what happens after partial success.
+  Distinguish restoration of code from recovery of data and external side effects.
+  Test the chosen recovery procedure. A backup alone does not establish recoverability.
+  Keep unexpected failures visible and never weaken acceptance criteria to hide them.
+- **Report:** Section 5.4 (#stage-04), failure handling.
+  Also Sections 5.9 (#stage-09), 5.12 (#stage-12), and 5.14 (#system-types).
+- **Why:** A universal no-recovery rule can conflict with the required system behavior.
+  This proposes design-driven recovery, not unrestricted or automatic retries.
+
+---
+
+### - [ ] Rank 12 | REPORT-13 | Assess change impacts and preserve approved intent
+
+**Expected impact:** High for evolving systems.
+**Ranking reason:** Prevents later changes from breaking contracts, stored data, and existing behavior or creating specification drift.
+**Ranking basis:** Section 5.13 (#stage-13).
+
+- **Current:** W supports changes, S proposes specification amendments, and G updates
+  living documents. The cross-artifact and compatibility review remains distributed.
+- **Proposal:** Add a compact change procedure from the current accepted baseline.
+  Map effects across requirements, decisions, interfaces, consumers, stored data,
+  tests, and operating instructions before implementation.
+  Show proposed intent changes for approval. Preserve stable IDs and link replacement
+  decisions. For incompatible changes, plan the consumer or data transition.
+  After the change, reconcile the artifacts and evidence into one accepted baseline.
+- **Report:** Section 5.13, "Maintain the specification through later changes"
+  (#stage-13).
+- **Why:** This strengthens existing amendment rules and prevents gradual artifact drift.
+
+---
+
+### - [ ] Rank 13 | REPORT-01 | Record a factual baseline before changes
+
+**Expected impact:** Medium-high; context-dependent.
+**Ranking reason:** Separates old failures from regressions and exposes environment or compatibility assumptions. Its impact rises for existing systems.
+**Ranking basis:** Sections 5.2 (#stage-02) and 5.1 (#stage-01).
+
+- **Current:** W starts with specification. S, D, and P inspect existing files, but the
+  workflow has no explicit baseline record with executed checks and known failures.
+- **Proposal:** Before planning, record the source revision, relevant system map,
+  runtime and dependency versions, existing test results, and known defects.
+  For a new project, establish its build and test environment. For an existing
+  project, record behavior and compatibility obligations that must survive.
+  Record pre-existing failures separately from regressions introduced by the change.
+- **Report:** Section 5.2, "Inspect the system and establish a baseline" (#stage-02).
+  Also Section 5.1, "Define the outcome and boundaries" (#stage-01).
+- **Why:** Later claims need a factual starting point and a clear delivery boundary.
+
+---
+
+### - [ ] Rank 14 | REPORT-10 | Repeatable installation, release, and checked handover
+
+**Expected impact:** Medium-high.
+**Ranking reason:** Detects installation and environment failures and makes the accepted release operable and recoverable by someone else.
+**Ranking basis:** Section 5.12 (#stage-12) and Appendix 2 (#production).
+
+- **Current:** W updates inaccurate documents and G requires README setup instructions.
+  G pins direct dependencies, but a clean-environment setup and release handover
+  are not explicit workflow gates.
+- **Proposal:** Test the documented setup from a clean environment. Retain sufficient
+  dependency and environment information to repeat it, including resolved versions
+  where direct pins alone do not control installation.
+  Identify the release artifact and source revision. Include operation, diagnostics,
+  known limits, ownership, safe reruns, and recovery instructions.
+  Check that the instructions work for someone other than the implementer.
+- **Report:** Section 5.12, "Document, release, and hand over" (#stage-12).
+  Also Appendix 2 (#production), Delivery and Operation.
+- **Why:** Committing code and documenting commands do not establish installability or
+  operational readiness.
+
+---
+
+### - [ ] Rank 15 | REPORT-05 | Prove that failing tests detect the intended defect
+
+**Expected impact:** Medium-high.
+**Ranking reason:** Rejects meaningless red results caused by broken setup. Strengthens the test basis already ranked first.
+**Ranking basis:** Section 5.6 (#stage-06).
+
+- **Current:** W's Execute loop says that new tests must fail. M applies a failing-test
+  condition to every milestone and rejects setup work that no test can show.
+- **Proposal:** For behavior changes and defect repairs, record why the new regression
+  or acceptance check fails before the repair and passes afterward.
+  An import error, broken fixture, or missing tool does not establish that a test
+  detects the intended behavioral defect.
+  Give setup, documentation, and refactoring work suitable evidence instead of
+  forcing an artificial failing behavioral test. Preserve tests-first work where
+  it adds useful evidence.
+- **Report:** Section 5.6, "Establish tests and expected results" (#stage-06).
+  Also Section 5.5 (#stage-05) and Section 5.10 (#stage-10).
+- **Why:** The reason for a failure matters more than the presence of a red result.
+
+---
+
+### - [ ] Rank 16 | REPORT-15 | Match evidence to the kind of system
+
+**Expected impact:** Medium; system-dependent.
+**Ranking reason:** Adds the checks that matter to the actual workload and avoids irrelevant ceremony. Amplifies earlier controls rather than replacing them.
+**Ranking basis:** Section 5.14 (#system-types) and Appendix 2 (#production).
+
+- **Current:** The generator selects optional stack modules, but W applies the same
+  execution loop and milestone template to every project.
+- **Proposal:** Keep one shared workflow with applicable evidence profiles.
+  - A script needs file-effect, exit-status, rerun, and interruption checks.
+  - A data workflow needs reconciliation, schema, backfill, and recovery evidence.
+  - A service needs contract, timeout, concurrency, and compatibility evidence.
+  - A user interface needs interaction, visual, and accessibility evidence.
+
+  Use only the records and checks needed for the actual scope. Several records can
+  share a document if their ownership and links remain clear.
+  Do not turn the report's 13 stages into 13 mandatory documents or repeated approvals
+  for decisions the user already made.
+- **Report:** Section 5.14, "Adapt the same workflow to different systems"
+  (#system-types). Also Section 4.2 (#artifacts) and Appendix 2 (#production).
+- **Why:** Proportionate evidence makes the workflow reusable without adding needless work.
+
+---
+
+### - [ ] Rank 17 | USER-06 | Remove unjustified rigidity from instructions
+
+**Expected impact:** Medium; conditional.
+**Ranking reason:** Can remove constraints that force poor designs. Benefit depends on retaining approved contracts, acceptance criteria, and evidence gates.
+**Ranking basis:** Sections 5.2 (#stage-02), 5.4 (#stage-04), and Appendix 3 (#quality).
+
+> Reduce overly specific instructions.
+> Give AI room to choose how to meet the requirements.
+> Review constraints that could cause bugs or other issues.
+> Source: User, original idea 6.
+
+---
+
+### - [ ] Rank 18 | USER-05 | Choose source structure during design
+
+**Expected impact:** Low-medium.
+**Ranking reason:** Clear responsibility boundaries can help maintainability. Folder names alone do not establish cohesion, correctness, or sound architecture.
+**Ranking basis:** Section 5.4 (#stage-04) and Appendix 3 (#quality); report-informed assessment of a user proposal.
+
+> Research common source folder structures before choosing the layout.
+> Include frontend, backend, and named feature or component subfolders where appropriate.
+> Source: User, original idea 5.
+
+---
+
+### - [ ] Rank 19 | USER-07 | Keep the core workflow language-independent
+
+**Expected impact:** Low direct impact.
+**Ranking reason:** Improves reuse and language choice across projects. It does not directly improve a given program when its current language already fits.
+**Ranking basis:** Section 2.1 (#scope), 5.4 (#stage-04), and 5.14 (#system-types); report-informed assessment of a user proposal.
+
+> Support different programming languages without tying the core workflow to one language.
+> Source: User, original idea 7.
+
+---
+
+### - [ ] Rank 20 | USER-04 | Collect linters and checkers in one folder
+
+**Expected impact:** Low direct impact.
+**Ranking reason:** Simplifies maintenance of the workflow tools. Moving files does not improve the checks or the generated program by itself.
+**Ranking basis:** Sections 5.8 (#stage-08) and Appendix 3 (#quality); indirect assessment, not a report recommendation for this folder layout.
+
+> Collect the linting and checking scripts and their configurations in a single dedicated folder.
+> Source: User, original idea 4.
+
+---
+
+### - [ ] Rank 21 | USER-01 | Rename the project to SDD Workflow
+
+**Expected impact:** No direct impact.
+**Ranking reason:** Improves naming and communication. A rename does not change generated behavior, reliability, or maintainability.
+**Ranking basis:** Appendix 3 (#quality); indirect assessment, not a report recommendation to rename the project.
+
+> Rename project-init to "SDD Workflow".
+> SDD stands for Spec Driven Development.
+> Source: User, original idea 1.
+
+---
+
+## Consolidation and Source Map
+
+- Original user idea 1 -> USER-01, rank 21.
+- Original user idea 2 + REPORT-08 -> USER-02, rank 3.
+- Original user idea 3 + REPORT-03 -> USER-03, rank 1.
+- Original user idea 4 -> USER-04, rank 20.
+- Original user idea 5 -> USER-05, rank 18.
+- Original user idea 6 -> USER-06, rank 17.
+- Original user idea 7 -> USER-07, rank 19.
+- Original user ideas 8, 9, and 10 + REPORT-14 -> USER-08, rank 7.
+  Both convention conflicts retain the user's position and report-derived alternative.
+- REPORT-01 -> rank 13. REPORT-02 -> rank 8. REPORT-04 -> rank 2.
+- REPORT-05 -> rank 15. REPORT-06 -> rank 5. REPORT-07 -> rank 4.
+- REPORT-09 -> rank 6. REPORT-10 -> rank 14. REPORT-11 -> rank 10.
+- REPORT-12 -> rank 11. REPORT-13 -> rank 12. REPORT-15 -> rank 16.
+- New user proposal: system overview and design check -> USER-09, rank 9.
+- New user instruction: avoid complex patterns in CLAUDE.md -> USER-08, rank 7.
+
+All 10 original user ideas, both later user additions, and all 15 report-derived
+proposals remain represented in these 21 consolidated entries. Old IDs identify sources, not additional ideas.
+The two convention conflicts remain unresolved. No proposal is implemented.
+
+All report-derived ideas retain their report section references and anchors.
+Path-specific findings come from the original repository baseline stated above.
+The ranking does not claim a new code audit or executed application tests.
+File names, gate details, and skill packaging are adaptations for this project.

@@ -23,3 +23,10 @@ Run commands in it with `conda run -n sherpa <command>`, for example
 
 Every commit is followed by a sync: pull (`git pull --rebase`), then `git push` to `origin`. Never
 leave a commit only on this machine. If the pull or the push fails, stop and report it.
+
+## Communication rules
+
+- Be very concise and direct.
+- Use a top-down structure: big picture first, then details.
+- Handle one thing at a time: one item, one question, one suggestion, etc.
+- Act as a rigorous critical thinking partner: challenge my assumptions, expose weaknesses and blind spots, test my reasoning, present alternative viewpoints, and agree only when the argument is strong.
