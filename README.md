@@ -1,14 +1,18 @@
 # sherpa
 
-**A Claude Code skill that sets up a new project.** You create an empty folder and open it in VS Code,
-then run the skill. It gives the new project its starting files: `CLAUDE.md` and path-scoped
-rules, docs, README, tool configs and starting folders. Then it commits, creates a GitHub
-repository, and pushes.
+**A Spec-Driven Development (SDD) framework that helps a developer build software with an AI coding
+assistant.** For now it supports Claude Code only (see [Approach](#approach)). It is delivered as a
+Claude Code skill, `project-init`, that sets up a new project. You create an
+empty folder and open it in VS Code, then run the skill. It gives the new project its starting
+files: `CLAUDE.md` and path-scoped rules, docs, README, tool configs and starting folders. Then it
+commits, creates a GitHub repository, and pushes.
 
 This repository is the skill's source. Everything the skill needs is inside `skills/project-init/`.
 
 ## Contents
 
+- [Objectives](#objectives)
+- [Approach](#approach)
 - [What it does](#what-it-does)
 - [What a new project gets, and why](#what-a-new-project-gets-and-why)
   - [Every project](#every-project)
@@ -29,6 +33,33 @@ This repository is the skill's source. Everything the skill needs is inside `ski
   - [The test suite](#the-test-suite)
   - [Lint and type checks](#lint-and-type-checks)
   - [Checked in real Claude Code sessions](#checked-in-real-claude-code-sessions)
+
+## Objectives
+
+The software a developer builds with sherpa must be:
+
+- **Written with zero lines of code by the developer.** Natural language is the programming
+  language.
+- **Production-level.** No prototype or demo software.
+- **High-quality.** Correct, readable, tested, maintainable.
+
+## Approach
+
+Spec-Driven Development (SDD): the developer approves a spec, then a design, then a plan, and the
+plan is built one milestone at a time. AI generation is probabilistic, so deterministic checks
+(tests, linters, type checkers, hooks) bound it.
+
+**Which assistant.** The ideal is a framework that works with any AI coding assistant (Claude,
+Gemini, etc.). The current choice is to limit it to Claude Code, because the skill, the rules files,
+the permissions, the hooks and the milestone runner use its features.
+
+**How a new project meets each objective.** The rest of this file gives the details.
+
+| Objective | How a new project gets it |
+| --- | --- |
+| Zero lines of code | `/write-spec`, `/write-design` and `/write-plan` turn an interview into the documents Claude builds from; `milestones-runner.py` runs the plan unattended. |
+| Production-level | Approved requirements with stable IDs, acceptance examples, thin milestones, scope controls and permissions that block destructive commands. |
+| High-quality | Ruff, mypy, ESLint, Prettier, Stylelint and an 80% branch-coverage floor, run by an edit hook and a pre-commit hook on every change. |
 
 ## What it does
 
@@ -109,6 +140,8 @@ checked with ruff 0.17.0 and mypy 2.4.0 using the configs in `assets/`.
 ## File structure
 
 ```text
+CLAUDE.md                       instructions for working on this repository
+docs/                           SDD report, presentation and demo; todo.md: proposed changes
 skills/project-init/            the skill. Install by copying this folder.
   SKILL.md                      what Claude reads: steps, questions, failure handling
   scripts/
@@ -138,7 +171,6 @@ tests/                          the test suite (not installed with the skill)
   test_runner.py                the milestone runner, with a fake claude
   fake_claude.py                stands in for `claude -p`: finishes, blocks or skips a milestone
 pytest.ini                      points pytest at tests/ and the skill's scripts
-CLAUDE.md, TODO.md              instructions for working on this repository; open items
 ```
 
 `assets/CLAUDE_GOLDEN.md.646` is the master as it was before it was cut from 646 lines to 525, so
