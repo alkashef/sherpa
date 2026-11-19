@@ -160,6 +160,29 @@ def test_sdd_is_the_way_in_and_routes_to_every_other_skill() -> None:
     assert "scripts/milestones-runner.py" in skill_text("sdd")
 
 
+def workflow_page() -> str:
+    """Return the page that shows the workflow as a diagram (docs/workflow.html)."""
+    return (bi.assets_dir() / "docs" / "workflow.html").read_text(encoding="utf-8")
+
+
+def test_the_workflow_page_names_every_skill_and_script_of_the_workflow() -> None:
+    # The page is a picture of docs/workflow.md. A skill or a script that the workflow gains
+    # must reach the page in the same change.
+    skills = [f"/{folder.name}" for folder in project_skills()]
+    scripts = sorted(set(re.findall(r"scripts/[\w-]+\.py", workflow_text())))
+    assert scripts != []
+    assert [name for name in [*skills, *scripts] if name not in workflow_page()] == []
+
+
+def test_every_card_of_the_workflow_page_has_its_panel() -> None:
+    # A card opens the panel whose key is its data-step; a card without one opens nothing.
+    page = workflow_page()
+    cards = re.findall(r'data-step="([a-z]+)"', page)
+    panels = re.findall(r"^    ([a-z]+): \{$", page, flags=re.MULTILINE)
+    assert cards != []
+    assert sorted(cards) == sorted(panels)
+
+
 def test_a_milestone_has_a_test_session_and_a_build_session() -> None:
     workflow = workflow_text()
     assert "**Test session** (`/write-tests`)" in workflow

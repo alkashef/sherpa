@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="The sherpa spec-driven development workflow: who does each step, what it produces, and what enforces it.">
+<title>Sherpa SDD Workflow</title>
+<style>
+  /* Layout: a slim /sdd bar, then two rows of four cards that snake. Top row left to right (setup
+     and approvals), bottom row right to left (the milestone loop, in two sessions). A card opens a
+     docked right panel. The text follows docs/workflow.md, which owns the rules. */
+  :root {
+    --bg: #f3f5f8;
+    --card: #ffffff;
+    --ink: #1b2a3a;
+    --muted: #5d6b7a;
+    --faint: #8a97a5;
+    --line: #d6dee7;
+    --rule: #aebccb;
+    --head: #0f2a47;
+    --accent: #2f6fae;
+    --tint: #e4edf7;
+    --shadow: rgba(15, 42, 71, .18);
+    --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Consolas, "Liberation Mono", monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1520; --card: #152131; --ink: #e3ebf4; --muted: #9fb0c2; --faint: #7488a0;
+      --line: #28394d; --rule: #3d526b; --head: #d4e5f8; --accent: #6aa7e0; --tint: #1b2e45;
+      --shadow: rgba(0, 0, 0, .5);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1520; --card: #152131; --ink: #e3ebf4; --muted: #9fb0c2; --faint: #7488a0;
+    --line: #28394d; --rule: #3d526b; --head: #d4e5f8; --accent: #6aa7e0; --tint: #1b2e45;
+    --shadow: rgba(0, 0, 0, .5);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.45;
+    padding-block: 28px 40px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  main { width: 100%; }
+  h1 { font-size: clamp(1.4rem, 3vw, 2rem); line-height: 1.15; color: var(--head); text-wrap: balance; margin-bottom: 22px; }
+  button { font: inherit; color: inherit; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-bottom: 32px; color: var(--muted); font-size: .9rem; }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+
+  .icon { display: block; width: 1.6rem; height: 1.6rem; color: var(--faint); fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .icon .dot { fill: currentColor; stroke: none; }
+  .legend .icon { width: 1.3rem; height: 1.3rem; }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr); column-gap: 32px; align-items: start; }
+
+  .flow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 84px minmax(0, 1fr) 84px minmax(0, 1fr) 84px minmax(0, 1fr);
+    grid-template-areas:
+      ".      .  sdd   sdd sdd  sdd sdd"
+      ".      .  r1    .   r2   .   r3"
+      "con    a1 spec  a2  des  a3  plan"
+      ".      .  .     .   .    .   d1"
+      "commit a6 check a5  code a4  test"
+      "loop loop loop loop loop loop loop";
+    grid-template-rows: auto 20px auto 56px auto 46px;
+    row-gap: 10px;
+    align-items: center;
+    min-width: 0;
+    container-type: inline-size;
+  }
+
+  .node {
+    position: relative;
+    align-self: stretch;
+    min-width: 0;
+    min-height: 92px;
+    display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 12px;
+    padding: 16px;
+    text-align: left;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    cursor: pointer;
+    z-index: 1;
+    transition: border-color .15s, box-shadow .15s, background-color .15s;
+  }
+  .node:hover { border-color: var(--accent); }
+  .node:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .node[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  /* The title size follows the width of the flow, not of the window: the flow gets narrower when
+     the panel docks beside it. The padding keeps the title clear of one icon, or of two (.duo). */
+  .node b { font-size: clamp(1rem, 1.8cqw, 1.35rem); line-height: 1.15; color: var(--head); text-wrap: balance; padding-right: 2.6rem; }
+  .node.duo b { padding-right: 4.4rem; }
+  .who { position: absolute; top: 14px; right: 14px; display: flex; gap: 6px; }
+
+  /* The /sdd bar: the way into every step to its right and below. */
+  .node.bar { min-height: 0; flex-direction: row; flex-wrap: wrap; align-items: baseline; justify-content: flex-start; gap: 4px 14px; padding: 12px 56px 12px 16px; }
+  .node.bar b { padding-right: 0; font-family: var(--font-mono); font-size: clamp(1rem, 1.4vw, 1.2rem); }
+  .node.bar .desc { color: var(--muted); font-size: .9rem; }
+  .node.bar .who { top: 50%; transform: translateY(-50%); }
+
+  .arrow { position: relative; justify-self: center; font-size: 2rem; font-weight: 700; line-height: 1; color: var(--accent); }
+  .arrow.route { font-size: 1.1rem; font-weight: 600; color: var(--faint); }
+  .tag { position: absolute; left: 50%; bottom: calc(100% + 6px); transform: translateX(-50%); white-space: nowrap; font-size: .68rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .arrow .tag { padding: 2px 7px; border: 1px solid var(--accent); border-radius: 999px; background: var(--tint); color: var(--accent); font-size: .76rem; font-weight: 600; letter-spacing: 0; text-transform: none; bottom: calc(100% + 8px); }
+  .arrow.down .tag { left: auto; right: calc(100% + 10px); bottom: auto; top: 50%; transform: translateY(-50%); }
+
+  /* One dashed box per session of a milestone. Its name sits on the top edge. */
+  .bracket { align-self: stretch; margin: -12px; border: 1.5px dashed var(--rule); border-radius: 16px; pointer-events: none; position: relative; z-index: 0; }
+  .bracket.build { grid-area: 5 / 1 / 6 / 6; }
+  .bracket.test { grid-area: 5 / 7 / 6 / 8; }
+  .bracket .tag { left: 14px; bottom: auto; top: 0; transform: translateY(-50%); padding: 0 6px; background: var(--bg); }
+
+  .loop { grid-area: loop; align-self: stretch; margin: -10px calc((100% - 252px) / 8) 0; position: relative; border: 2px solid var(--accent); border-top: 0; border-radius: 0 0 44px 44px / 0 0 100% 100%; pointer-events: none; z-index: 2; }
+  .loop::after { content: ""; position: absolute; right: -8px; top: -3px; border-left: 7px solid transparent; border-right: 7px solid transparent; border-bottom: 10px solid var(--accent); }
+  .loop .tag { left: 50%; bottom: -8px; transform: translateX(-50%); padding: 0 10px; background: var(--bg); }
+
+  .src { margin-top: 44px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--faint); font-size: .82rem; }
+  code { font-family: var(--font-mono); font-size: .86em; color: var(--muted); overflow-wrap: anywhere; }
+
+  /* Right panel: docked beside the flow on wide screens, a drawer over it on narrow ones. */
+  .panel { display: none; }
+  .panel-inner { display: flex; flex-direction: column; gap: 18px; }
+  .panel header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .eyebrow { font-size: .72rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+  .panel h2 { margin-top: 4px; font-size: 1.35rem; line-height: 1.2; color: var(--head); }
+  .panel h2:focus { outline: none; }
+  .close { flex: none; width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--muted); font-size: 1.2rem; line-height: 1; cursor: pointer; }
+  .close:hover { border-color: var(--accent); color: var(--head); }
+  .close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .actors { display: flex; flex-direction: column; gap: 8px; }
+  .actor { display: flex; align-items: center; gap: 10px; font-size: .92rem; color: var(--ink); }
+  .actor .icon { width: 1.4rem; height: 1.4rem; }
+  #p-body { display: flex; flex-direction: column; gap: 16px; }
+  .panel section h3 { font-size: .72rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .panel section p { font-size: .95rem; max-width: 62ch; }
+  .panel section p + p { margin-top: 6px; }
+  .backdrop { display: none; }
+
+  .layout.open .panel {
+    display: block;
+    position: fixed; z-index: 20; top: 0; right: 0; bottom: 0;
+    width: min(100%, 420px);
+    overflow-y: auto;
+    padding: calc(22px + env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) 22px;
+    background: var(--card);
+    border-left: 1px solid var(--line);
+    box-shadow: -12px 0 32px var(--shadow);
+  }
+  .layout.open .backdrop { display: block; position: fixed; inset: 0; z-index: 15; background: var(--shadow); }
+
+  @media (min-width: 1200px) {
+    .layout.open { grid-template-columns: minmax(0, 1fr) 380px; }
+    .layout.open .panel {
+      position: sticky; top: 16px; z-index: 1; align-self: start; width: auto; max-height: calc(100vh - 32px);
+      padding: 22px; border: 1px solid var(--line); border-radius: 12px; box-shadow: none;
+    }
+    .layout.open .backdrop { display: none; }
+  }
+
+  /* Narrow cards (a small window, or the panel docked): the icons go under the title. */
+  @container (max-width: 1000px) {
+    .node:not(.bar) { padding: 14px; }
+    .node:not(.bar) b { padding-right: 0; }
+    .node:not(.bar) .who { position: static; }
+  }
+
+  @media (max-width: 900px) {
+    .node:not(.bar) b { padding-right: 4.4rem; }
+    .node:not(.bar) .who { position: absolute; }
+    .flow {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: "con" "a1" "sdd" "r1" "spec" "a2" "des" "a3" "plan" "d1" "test" "a4" "code" "a5" "check" "a6" "commit";
+      grid-template-rows: none;
+      row-gap: 8px;
+    }
+    .bracket, .loop, .tag, .route.extra { display: none; }
+    .arrow.right { transform: rotate(90deg); }
+    .arrow.left { transform: rotate(-90deg); }
+    .arrow.route { font-size: 2rem; font-weight: 700; color: var(--accent); }
+    .node { min-height: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { .node { transition: none; } }
+</style>
+</head>
+<body>
+
+<main>
+  <h1>Sherpa SDD workflow</h1>
+
+  <div class="legend" aria-label="Who does the step">
+    <span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>Human approves</span>
+    <span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V5M2 13v3M22 13v3M9.5 17.5h5"/><circle class="dot" cx="12" cy="3.6" r="1.2"/><circle class="dot" cx="9" cy="13" r="1.3"/><circle class="dot" cx="15" cy="13" r="1.3"/></svg>AI writes</span>
+    <span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10l3 2-3 2M12.5 15H17"/></svg>Script or hook enforces</span>
+  </div>
+
+  <div class="layout" id="layout">
+    <div class="flow" role="group" aria-label="Constitution, then /sdd routes to Spec, Design or Plan. Then per milestone: a test session writes the tests first, and a build session does Code, Check, and Commit and push. Repeated for the next milestone.">
+
+      <button type="button" class="node bar" data-step="sdd" aria-pressed="false" aria-controls="panel" style="grid-area: sdd">
+        <b>/sdd</b>
+        <span class="desc">The way in. It reads the docs, names the next step, starts that step's skill, then stops.</span>
+        <span class="who"><svg class="icon" viewBox="0 0 24 24" role="img" aria-label="AI"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V5M2 13v3M22 13v3M9.5 17.5h5"/><circle class="dot" cx="12" cy="3.6" r="1.2"/><circle class="dot" cx="9" cy="13" r="1.3"/><circle class="dot" cx="15" cy="13" r="1.3"/></svg></span>
+      </button>
+      <div class="arrow route" style="grid-area: r1" aria-hidden="true">&darr;</div>
+      <div class="arrow route extra" style="grid-area: r2" aria-hidden="true">&darr;</div>
+      <div class="arrow route extra" style="grid-area: r3" aria-hidden="true">&darr;</div>
+
+      <button type="button" class="node script" data-step="constitution" aria-pressed="false" aria-controls="panel" style="grid-area: con">
+        <b>Constitution</b>
+        <span class="who"><svg class="icon" viewBox="0 0 24 24" role="img" aria-label="Script"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10l3 2-3 2M12.5 15H17"/></svg></span>
+      </button>
+      <div class="arrow right" style="grid-area: a1" aria-hidden="true">&rarr;</div>
+
+      <button type="button" class="node duo" data-step="spec" aria-pressed="false" aria-controls="panel" style="grid-area: spec">
+        <b>Spec</b>
+        <span class="who">
+          <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="AI"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V5M2 13v3M22 13v3M9.5 17.5h5"/><circle class="dot" cx="12" cy="3.6" r="1.2"/><circle class="dot" cx="9" cy="13" r="1.3"/><circle class="dot" cx="15" cy="13" r="1.3"/></svg>
+          <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="Human"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+        </span>
+      </button>
+      <div class="arrow right" style="grid-area: a2" aria-hidden="true">&rarr;<span class="tag">Approved</span></div>
+
+      <button type="button" class="node duo" data-step="design" aria-pressed="false" aria-controls="panel" style="grid-area: des">
+        <b>Design</b>
+        <span class="who">
+          <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="AI"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V5M2 13v3M22 13v3M9.5 17.5h5"/><circle class="dot" cx="12" cy="3.6" r="1.2"/><circle class="dot" cx="9" cy="13" r="1.3"/><circle class="dot" cx="15" cy="13" r="1.3"/></svg>
+          <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="Human"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+        </span>
+      </button>
+      <div class="arrow right" style="grid-area: a3" aria-hidden="true">&rarr;<span class="tag">Approved</span></div>
+
+      <button type="button" class="node duo" data-step="plan" aria-pressed="false" aria-controls="panel" style="grid-area: plan">
+        <b>Plan</b>
+        <span class="who">
+          <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="AI"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V5M2 13v3M22 13v3M9.5 17.5h5"/><circle class="dot" cx="12" cy="3.6" r="1.2"/><circle class="dot" cx="9" cy="13" r="1.3"/><circle class="dot" cx="15" cy="13" r="1.3"/></svg>
+          <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="Human"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+        </span>
+      </button>
+      <div class="arrow down" style="grid-area: d1" aria-hidden="true">&darr;<span class="tag">Table approved</span></div>
+
+      <button type="button" class="node" data-step="tests" aria-pressed="false" aria-controls="panel" style="grid-area: test">
+        <b>Tests first</b>
+        <span class="who"><svg class="icon" viewBox="0 0 24 24" role="img" aria-label="AI"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V5M2 13v3M22 13v3M9.5 17.5h5"/><circle class="dot" cx="12" cy="3.6" r="1.2"/><circle class="dot" cx="9" cy="13" r="1.3"/><circle class="dot" cx="15" cy="13" r="1.3"/></svg></span>
+      </button>
+      <div class="arrow left" style="grid-area: a4" aria-hidden="true">&larr;<span class="tag">Fail</span></div>
+
+      <button type="button" class="node" data-step="code" aria-pressed="false" aria-controls="panel" style="grid-area: code">
+        <b>Code</b>
+        <span class="who"><svg class="icon" viewBox="0 0 24 24" role="img" aria-label="AI"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V5M2 13v3M22 13v3M9.5 17.5h5"/><circle class="dot" cx="12" cy="3.6" r="1.2"/><circle class="dot" cx="9" cy="13" r="1.3"/><circle class="dot" cx="15" cy="13" r="1.3"/></svg></span>
+      </button>
+      <div class="arrow left" style="grid-area: a5" aria-hidden="true">&larr;</div>
+
+      <button type="button" class="node script" data-step="check" aria-pressed="false" aria-controls="panel" style="grid-area: check">
+        <b>Check</b>
+        <span class="who"><svg class="icon" viewBox="0 0 24 24" role="img" aria-label="Script"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10l3 2-3 2M12.5 15H17"/></svg></span>
+      </button>
+      <div class="arrow left" style="grid-area: a6" aria-hidden="true">&larr;<span class="tag">Pass</span></div>
+
+      <button type="button" class="node" data-step="commit" aria-pressed="false" aria-controls="panel" style="grid-area: commit">
+        <b>Commit &amp; push</b>
+        <span class="who"><svg class="icon" viewBox="0 0 24 24" role="img" aria-label="AI"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V5M2 13v3M22 13v3M9.5 17.5h5"/><circle class="dot" cx="12" cy="3.6" r="1.2"/><circle class="dot" cx="9" cy="13" r="1.3"/><circle class="dot" cx="15" cy="13" r="1.3"/></svg></span>
+      </button>
+
+      <div class="bracket test" aria-hidden="true"><span class="tag">Test session</span></div>
+      <div class="bracket build" aria-hidden="true"><span class="tag">Build session</span></div>
+      <div class="loop" aria-hidden="true"><span class="tag">Next milestone &middot; two fresh claude sessions each</span></div>
+    </div>
+
+    <aside class="panel" id="panel" aria-label="Step details" hidden>
+      <div class="panel-inner">
+        <header>
+          <div>
+            <div class="eyebrow" id="p-eyebrow"></div>
+            <h2 id="p-title" tabindex="-1"></h2>
+          </div>
+          <button type="button" class="close" id="p-close" aria-label="Close details">&times;</button>
+        </header>
+        <div class="actors" id="p-actors"></div>
+        <div id="p-body"></div>
+      </div>
+    </aside>
+    <div class="backdrop" id="backdrop" aria-hidden="true"></div>
+  </div>
+
+  <p class="src">The rules are in <code>docs/workflow.md</code>. This page shows them. If the two disagree, <code>workflow.md</code> is right.</p>
+</main>
+
+<script>
+(function () {
+  var ICONS = {
+    human: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>',
+    ai: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V5M2 13v3M22 13v3M9.5 17.5h5"/><circle class="dot" cx="12" cy="3.6" r="1.2"/><circle class="dot" cx="9" cy="13" r="1.3"/><circle class="dot" cx="15" cy="13" r="1.3"/></svg>',
+    script: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10l3 2-3 2M12.5 15H17"/></svg>'
+  };
+
+  var STEPS = {
+    sdd: {
+      eyebrow: 'Every request · the way in',
+      title: '/sdd',
+      actors: [['ai', 'reads the state and routes'], ['human', 'asks, and passes each gate']],
+      sections: [
+        ['What happens', '<p><code>/sdd</code> reads the files, not memory: the Status of <code>spec.md</code>, the decisions and open questions of <code>design.md</code>, the rows of <code>plan.md</code>, the ideas in <code>unapproved-ideas.md</code>, and git. It names the step that comes next and starts that step\'s skill. It runs one step, then stops.</p>'],
+        ['Routing', '<p>New or changed behavior: <code>/write-spec</code>. A change of architecture, data, interfaces or libraries with no change of behavior: <code>/write-design</code>. Milestones, or a fix of behavior the spec already states: <code>/write-plan</code>. To build: the runner command (<code>python scripts/milestones-runner.py</code>), or one milestone in chat.</p>'],
+        ['Order', '<p>A draft spec comes first. Then a design that is stale or not approved, then a missing plan, then a blocked milestone, then uncommitted docs. A request that skips a step goes to that step. <code>/sdd</code> never passes an approval gate for the user.</p>'],
+        ['Ideas', '<p>An idea for later is one line in <code>docs/unapproved-ideas.md</code>. Nothing is designed, planned, tested or built from it. It becomes work only through Spec, Design or Plan, with that step\'s approval.</p>']
+      ]
+    },
+    constitution: {
+      eyebrow: 'Once per project',
+      title: 'Constitution',
+      actors: [['script', 'project-init builds it'], ['human', 'reviews the Project section']],
+      sections: [
+        ['What happens', '<p>The <code>project-init</code> skill asks for a name, purpose, modules and visibility, then runs <code>init_project.py</code>. It checks the folder, git, gh and conda, runs git init, builds the files with <code>build_instance.py</code>, creates the conda environment, commits, turns on the pre-commit hook, creates the GitHub repository and pushes.</p>'],
+        ['Output', '<p><code>CLAUDE.md</code> (always-loaded rules), <code>.claude/rules/</code> (path-scoped rules), <code>.claude/settings.json</code>, the skills <code>/sdd</code>, <code>/write-spec</code>, <code>/write-design</code>, <code>/write-plan</code> and <code>/write-tests</code>, <code>.githooks/pre-commit</code>, <code>scripts/</code>, <code>docs/</code> (the workflow and this page, spec, design, plan, unapproved ideas), tool configs.</p>'],
+        ['Enforced by', '<p><code>settings.json</code> denies force-push, <code>--no-verify</code>, hard reset, <code>git clean</code>, <code>git restore</code> and changes to <code>core.hooksPath</code>. Edits to <code>CLAUDE.md</code>, <code>spec.md</code>, <code>workflow.md</code>, the settings, the hooks, the check scripts and the tool configs ask for permission first. So do installs and recursive deletes.</p>']
+      ]
+    },
+    spec: {
+      eyebrow: 'Once per change · human approves',
+      title: 'Spec',
+      actors: [['ai', 'interviews and drafts'], ['human', 'answers and approves']],
+      sections: [
+        ['What happens', '<p><code>/write-spec</code> asks one question at a time. It writes each requirement as one EARS statement with a stable ID (<code>AREA-NNN</code> or <code>NFR-NNN</code>), which a test can check without the design. Where a requirement needs a concrete case, an acceptance example (<code>EX-NNN</code>) gives it. The file is marked <code>Status: Draft</code>. For an approved spec, it proposes each change first.</p>'],
+        ['Output', '<p><code>docs/spec.md</code>. The status becomes Approved when the human approves. The tests are written from its requirements and examples.</p>'],
+        ['Enforced by', '<p>Edits to <code>spec.md</code> ask for permission, so an unattended session cannot make them. A milestone never changes the spec: the runner counts a milestone that changed it as not finished. For a spec change, the human makes the edit and writes an Approval entry in the plan.</p>']
+      ]
+    },
+    design: {
+      eyebrow: 'Once per change · human approves',
+      title: 'Design',
+      actors: [['ai', 'designs and asks'], ['human', 'answers and approves']],
+      sections: [
+        ['What happens', '<p><code>/write-design</code> reads the approved spec and applies a light version of Attribute-Driven Design 3.0. It asks only what it cannot decide itself. It gives each requirement a test level (<code>unit</code>, <code>e2e</code> or <code>ui</code>) and names every interface a test needs.</p>'],
+        ['Output', '<p><code>docs/design.md</code>: Decisions (<code>DEC-NNN</code>), Architecture, Data model, Interfaces, Test design and Open design questions.</p>'],
+        ['Gate', '<p>The design is approved when no decision is <code>Proposed</code> and no design question is open. If the design needs a different requirement, it proposes a spec change for approval. When the spec and the design disagree, the spec wins.</p>']
+      ]
+    },
+    plan: {
+      eyebrow: 'Once per change · human approves',
+      title: 'Plan',
+      actors: [['ai', 'cuts the milestones'], ['human', 'approves the table']],
+      sections: [
+        ['What happens', '<p><code>/write-plan</code> stops unless the spec and the design are approved. It cuts thin milestones and proposes a model and an effort for each. It shows the milestone table in chat first. After the human approves, it writes the table and one block per milestone. A fix, however small, is one milestone.</p>'],
+        ['Output', '<p><code>docs/plan.md</code>. The table "Milestones at a glance" has milestone, description, model, effort and status. Each block has Refs, Owner, Tests first, Build and Gate. Checks that need a live service or a person are listed under "Human checks": the human does them after the run.</p>'],
+        ['Gate', '<p>Every requirement ID in the spec must belong to at least one milestone. <code>spec_coverage.py</code> lists each ID as tested, manual, planned or missing. A <code>Decided</code> decision must name each dependency, and the human installs it before the run. The runner reads the table.</p>']
+      ]
+    },
+    tests: {
+      eyebrow: 'Per milestone · test session',
+      title: 'Tests first',
+      actors: [['script', 'runner starts the test session'], ['ai', 'writes and runs the tests']],
+      sections: [
+        ['What happens', '<p>The runner starts a fresh <code>claude -p</code> session for the next open row, with that row\'s model and effort. The session runs <code>/write-tests</code>. It writes one test for each name under Tests first, from the spec\'s requirements and examples and the design\'s interfaces. Then it runs them: each must fail because the behavior is missing. It does not commit.</p>'],
+        ['Output', '<p><code>tests/unit/</code>, <code>tests/e2e/</code> and <code>tests/e2e/ui/</code>, each test named after the requirement ID it verifies. The report names each requirement without a test as <code>Manual:</code>.</p>'],
+        ['Enforced by', '<p>The session cannot read the code: Read, Grep and Glob are disallowed for <code>src/</code>. So the tests catch code that drifts from the spec. After the session, the runner stores a hash of every file under <code>tests/</code>.</p>'],
+        ['Before the first milestone', '<p>The runner checks that the conda environment is active, the settings file is there, the commit hook is on, git is clean and the branch has an upstream. Sessions run with <code>bypassPermissions</code>. Their guard rails are the deny and ask rules of <code>settings.json</code>.</p>'],
+        ['In chat', '<p>When <code>/sdd</code> builds one milestone in chat, a subagent is the test session.</p>']
+      ]
+    },
+    code: {
+      eyebrow: 'Per milestone · build session',
+      title: 'Code',
+      actors: [['script', 'runner starts the build session'], ['ai', 'writes the change'], ['script', 'edit hook checks each file']],
+      sections: [
+        ['What happens', '<p>A second fresh session writes the smallest change that passes the new tests. It does not change a file in <code>tests/</code>. A test that looks wrong is a blocker.</p>'],
+        ['Decisions', '<p>Only the spec is locked. For everything else that is not a blocker, the session picks the most conservative option and carries on. When that changes the design, it adds a <code>DEC-NNN</code> with the Status <code>Proposed</code>. Its report has one <code>DECISION:</code> line per decision. The human reviews these after the run.</p>'],
+        ['Enforced by', '<p>Edit and Write are disallowed for <code>tests/</code> in this session. After every edit, a hook runs <code>check.py --edited</code>. It formats and fixes the file (ruff for Python, ESLint, Stylelint and Prettier for web files). Remaining errors go back to Claude as a block decision.</p>']
+      ]
+    },
+    check: {
+      eyebrow: 'Per milestone · build session',
+      title: 'Check',
+      actors: [['script', 'runs the checks']],
+      sections: [
+        ['What happens', '<p>The session runs <code>python scripts/check.py</code> and <code>python scripts/spec_coverage.py M&lt;n&gt;</code>. If one fails, it goes back to Code.</p>'],
+        ['Checks', '<p>Python: ruff check and format, mypy (once <code>src/</code> has Python), pytest with an 80% branch-coverage floor (once tests exist). Web: ESLint, tsc, Prettier, Stylelint, <code>node --test</code>. Spec coverage: each requirement ID in the milestone\'s Refs has a test or a <code>Manual:</code> entry.</p>'],
+        ['Enforced by', '<p>The pre-commit hook runs the same full check on every commit and refuses the commit if anything fails. After the build session, the runner compares the hashes of <code>tests/</code> and runs the spec coverage itself.</p>'],
+        ['Offline', '<p>A milestone run calls no live external service and uses no real user data. Tests use fakes at the external boundaries.</p>']
+      ]
+    },
+    commit: {
+      eyebrow: 'Per milestone · build session',
+      title: 'Commit & push',
+      actors: [['ai', 'commits and pushes'], ['script', 'runner verifies'], ['human', 'only when blocked']],
+      sections: [
+        ['What happens', '<p>The session updates docs that the change made inaccurate and deletes the milestone\'s row and block from <code>plan.md</code>. It commits only the files it changed as <code>M&lt;n&gt;: title</code> and pushes.</p>'],
+        ['Runner check', '<p>The runner checks that the row left the plan, git is clean, the push happened, and <code>tests/</code> and <code>spec.md</code> did not change. If so, it starts the next open row. If not, it tries the session again (<code>--retries</code>, default 1; a session over 90 minutes counts as not finished), then stops. <code>--resume</code> continues from the changes that are left.</p>'],
+        ['Blocked', '<p>A milestone stops when it needs a spec change, a forbidden action, a new flow of user data to an external service, real user data, a secret in a committed file, a dependency that no <code>Decided</code> decision names, or a change to a test. It sets its status to blocked, adds a Blocked entry, undoes its other changes, commits only <code>plan.md</code> as <code>M&lt;n&gt;: blocked</code> and pushes. The runner stops and prints the question.</p><p>The human adds an Approval entry, sets the status to approved, commits and runs again. The approval permits exactly what it says.</p>']
+      ]
+    }
+  };
+
+  var layout = document.getElementById('layout');
+  var panel = document.getElementById('panel');
+  var title = document.getElementById('p-title');
+  var eyebrow = document.getElementById('p-eyebrow');
+  var actors = document.getElementById('p-actors');
+  var body = document.getElementById('p-body');
+  var nodes = Array.prototype.slice.call(document.querySelectorAll('.node'));
+  var current = null;
+
+  function render(id) {
+    var s = STEPS[id];
+    eyebrow.textContent = s.eyebrow;
+    title.textContent = s.title;
+    actors.innerHTML = s.actors.map(function (a) {
+      return '<div class="actor">' + ICONS[a[0]] + '<span>' + a[1] + '</span></div>';
+    }).join('');
+    body.innerHTML = s.sections.map(function (sec) {
+      return '<section><h3>' + sec[0] + '</h3>' + sec[1] + '</section>';
+    }).join('');
+  }
+
+  function open(id) {
+    current = id;
+    render(id);
+    panel.hidden = false;
+    layout.classList.add('open');
+    nodes.forEach(function (n) { n.setAttribute('aria-pressed', n.dataset.step === id ? 'true' : 'false'); });
+    panel.scrollTop = 0;
+  }
+
+  function close(returnFocus) {
+    var node = nodes.find(function (n) { return n.dataset.step === current; });
+    current = null;
+    panel.hidden = true;
+    layout.classList.remove('open');
+    nodes.forEach(function (n) { n.setAttribute('aria-pressed', 'false'); });
+    if (returnFocus && node) node.focus();
+  }
+
+  nodes.forEach(function (n) {
+    n.addEventListener('click', function () {
+      if (current === n.dataset.step) close(false); else open(n.dataset.step);
+    });
+  });
+  document.getElementById('p-close').addEventListener('click', function () { close(true); });
+  document.getElementById('backdrop').addEventListener('click', function () { close(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && current) close(true); });
+})();
+</script>
+
+</body>
+</html>

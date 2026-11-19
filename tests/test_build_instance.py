@@ -16,6 +16,8 @@ PYTHON_FILES = [
     "README.md",
     "docs/spec.md",
     "docs/unapproved-ideas.md",
+    "docs/workflow.html",
+    "docs/workflow.md",
     "ruff.toml",
     "mypy.ini",
     "pytest.ini",

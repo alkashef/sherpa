@@ -96,6 +96,7 @@ def template_files() -> dict[str, list[str]]:
             ".gitignore",
             "config/.env.example",
             "docs/unapproved-ideas.md",
+            "docs/workflow.html",
             "docs/workflow.md",
             "scripts/check.py",
             "scripts/cleanup.py",
@@ -156,7 +157,7 @@ def always_folders() -> dict[str, str]:
     return {
         "src/": "All source code.",
         "tests/": "`unit/` and `e2e/` tests.",
-        "docs/": "Workflow, spec, design, plan, and unapproved ideas.",
+        "docs/": "Workflow (text and diagram), spec, design, plan, and unapproved ideas.",
         "config/": "`.env` (never committed) and `.env.example`.",
         "scripts/": "`check.py` and `spec_coverage.py` (the checks), `milestones-runner.py`, "
         "`cleanup.py`, setup scripts.",

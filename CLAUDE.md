@@ -40,6 +40,8 @@ wording where it costs nothing.
 - `skills/project-init/scripts/`: `init_project.py` (folder, git, GitHub) and `build_instance.py`
   (builds the new project's files).
 - `skills/project-init/assets/`: everything a new project receives.
+- `skills/project-init/assets/docs/workflow.html`: the workflow as a diagram, for the developer.
+  `assets/docs/workflow.md` owns the rules; the page shows them.
 - `tests/`: the test suite. It is not installed with the skill.
 - `docs/`: the SDD report, presentation and demo, one folder per version (`v2/` is current, `v1/`
   is the workflow before the test session); `unapproved-ideas.md` holds proposed workflow changes.
@@ -66,6 +68,10 @@ The lint and type-check commands are in README, "How to test".
 - The workflow, the project skills and the scripts in `assets/` are the same in every project. When
   a change comes back from a project that used them, remove that project's names first (its file
   names, ID scheme, tools) and do not bring back a check it cut. A test refuses the known ones.
+- Keep `assets/docs/workflow.html` in step with the workflow. A change to a step, a gate, a
+  session, a check or a permission (in `assets/docs/workflow.md`, a project skill, the runner,
+  `check.py` or `settings.json`) updates the diagram and the panel of each step it touches, in the
+  same commit.
 - Do not edit `assets/CLAUDE_GOLDEN.md.646`. It is a reference copy that nothing reads.
 - Run the test suite before every commit.
 

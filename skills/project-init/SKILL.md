@@ -100,6 +100,9 @@ To change what new projects get, edit `assets/`, not this file.
      gets two `claude -p` sessions: one writes its tests with `/write-tests`, without reading the
      code, and one builds the code, without changing the tests. It stops at the first milestone
      that fails or needs a decision.
+   - Open `docs/workflow.html` in a browser: it shows this loop as a diagram. Click a step to see
+     who does it, what it produces, and what enforces it. The rules themselves are in
+     `docs/workflow.md`.
    - An idea for later goes into `docs/unapproved-ideas.md`. Nothing is built from that file: an
      idea becomes work only through `/sdd`, with the user's approval.
    - Review the **Project** section of the new `CLAUDE.md` and the layout table in `docs/design.md`.

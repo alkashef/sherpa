@@ -123,7 +123,7 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 | --- | --- |
 | `src/` | All source code. `docs/design.md` has the detailed layout. |
 | `tests/` | `unit/`, `e2e/`, and `e2e/ui/`. |
-| `docs/` | `workflow.md`, `spec.md`, `design.md`, `plan.md`, `unapproved-ideas.md`, and reference material. |
+| `docs/` | `workflow.md` (and `workflow.html`, its diagram for the user), `spec.md`, `design.md`, `plan.md`, `unapproved-ideas.md`, and reference material. |
 | `config/` | `.env` (never committed) and `.env.example` (committed). |
 | `data/` | Input and runtime data. |
 | `content/`, `site/` | Static site: Markdown source (authors edit only this) and generated output (committed, never edited by hand). |
