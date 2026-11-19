@@ -41,8 +41,9 @@ wording where it costs nothing.
   (builds the new project's files).
 - `skills/project-init/assets/`: everything a new project receives.
 - `tests/`: the test suite. It is not installed with the skill.
-- `docs/`: the SDD report, presentation and demo; `todo.md` holds proposed workflow changes (not
-  approved for implementation).
+- `docs/`: the SDD report, presentation and demo, one folder per version (`v2/` is current, `v1/`
+  is the workflow before the test session); `unapproved-ideas.md` holds proposed workflow changes.
+  Never implement one without the user's approval.
 - `README.md`: the full description, usage, contribution and test guide. Read it before changing
   what new projects get.
 

@@ -143,7 +143,8 @@ checked with ruff 0.17.0 and mypy 2.4.0 using the configs in `assets/`.
 
 ```text
 CLAUDE.md                       instructions for working on this repository
-docs/                           SDD report, presentation and demo; todo.md: proposed changes
+docs/                           unapproved-ideas.md: proposed changes, not approved
+  v1/, v2/                      SDD report, presentation and demo; v2 is the current workflow
 skills/project-init/            the skill. Install by copying this folder.
   SKILL.md                      what Claude reads: steps, questions, failure handling
   scripts/

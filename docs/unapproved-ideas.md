@@ -1,7 +1,11 @@
-# SDD Workflow - Proposed Ideas
+# Unapproved ideas
+
+Ideas for sherpa's workflow that nobody approved. An idea is not a requirement: never design, plan,
+test or build from this file. An idea becomes work only when the user approves it.
 
 - Approved for recording: October 17, 2026
 - Consolidated: October 17, 2026
+- Renamed from `todo.md`: November 19, 2026
 
 These notes record proposed changes. Approval to record them does not authorize implementation.
 The user authorized merging duplicates and grouping conflicting proposals.
