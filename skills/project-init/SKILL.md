@@ -1,6 +1,6 @@
 ---
 name: project-init
-description: Set up the current folder as a new project from the golden templates and push it to GitHub. Run it in a new, empty project folder that is open in VS Code. Builds CLAUDE.md, the path-scoped rules, docs/ (workflow, spec, design, plan), the /write-spec, /write-design and /write-plan skills, README, tool configs and starting folders, then commits, creates the GitHub repository, pushes, and creates a conda environment with the project's name. Use whenever the user wants to start, init, bootstrap or scaffold a new project or repo, or says "new project", even if they do not mention GitHub or the docs. Not for adding files to an existing project.
+description: Set up the current folder as a new project from the golden templates and push it to GitHub. Run it in a new, empty project folder that is open in VS Code. Builds CLAUDE.md, the path-scoped rules, docs/ (workflow, spec, design, plan, unapproved ideas), the /sdd, /write-spec, /write-design, /write-plan and /write-tests skills, README, tool configs and starting folders, then commits, creates the GitHub repository, pushes, and creates a conda environment with the project's name. Use whenever the user wants to start, init, bootstrap or scaffold a new project or repo, or says "new project", even if they do not mention GitHub or the docs. Not for adding files to an existing project.
 ---
 
 # Project init
@@ -90,12 +90,18 @@ To change what new projects get, edit `assets/`, not this file.
      Stylelint and Prettier) on the file and sends what is left back to Claude, and the git
      pre-commit hook refuses a commit unless every check and test passes. Until `npm install` has run, it
      refuses commits that have web files to check, and says so.
-   - In the new session, type `/write-spec`. It interviews the user about the project, starting
-     from the purpose given here, and writes `docs/spec.md`. When the user approves the spec, type
-     `/write-design` to write `docs/design.md`, and when the user approves the design, `/write-plan`
-     to write the milestones in `docs/plan.md`. Then follow `docs/workflow.md`.
-     `python scripts/milestones-runner.py` runs the planned milestones unattended, one `claude -p`
-     session each, and stops at the first that fails or needs a decision.
+   - In the new session, type `/sdd`. It reads the state of the docs, names the next step of
+     `docs/workflow.md`, and starts that step's skill: first `/write-spec`, which interviews the
+     user about the project, starting from the purpose given here, and writes `docs/spec.md`.
+     When the user approves the spec, `/write-design` writes `docs/design.md`, and when the user
+     approves the design, `/write-plan` writes the milestones in `docs/plan.md`. `/sdd` runs one
+     step, then stops: run it again for the next one.
+     `python scripts/milestones-runner.py` runs the planned milestones unattended. Each milestone
+     gets two `claude -p` sessions: one writes its tests with `/write-tests`, without reading the
+     code, and one builds the code, without changing the tests. It stops at the first milestone
+     that fails or needs a decision.
+   - An idea for later goes into `docs/unapproved-ideas.md`. Nothing is built from that file: an
+     idea becomes work only through `/sdd`, with the user's approval.
    - Review the **Project** section of the new `CLAUDE.md` and the layout table in `docs/design.md`.
 
 Do not edit the generated files or make more commits in this skill. Setting up the project is done

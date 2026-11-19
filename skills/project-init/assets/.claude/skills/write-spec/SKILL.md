@@ -6,7 +6,8 @@ description: >-
   discovery, user interviews, specification gaps, or requests to build a spec.
   Use usage-centered elicitation, one question at a time, EARS syntax, stable
   requirement IDs, and concrete acceptance examples. Preserve existing approved
-  requirements. Do not use for implementation, architecture, or a clear small fix.
+  requirements. Do not use for implementation, architecture, or a fix of behavior the
+  spec already states (that goes to /write-plan as a fix milestone).
 ---
 
 # Write Spec
@@ -26,6 +27,8 @@ project has no existing spec format.
 1. Read the request, prior answers, and relevant supplied documents.
 2. Read project instructions and the existing spec, workflow, and glossary.
 3. Identify whether this is a new spec, a resumed interview, or a proposed amendment.
+   Read `docs/unapproved-ideas.md` when it exists. An idea there is evidence of intent, not a
+   requirement: take one up only when the user asks, and interview it like any other request.
 4. Use the existing spec path. Otherwise, use `docs/spec.md` in the stated project.
 5. If no project or destination is known, interview in chat. Resolve the destination before saving.
 
@@ -88,6 +91,16 @@ Treat an unknown target as an open question with a way to resolve it.
 
 For each consequential rule, capture a concrete input or situation and its expected result.
 Include a representative success case and a relevant exception or boundary case.
+
+The requirements and the acceptance examples are the tests designed from the spec:
+`/write-tests` later turns them into code without reading the code. So write each
+requirement so that a test can be built from it before the design exists: a starting
+state, the person's action, and a result a test can observe (what the user sees, what the
+system answers, what is stored). When a requirement needs a concrete case to be testable,
+add an example with invented data and link the requirement to it. Avoid words a test
+cannot check, such as "clear", "fast", or "easy". Name no routes, modules, or screen
+internals; those belong to the design.
+
 Ask the user or appropriate domain owner to review the expected results.
 
 Restate a small, coherent part when enough evidence exists. Ask what is wrong or missing.
@@ -99,6 +112,8 @@ Write only within the authorized destination and approval scope. Keep a working 
 current so the interview can resume. Label it `Draft` until the applicable approval occurs.
 Store open questions and material assumptions in that same spec. Do not create another
 requirements document or copy requirements into the design or plan.
+When an idea from `docs/unapproved-ideas.md` becomes a draft requirement, or the user drops
+it, delete its line there in the same change.
 
 For each requirement:
 
@@ -129,6 +144,7 @@ Review substance before wording:
 - Check that scenarios cover the agreed scope, including relevant roles and failure paths.
 - Check terminology, consistency, unique IDs, and unresolved conflicts.
 - Check that acceptance examples have domain-reviewed expected results.
+- Check that every requirement states a result a test can observe.
 - Identify material unknowns that would change scope, behavior, or acceptance.
 
 Resolve material unknowns or explicitly defer them with an owner and a revisit condition.

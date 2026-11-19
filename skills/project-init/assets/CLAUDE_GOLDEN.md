@@ -34,8 +34,9 @@ The objective is clean, maintainable code for humans and machines. Humans can re
 Machines (AI agents, type checkers, linters, tests) can navigate and verify it. All code is written
 by AI. Follow every rule in this file exactly.
 
-- `docs/workflow.md`, `spec.md`, `design.md`, and `plan.md` always exist.
-  `workflow.md` says what each is for.
+- `docs/workflow.md`, `spec.md`, `design.md`, `plan.md`, and `unapproved-ideas.md` always exist.
+  `workflow.md` says what each is for. They are the only spec, design, and plan: a skill that
+  would write one of them to another place writes to these files instead.
 - Requirements live only in `docs/spec.md`. Never implement one that exists only in chat, code, or
   memory. If a request is not covered by the spec or contradicts it, stop and ask.
 - Write the spec in EARS syntax (ubiquitous, event, state, unwanted-behavior, optional-feature),
@@ -71,6 +72,7 @@ End every task that changes files with this report, one line per item:
 - **Tests added or updated:** a list.
 - **Tests run:** N passed out of M.
 - **Assumptions and open questions:** very concise.
+- One `DECISION:` line for each decision made in a milestone (`docs/workflow.md`, Rules).
 - **TLDR: what I need to know if I read nothing else.** (last, whole line in bold)
 
 ## Code smells
@@ -110,8 +112,9 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
   LLM). A module exposes only what others need and never reaches into another module's internals.
 - Pass anything that touches an external system (repository, API client, file writer, LLM client)
   into the code that uses it, so tests can use fakes. Do not use a dependency-injection framework.
-- Changing a layer, a module boundary, the data model, the public API, or the tech stack needs the
-  user's approval and a `DEC-NNN` in `docs/design.md`.
+- Changing a layer, a module boundary, the data model, the public API, or the tech stack needs a
+  `DEC-NNN` in `docs/design.md`. Outside a milestone it also needs the user's approval; in a
+  milestone, `docs/workflow.md` (Rules) applies.
 
 ## Directory structure
 <!-- A7. Applies when: always. A host that needs files at the repo root (for example GitHub Pages) lists the exception in docs/design.md. -->
@@ -120,12 +123,12 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 | --- | --- |
 | `src/` | All source code. `docs/design.md` has the detailed layout. |
 | `tests/` | `unit/`, `e2e/`, and `e2e/ui/`. |
-| `docs/` | `workflow.md`, `spec.md`, `design.md`, `plan.md`, and reference material. |
+| `docs/` | `workflow.md`, `spec.md`, `design.md`, `plan.md`, `unapproved-ideas.md`, and reference material. |
 | `config/` | `.env` (never committed) and `.env.example` (committed). |
 | `data/` | Input and runtime data. |
 | `content/`, `site/` | Static site: Markdown source (authors edit only this) and generated output (committed, never edited by hand). |
 | `models/`, `prompts/` | Downloaded model weights (never committed; path from config) and LLM prompt files. |
-| `scripts/` | Setup, download, and maintenance scripts: `cleanup.py`, `check.py` (the checks the hooks run), `milestones-runner.py` (runs the plan unattended), `download_models.py`, `download_assets.py`. |
+| `scripts/` | Setup, download, and maintenance scripts: `cleanup.py`, `check.py` (the checks the hooks run), `spec_coverage.py` (which requirement has a test), `milestones-runner.py` (runs the plan unattended), `download_models.py`, `download_assets.py`. |
 | `.vscode/`, `.claude/` | Shared editor settings and Claude Code settings. |
 | Root | `CLAUDE.md`, `README.md`, `requirements.txt`, `.gitignore`, `main.py` (Python entry point), `Dockerfile`, `compose.yaml`, `.dockerignore` (Docker), and the tool configs: `ruff.toml`, `mypy.ini`, `pytest.ini` (Python), `package.json`, `tsconfig.json`, `eslint.config.js` (JavaScript). |
 
@@ -171,8 +174,8 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 <!-- A10. Applies when: the project uses third-party libraries. Environment commands are in the language sections. -->
 
 - Prefer the standard library. Ask before adding any dependency, and say why the standard library is
-  not enough. Install only into the project's isolated environment, never into the global
-  interpreter or a base environment.
+  not enough. One that `docs/design.md` names in a `Decided` decision is approved. Install only into
+  the project's isolated environment, never into the global interpreter or a base environment.
 - The dependency file (`requirements.txt`; `package.json` for JavaScript) is the only list. Add a
   library in the same change that first imports it, never import an unlisted library, and remove it
   when its last import goes.
@@ -253,15 +256,14 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
   weights, exports, logs, or caches. Before the first commit, check that `.gitignore` covers them.
 - `.claude/settings.json` blocks force-push, `reset --hard`, `git clean`, `git restore`, and Docker
   volume deletion. It asks before recursive deletes, installs, killing processes, and edits to the
-  spec, `CLAUDE.md`, or the settings. Never work around a block with a different command.
+  spec, the workflow, `CLAUDE.md`, or the settings. Never work around a block with a different
+  command.
 - Delete recursively only a scratch folder you made in this milestone, and clear caches with
   `scripts/cleanup.py`. Never touch files outside this repo (except scratch folders you make and
   delete), the paths listed as protected under Project rules, or another program's process.
-- If a task needs a forbidden action, or an approval you cannot get now (a new dependency, an
-  architecture change, a spec change), stop that milestone: in `docs/plan.md`, set its Status to
-  `blocked` and add a **Blocked** entry with the reason and the exact question (template in
-  `docs/workflow.md`), and ask in chat if the user is present. An **Approval** entry in the block
-  permits exactly what it says, and nothing more.
+- If a milestone needs something that `docs/workflow.md` (Blocked) names, such as a forbidden
+  action, a spec change, or a dependency no `Decided` decision names, stop it as that step says.
+  An **Approval** entry in its block permits exactly what it says, and nothing more.
 
 ## Security and privacy
 <!-- A16. Applies when: always. -->

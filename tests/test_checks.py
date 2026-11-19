@@ -120,6 +120,29 @@ def test_checks_run_the_tests_once_there_are_some(project: Sandbox) -> None:
     assert "test_add" in output
 
 
+def test_a_commit_of_docs_alone_skips_the_tests(project: Sandbox) -> None:
+    # A blocked milestone and an approval commit docs/plan.md alone: no test result can change.
+    write_tested_module(project.folder, 4)
+    (project.folder / "docs" / "plan.md").write_text("# Plan\n", encoding="utf-8")
+    project.git("add", "docs/plan.md")
+    code, output = check(project.folder)
+    assert code == 0, output
+    assert "Only files under docs/ are staged: tests skipped." in output
+    project.git("add", "-A")
+    code, output = check(project.folder)
+    assert code == 2
+    assert "test_add" in output
+
+
+def test_docs_alone_still_run_the_other_checks(project: Sandbox) -> None:
+    (project.folder / "src" / "bad.py").write_text(BAD, encoding="utf-8")
+    (project.folder / "docs" / "plan.md").write_text("# Plan\n", encoding="utf-8")
+    project.git("add", "docs/plan.md")
+    code, output = check(project.folder)
+    assert code == 2
+    assert "bad.py" in output
+
+
 def test_pre_commit_hook_refuses_a_failing_commit(project: Sandbox) -> None:
     # The hook finds Python through the active conda environment, as in a VS Code terminal.
     env = {**project.env, "CONDA_DEFAULT_ENV": "demo", "CONDA_PREFIX": sys.prefix}

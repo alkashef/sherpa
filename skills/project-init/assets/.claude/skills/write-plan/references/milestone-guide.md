@@ -5,7 +5,8 @@
 A milestone is one unit of delivered behavior. Test it with these questions:
 
 - Can one session finish it, including its tests, in one commit?
-- Does it have at least one test that fails before the change and passes after?
+- Does it have at least one test that fails before the change and passes after? A `Manual:`
+  entry stands in only for what a session cannot check alone (see Gate).
 - Can the user say what is different when it is done?
 
 If any answer is no, split the milestone or merge it with a neighbor.
@@ -24,6 +25,8 @@ that needs it.
 Make a list of requirement IDs with the milestone that owns each. A non-functional requirement
 (`NFR-NNN`) belongs to the milestone where its test first can run, or to its own milestone when it
 needs separate work. A requirement with status Withdrawn needs no milestone.
+The manual checks are not a milestone: they go under "## Human checks" after the last block
+(see Gate).
 
 ## Model and effort
 
@@ -44,7 +47,11 @@ must be repeatable.
 
 ## Tests first
 
-- One test name per requirement ID, written so the name shows the ID.
+- One test name per requirement ID, written so the name shows the ID. Group the names by the
+  level the design gives each requirement: `unit:`, `e2e:`, `ui:`.
+- A separate session writes the tests from the spec and the design, without the code
+  (`/write-tests`). So each name says which case and which result it checks.
+- Write `Manual: <requirement ID>` only for what needs a person or a live external service.
 - A test checks behavior the spec states. It does not check how the code is built.
 - Name the boundary and failure cases the spec lists. Do not invent new ones.
 
@@ -52,7 +59,18 @@ must be repeatable.
 
 - Describe the smallest change that passes the tests.
 - Name the files or modules the design assigns. Do not specify private functions.
-- Leave out anything the design does not decide. A missing decision is a question for the user.
+- Leave out anything the design does not decide. The milestone's session decides it, records it
+  as a `Proposed` decision, and reports it (`docs/workflow.md`, Rules).
+
+## Gate
+
+The runner starts a milestone in a session with nobody to answer. A Gate is met by what the
+session can run itself: the tests and checks of `CLAUDE.md`, with fakes at the external
+boundaries and invented data. These are not a Gate: a call to a live external service (an LLM, a
+paid API), a read of the user's real data, a walk through the `Manual:` entries, a person's
+review, or a download from the network. List them under "## Human checks" at the end of the
+plan, one line each with the requirement or decision ID, for the user to do after the run. The
+heading is level 2, so the runner's reading of the milestone blocks is not affected.
 
 ## Example of one row and block
 
@@ -63,7 +81,8 @@ must be repeatable.
 
 - **Refs:** PAY-001, PAY-002, DEC-004.
 - **Owner:** `src/payments/record.py`.
-- **Tests first:** `test_pay_001_balance_falls_by_payment`, `test_pay_002_overpayment_rejected`.
+- **Tests first:** unit: `test_pay_001_balance_falls_by_payment`,
+  `test_pay_002_overpayment_rejected`.
 - **Build:** add `record_payment` to the payments module; reject an amount above the balance.
 - **Gate:** the tests and the checks in `CLAUDE.md` pass; the README lists the new command.
 ```

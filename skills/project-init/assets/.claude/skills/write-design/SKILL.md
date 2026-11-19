@@ -14,6 +14,7 @@ Treat this as an adaptation of ADD, not the official method or a guarantee of te
 - Read existing code, manifests, and tests when available. Distinguish an implemented fact from a proposed design.
 - Use the project's paths and conventions. Default to `docs/design.md` when none exist.
 - Identify whether the request creates, resumes, reviews, or amends a design. Preserve unrelated decisions and user edits.
+- Read `docs/unapproved-ideas.md` when it exists. An idea there is not a decision. Take one up only when the user asks; when it becomes a decision, or the user drops it, delete its line there in the same change.
 - Confirm approval from the available record or the user's instruction. If the spec is unapproved, analyze it provisionally and resolve approval before finalizing design.
 - If requirements are absent, ask for the spec or use `/write-spec` first. Do not invent business behavior to make architecture possible.
 
@@ -67,7 +68,7 @@ Do not require a technical reviewer for every routine choice or claim that an AI
 
 ## Write the design
 
-Preserve the project's headings. For project-init, retain Decisions, Architecture, Data model, and Interfaces.
+Preserve the project's headings. For project-init, retain Decisions, Architecture, Data model, Interfaces, Test design, and Open design questions.
 Add compact subsections for drivers, technology choices, important flows, and unresolved risks only when needed.
 Cover these concerns where they apply:
 
@@ -76,6 +77,9 @@ Cover these concerns where they apply:
 - Data types, identities, ownership, relationships, integrity, persistence, and migration boundaries.
 - Public contracts, authorization boundaries, validation, errors, and recovery behavior.
 - Deployment, external data flows, secrets, settings, and operational failure handling.
+- How each requirement is tested: its level (`unit` for logic with fakes, `e2e` through the outermost non-browser entry point, `ui` for what only the page shows), the test tools, and the fake for each external system.
+
+The test writer reads only the spec and the design, never the code (`/write-tests`). So name every interface a test needs: entry points, request and response fields, stored records, and public functions.
 
 For an AI feature, define the provider or local runtime, outgoing data, output validation, failure handling, and test boundaries. Respect project rules.
 Choose diagrams only when they clarify boundaries, dependencies, or runtime behavior. Use the least detail that helps implementation.
@@ -87,8 +91,10 @@ Give every significant design decision a stable `DEC-NNN`, or the existing proje
 Never renumber or reuse IDs. Find the highest allocated ID in the current document and available Git history before assigning a new one.
 If history is unavailable, resolve the allocation boundary before finalizing new IDs. Provisional labels must not enter the approved design.
 Record context, requirement references, choice, rationale, alternatives, consequences, and a validation method. Use compact tables or nearby details.
-Under project-init, keep one current decision per topic. Remove a replaced decision from the current document and give its replacement a new ID.
-Keep replacement history in Git. If another project uses superseded records, preserve that convention instead.
+Give every decision a Status. Set it to `Decided` only when the user chose or confirmed the decision. A decision that you derived from a requirement is `Proposed` until the user confirms it.
+Keep one current decision per topic. When a decision is replaced, keep its row, set its Status to `Superseded`, and name the replacement in its Why. Give the replacement a new ID.
+A `Proposed` decision whose Why says "auto-decided in M<n>, review" was made by a milestone session (`docs/workflow.md`, Rules). Show each one to the user: confirm it as `Decided`, or replace it.
+Record a question that the design cannot settle in the table "Open design questions", with who decides it and what it blocks. Delete the row when the question is closed.
 Separate observed results, documented capabilities, estimates, assumptions, and planned checks. Cite sources for consequential claims.
 Never mark a test, benchmark, compatibility check, or prototype as successful unless it actually ran.
 
@@ -97,8 +103,9 @@ Never mark a test, benchmark, compatibility check, or prototype as successful un
 Check that the design addresses the architectural drivers, respects the spec, and gives significant decisions real alternatives and validation methods.
 Check references, unique IDs, technology evidence, data flows, interface failures, and consistency with project rules.
 Check that material unknowns have an owner and a blocking condition. Do not call an unresolved stack choice final.
+Check that every requirement has a test level and that the interfaces its test needs are named.
 Present the concrete design before requesting any approval required by project rules. Allow review in chat or a draft without replacing approved content prematurely.
-Record only approval actually given, in the location the workflow permits. Technical review and user approval are separate facts.
+Record only approval actually given: a decision becomes `Decided` when the user chooses or confirms it. The design is approved when no decision is `Proposed` and no design question is open. Technical review and user approval are separate facts.
 Save authorized design edits and follow applicable document checks and Git rules. Report the result and any remaining blocker briefly.
 Stop after design. Do not install dependencies, create application code, run experiments, or build milestones unless separately authorized.
 After approval, tell the user the next step is `/write-plan`.

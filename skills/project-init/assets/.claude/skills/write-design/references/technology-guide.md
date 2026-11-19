@@ -29,7 +29,7 @@ In project-init, `requirements.txt` or `package.json` owns the installed direct 
 
 Identify existing, approved, proposed, and unverified technologies clearly.
 A proposed library remains proposed until the user grants any required dependency approval.
-An architecture approval permits a dependency only when that library and permission are explicit in the approved scope.
+A dependency is approved when a `Decided` decision in `docs/design.md` names it. An unattended milestone stops at a library that no `Decided` decision names (`docs/workflow.md`, Blocked).
 
 ## Explain choices to non-programmers
 

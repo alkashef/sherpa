@@ -62,6 +62,9 @@ The lint and type-check commands are in README, "How to test".
   `assets/CLAUDE_GOLDEN.md` and keep its section tags.
 - The built `CLAUDE.md` of a new project must stay under 200 lines, blank lines included. If the
   test fails, shorten a section or move one into a rules file. Do not raise the limit.
+- The workflow, the project skills and the scripts in `assets/` are the same in every project. When
+  a change comes back from a project that used them, remove that project's names first (its file
+  names, ID scheme, tools) and do not bring back a check it cut. A test refuses the known ones.
 - Do not edit `assets/CLAUDE_GOLDEN.md.646`. It is a reference copy that nothing reads.
 - Run the test suite before every commit.
 

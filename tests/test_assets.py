@@ -65,10 +65,19 @@ def test_check_configs_and_hooks_ask_before_an_edit() -> None:
         ".stylelintrc.json",
         ".githooks/**",
         "scripts/check.py",
+        "scripts/spec_coverage.py",
         "scripts/run-check.sh",
     ]
     ask = settings["permissions"]["ask"]
     assert [f for f in protected if f"Edit(/{f})" not in ask] == []
+
+
+def test_the_spec_and_the_workflow_ask_before_an_edit() -> None:
+    # An ask rule refuses when nobody can answer, so an unattended milestone cannot change the
+    # requirements or the rules it works under (docs/workflow.md, Approval).
+    settings = json.loads((bi.assets_dir() / ".claude" / "settings.json").read_text("utf-8"))
+    ask = settings["permissions"]["ask"]
+    assert [f for f in ("docs/spec.md", "docs/workflow.md") if f"Edit(/{f})" not in ask] == []
 
 
 def test_every_section_id_is_unique() -> None:
@@ -81,8 +90,9 @@ def project_skills() -> list[Path]:
     return sorted(p for p in (bi.assets_dir() / ".claude" / "skills").iterdir() if p.is_dir())
 
 
-def test_project_skills_are_the_three_slash_commands() -> None:
-    assert [p.name for p in project_skills()] == ["write-design", "write-plan", "write-spec"]
+def test_project_skills_are_the_five_slash_commands() -> None:
+    names = [p.name for p in project_skills()]
+    assert names == ["sdd", "write-design", "write-plan", "write-spec", "write-tests"]
 
 
 def test_every_project_skill_names_itself_after_its_folder() -> None:
@@ -95,8 +105,15 @@ def test_every_project_skill_link_resolves() -> None:
     for folder in project_skills():
         text = (folder / "SKILL.md").read_text(encoding="utf-8")
         links = re.findall(r"\]\(([^)#:]+)\)", text)
-        assert links, folder.name
-        assert [link for link in links if not (folder / link).is_file()] == []
+        assert [link for link in links if not (folder / link).is_file()] == [], folder.name
+
+
+def test_every_project_skill_file_is_linked_from_its_skill() -> None:
+    # A guide or template that SKILL.md does not link is never read.
+    for folder in project_skills():
+        text = (folder / "SKILL.md").read_text(encoding="utf-8")
+        files = [p.relative_to(folder).as_posix() for p in folder.rglob("*") if p.is_file()]
+        assert [f for f in files if f != "SKILL.md" and f"]({f})" not in text] == [], folder.name
 
 
 def test_the_workflow_and_the_skills_hand_off_to_each_other() -> None:
@@ -123,3 +140,83 @@ def test_the_plan_skill_follows_the_design_skill() -> None:
     plan_skill = (skills / "write-plan" / "SKILL.md").read_text(encoding="utf-8")
     assert "/write-spec" in plan_skill
     assert "/write-design" in plan_skill
+
+
+def skill_text(name: str) -> str:
+    """Return the SKILL.md of one project skill."""
+    path = bi.assets_dir() / ".claude" / "skills" / name / "SKILL.md"
+    return path.read_text(encoding="utf-8")
+
+
+def workflow_text() -> str:
+    """Return the workflow that new projects get."""
+    return (bi.assets_dir() / "docs" / "workflow.md").read_text(encoding="utf-8")
+
+
+def test_sdd_is_the_way_in_and_routes_to_every_other_skill() -> None:
+    assert "`/sdd` is the way in" in workflow_text()
+    for skill in ("/write-spec", "/write-design", "/write-plan", "/write-tests"):
+        assert skill in skill_text("sdd"), skill
+    assert "scripts/milestones-runner.py" in skill_text("sdd")
+
+
+def test_a_milestone_has_a_test_session_and_a_build_session() -> None:
+    workflow = workflow_text()
+    assert "**Test session** (`/write-tests`)" in workflow
+    assert "**Build session:**" in workflow
+    assert "Do not change a file in `tests/`" in workflow
+    assert "Do not read the code in `src/`" in skill_text("write-tests")
+    assert "/write-tests" in skill_text("write-plan")
+    assert "/write-tests" in skill_text("write-spec")
+    assert "/write-tests" in skill_text("write-design")
+
+
+def test_the_test_levels_are_the_same_everywhere() -> None:
+    # The design gives each requirement a level, the plan groups the test names by it, and the
+    # test session writes each test in that level's folder.
+    levels = ("unit:", "e2e:", "ui:")
+    sources = {
+        "workflow": workflow_text(),
+        "write-plan": skill_text("write-plan"),
+        "write-tests": skill_text("write-tests"),
+    }
+    assert [(name, lv) for name, text in sources.items() for lv in levels if lv not in text] == []
+    for level in ("`unit`", "`e2e`", "`ui`"):
+        assert level in skill_text("write-design"), level
+
+
+def test_the_design_records_who_decided() -> None:
+    # /sdd and /write-plan read the design as approved when no decision is Proposed.
+    design = (bi.assets_dir() / "docs" / "design.md").read_text(encoding="utf-8")
+    assert "| ID | Status | Decision | Why |" in design
+    assert "## 6. Open design questions" in design
+    for text in (workflow_text(), skill_text("sdd"), skill_text("write-plan")):
+        assert "`Proposed`" in text
+    for status in ("`Decided`", "`Proposed`", "`Superseded`"):
+        assert status in skill_text("write-design"), status
+
+
+def test_unapproved_ideas_are_never_built_from() -> None:
+    ideas = (bi.assets_dir() / "docs" / "unapproved-ideas.md").read_text(encoding="utf-8")
+    assert "never\ndesign, plan, test or build from this file" in ideas
+    assert "Never design, plan, test or build from it." in workflow_text()
+    for skill in ("sdd", "write-spec", "write-design", "write-plan"):
+        assert "docs/unapproved-ideas.md" in skill_text(skill), skill
+    # The file is for the user and for /sdd; the sessions of a milestone never read it.
+    runner = (bi.assets_dir() / "scripts" / "milestones-runner.py").read_text(encoding="utf-8")
+    assert "unapproved-ideas" not in runner
+    assert "unapproved-ideas" not in skill_text("write-tests")
+
+
+def test_no_asset_keeps_the_wording_of_another_project() -> None:
+    # The workflow, the skills and the scripts are the same in every project. These words came
+    # from one project that used them, and must not come back with a later merge.
+    # Its two-digit IDs (FR-NN, AC-NN, D-NN) are not part of NFR-NNN or DEC-NNN.
+    words = re.compile(
+        r"specs\.md|docs/ui|Ollama|embedding|design-kb|(?<![A-Z])(?:FR|AC|D)-NN(?!N)"
+    )
+    assets = bi.assets_dir()
+    sources = [*(assets / "docs").glob("*.md"), *(assets / ".claude" / "skills").rglob("*.md")]
+    sources += [*(assets / "scripts").glob("*.py"), assets / "CLAUDE_GOLDEN.md"]
+    found = {p.name: words.findall(p.read_text(encoding="utf-8")) for p in sources}
+    assert {name: hits for name, hits in found.items() if hits} == {}

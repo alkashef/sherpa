@@ -11,7 +11,8 @@ mypy once `src/` holds Python, pytest with the 80% branch-coverage floor once `t
 `test_*.py`. Web (with `package.json`): ESLint and tsc (with `eslint.config.js`) once `src/` or
 `tests/` holds JavaScript, Prettier once they hold JavaScript, CSS or HTML, Stylelint once `src/`
 holds CSS, `node --test` once `tests/` holds a `*.test.js`. A new project with no tests can
-still commit.
+still commit. When every staged file is under `docs/`, the tests are skipped (the other checks
+still run): a commit of the plan or the spec alone cannot change a test result.
 
 The full run exits 2 if anything fails, so that git refuses the commit. With --edited, ruff,
 ESLint, Stylelint and Prettier fix what they can in that one file (tests do not run), and the rest
@@ -33,6 +34,7 @@ ROOT = Path(__file__).resolve().parent.parent
 FAILED = 2
 JS_SUFFIXES = {".js", ".mjs", ".cjs", ".ts"}
 WEB_SUFFIXES = JS_SUFFIXES | {".css", ".html"}
+DOCS_PREFIX = "docs/"
 
 
 def run(command: list[str]) -> tuple[int, str]:
@@ -65,20 +67,33 @@ def has_tests(pattern: str) -> bool:
     return any((ROOT / "tests").rglob(pattern))
 
 
-def python_checks() -> list[list[str]]:
+def staged_files() -> list[str]:
+    """Return the paths staged for the next commit; a moved file lists both of its paths."""
+    git = shutil.which("git") or "git"
+    code, output = run([git, "diff", "--cached", "--name-only", "--no-renames"])
+    return output.splitlines() if code == 0 else []
+
+
+def only_docs_staged() -> bool:
+    """Return True if files are staged and every one of them is under `docs/`."""
+    staged = staged_files()
+    return bool(staged) and all(path.startswith(DOCS_PREFIX) for path in staged)
+
+
+def python_checks(with_tests: bool) -> list[list[str]]:
     """Return the Python checks: lint and format always, types and tests once there are some."""
     if not (ROOT / "ruff.toml").is_file():
         return []
     checks = [python_tool("ruff", "check", "."), python_tool("ruff", "format", "--check", ".")]
     if has_files(["src"], {".py"}):
         checks.append(python_tool("mypy"))
-    if has_tests("test_*.py"):
+    if with_tests and has_tests("test_*.py"):
         coverage = ["--cov=src", "--cov-branch", "--cov-fail-under=80"]
         checks.append(python_tool("pytest", "-q", *coverage))
     return checks
 
 
-def web_checks() -> list[list[str]]:
+def web_checks(with_tests: bool) -> list[list[str]]:
     """Return the `npm run` checks (see package.json) that have something to check."""
     if not (ROOT / "package.json").is_file():
         return []
@@ -89,7 +104,7 @@ def web_checks() -> list[list[str]]:
         scripts.append("format:check")
     if has_files(["src"], {".css"}):
         scripts.append("lint:css")
-    if has_tests("*.test.js"):
+    if with_tests and has_tests("*.test.js"):
         scripts.append("test")
     npm = shutil.which("npm") or "npm"
     return [[npm, "run", script] for script in scripts]
@@ -119,7 +134,8 @@ def label(command: list[str]) -> str:
 def check_all() -> int:
     """Run every check that applies and print each failure. Return 0 or FAILED."""
     failures: list[str] = []
-    for command in python_checks() + web_checks():
+    with_tests = not only_docs_staged()
+    for command in python_checks(with_tests) + web_checks(with_tests):
         problem = why_not_runnable(command)
         if not problem:
             code, output = run(command)
@@ -129,7 +145,8 @@ def check_all() -> int:
     if failures:
         print("\n\n".join(failures), file=sys.stderr)
         return FAILED
-    print("All checks passed.")
+    skipped = "" if with_tests else f" Only files under {DOCS_PREFIX} are staged: tests skipped."
+    print(f"All checks passed.{skipped}")
     return 0
 
 

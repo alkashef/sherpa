@@ -2,16 +2,17 @@
 
 How to build what `spec.md` says. If this file and the spec disagree, the spec wins.
 
-Review state: <draft, awaiting a named decision, or approved scope with its approval reference>.
+Review state: <draft, awaiting a named decision, or approved scope with its approval reference>. The design is approved when no decision is `Proposed` and no design question is open.
 Spec baseline: <document path and revision when available>.
 
 ## 1. Decisions
 
-Keep one current decision per topic. Keep previous decisions in Git history. Never reuse or renumber a decision ID.
+Keep one current decision per topic. Never reuse or renumber a decision ID. Keep the row of a replaced decision with the Status `Superseded`, and name its replacement in Why.
+Status: `Decided` means the user chose or confirmed it. `Proposed` means the AI derived it and the user has not confirmed it.
 
-| ID | Decision | Why and requirement references |
-| --- | --- | --- |
-| <DEC ID> | <chosen approach> | <reason, spec IDs, project constraint references> |
+| ID | Status | Decision | Why and requirement references |
+| --- | --- | --- | --- |
+| <DEC ID> | <Decided, Proposed or Superseded> | <chosen approach> | <reason, spec IDs, project constraint references> |
 
 ### <DEC ID>: <topic>
 
@@ -58,11 +59,15 @@ Record selected technologies and proposals here. Keep the installed dependency i
 
 ## 4. Interfaces
 
-<Define applicable public contracts, inputs, outputs, validation, authorization, errors, and recovery. Cite the relevant IDs.>
+<Define applicable public contracts, inputs, outputs, validation, authorization, errors, and recovery. Name every interface a test needs: entry points, request and response fields, stored records, and public functions. Cite the relevant IDs.>
 
-## 5. Unresolved risks and design checks
+## 5. Test design
 
-| Issue and references | Owner | Evidence needed | Blocks what? |
+<State the test level of each requirement (`unit`, `e2e` or `ui`), the test tools, the test harness, and the fake for each external system. The project rules own the test policy: cite them and do not weaken them.>
+
+## 6. Open design questions
+
+| ID | Question, risk or design check, and references | Who decides | Blocks what |
 | --- | --- | --- | --- |
 
 <Remove unused optional sections. Resolve material blockers before declaring the design ready for planning.>

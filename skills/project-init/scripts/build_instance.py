@@ -80,7 +80,7 @@ def optional_flags() -> dict[str, str]:
 
 
 def skill_files() -> list[str]:
-    """Return the files of the project skills (`/write-spec`, `/write-design`) under assets/."""
+    """Return the files of the project skills (`/sdd`, `/write-spec` and the rest) under assets/."""
     skills = assets_dir() / ".claude" / "skills"
     return sorted(p.relative_to(assets_dir()).as_posix() for p in skills.rglob("*") if p.is_file())
 
@@ -95,9 +95,11 @@ def template_files() -> dict[str, list[str]]:
             ".githooks/pre-commit",
             ".gitignore",
             "config/.env.example",
+            "docs/unapproved-ideas.md",
             "docs/workflow.md",
             "scripts/check.py",
             "scripts/cleanup.py",
+            "scripts/spec_coverage.py",
         ],
         "python": ["ruff.toml", "mypy.ini", "pytest.ini", "requirements.txt"],
         "javascript": [
@@ -154,9 +156,10 @@ def always_folders() -> dict[str, str]:
     return {
         "src/": "All source code.",
         "tests/": "`unit/` and `e2e/` tests.",
-        "docs/": "Workflow, spec, design, and plan.",
+        "docs/": "Workflow, spec, design, plan, and unapproved ideas.",
         "config/": "`.env` (never committed) and `.env.example`.",
-        "scripts/": "`check.py` (the checks), `milestones-runner.py`, `cleanup.py`, setup scripts.",
+        "scripts/": "`check.py` and `spec_coverage.py` (the checks), `milestones-runner.py`, "
+        "`cleanup.py`, setup scripts.",
         ".claude/": "Claude Code settings, including the hook that checks each edit.",
         ".githooks/": "`pre-commit`: refuses a commit unless the checks pass.",
         ".vscode/": "Shared editor settings.",

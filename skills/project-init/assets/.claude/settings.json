@@ -10,6 +10,7 @@
       "Bash(git push *)",
       "Bash(python scripts/cleanup.py *)",
       "Bash(python scripts/check.py *)",
+      "Bash(python scripts/spec_coverage.py *)",
       "PowerShell(git status *)",
       "PowerShell(git diff *)",
       "PowerShell(git log *)",
@@ -17,10 +18,12 @@
       "PowerShell(git commit *)",
       "PowerShell(git push *)",
       "PowerShell(python scripts/cleanup.py *)",
-      "PowerShell(python scripts/check.py *)"
+      "PowerShell(python scripts/check.py *)",
+      "PowerShell(python scripts/spec_coverage.py *)"
     ],
     "ask": [
       "Edit(/docs/spec.md)",
+      "Edit(/docs/workflow.md)",
       "Edit(/CLAUDE.md)",
       "Edit(/.claude/settings.json)",
       "Edit(/ruff.toml)",
@@ -33,6 +36,7 @@
       "Edit(/.stylelintrc.json)",
       "Edit(/.githooks/**)",
       "Edit(/scripts/check.py)",
+      "Edit(/scripts/spec_coverage.py)",
       "Edit(/scripts/run-check.sh)",
       "Bash(pip install *)",
       "Bash(npm install *)",

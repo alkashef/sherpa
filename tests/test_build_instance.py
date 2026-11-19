@@ -15,11 +15,13 @@ PYTHON_FILES = [
     ".claude/settings.json",
     "README.md",
     "docs/spec.md",
+    "docs/unapproved-ideas.md",
     "ruff.toml",
     "mypy.ini",
     "pytest.ini",
     "requirements.txt",
     "scripts/cleanup.py",
+    "scripts/spec_coverage.py",
     "src/.gitkeep",
     "tests/unit/.gitkeep",
 ]
@@ -145,7 +147,7 @@ def test_select_sections_drops_optional_sections_not_chosen() -> None:
 
 def test_build_writes_the_project_skills(tmp_path: Path) -> None:
     build(tmp_path)
-    for skill in ("write-spec", "write-design", "write-plan"):
+    for skill in ("sdd", "write-spec", "write-design", "write-plan", "write-tests"):
         assert (tmp_path / ".claude" / "skills" / skill / "SKILL.md").is_file()
     assert not (tmp_path / ".claude" / "skills" / "write-spec" / "assets" / "icon.svg").exists()
 
@@ -157,3 +159,18 @@ def test_build_writes_a_draft_spec_and_no_inbox(tmp_path: Path) -> None:
     assert "# Spec — my-app\n\nStatus: Draft" in spec
     assert "Counts sheep" in spec
     assert not (docs / "inbox.md").exists()
+
+
+def test_build_writes_an_empty_list_of_unapproved_ideas(tmp_path: Path) -> None:
+    build(tmp_path / "my-app", "--purpose", "Counts sheep")
+    ideas = (tmp_path / "my-app" / "docs" / "unapproved-ideas.md").read_text(encoding="utf-8")
+    assert ideas.startswith("# Unapproved ideas\n")
+    assert ideas.rstrip().endswith("None yet.")
+    # The purpose is a fact of the project, not an idea: nothing is filled in here.
+    assert "Counts sheep" not in ideas
+
+
+def test_a_new_design_starts_with_a_proposed_stack_decision(tmp_path: Path) -> None:
+    build(tmp_path / "my-app", "--with", "python")
+    design = (tmp_path / "my-app" / "docs" / "design.md").read_text(encoding="utf-8")
+    assert "| DEC-001 | Proposed | Python 3.12, conda environment `my-app`" in design

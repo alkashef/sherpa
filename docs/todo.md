@@ -115,6 +115,11 @@ Report-derived extension [High]; former REPORT-03:
 - **Report:** Section 5.6, "Establish tests and expected results" (#stage-06).
   Also Section 4.4, "Two distinct questions about correctness" (#two-questions).
 - **Why:** Generated code and generated tests can agree on the same wrong assumption.
+- **Status (November 19, 2026):** Partly delivered. `/write-tests` is a skill that writes the
+  tests of a milestone from the spec and the design, in a session that may not read `src/`, and
+  the build session may not change them. S now asks for requirements a test can check.
+  Not delivered: several tests per requirement, the recorded source of each expected result,
+  and property or mutation checks.
 
 ---
 
@@ -341,6 +346,10 @@ Report-derived alternative and quality criteria [High]; former REPORT-14:
   Also Sections 4.2 (#artifacts), 5.5 (#stage-05), and 5.13 (#stage-13).
 - **Why:** IDs and historical commits alone do not give a current requirement-to-result
   view. This extends the existing coverage check rather than replacing it.
+- **Status (November 19, 2026):** Partly delivered. `scripts/spec_coverage.py` lists each
+  requirement ID as tested, manual, planned or missing, and R refuses a milestone whose Refs
+  hold a requirement with no test. Not delivered: the consistency check across the spec, design
+  and plan, and the evidence record of a finished milestone.
 
 ---
 
@@ -543,6 +552,10 @@ Status: Proposed only. No skill or workflow rule is implemented.
 - **Report:** Section 5.6, "Establish tests and expected results" (#stage-06).
   Also Section 5.5 (#stage-05) and Section 5.10 (#stage-10).
 - **Why:** The reason for a failure matters more than the presence of a red result.
+- **Status (November 19, 2026):** Partly delivered. `/write-tests` accepts a failing test only
+  when the behavior is missing, not for a syntax error, a broken fixture or a wrong import, and
+  its report says how each test fails. Not delivered: a kept record of that reason, and other
+  evidence for setup, documentation and refactoring work.
 
 ---
 
