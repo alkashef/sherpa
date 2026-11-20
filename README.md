@@ -425,7 +425,9 @@ config, GitHub account and conda environments are never touched.
   first; the project skills are the five slash commands, and every file of a skill is linked
   from its `SKILL.md`; `/sdd` routes to every other skill; a milestone has a test session and a
   build session; the workflow page (`docs/workflow.html`) names every skill and script of the
-  workflow, and each of its cards has a panel; the test levels are the same in the workflow and
+  workflow, each of its cards has a panel, and its stamp is the SHA-256 of `docs/workflow.md` (a
+  change to the workflow fails until the page is read, corrected and stamped with the hash that
+  the test prints); the test levels are the same in the workflow and
   the skills; unapproved ideas are never built from; and no asset keeps the wording of another
   project.
 - `test_build_instance.py`: which files each build writes, no `{{placeholders}}` left, rules files

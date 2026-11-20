@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="The sherpa spec-driven development workflow: who does each step, what it produces, and what enforces it.">
+<!-- The SHA-256 of docs/workflow.md when this page was last made to agree with it. -->
+<meta name="workflow-md-sha256" content="10e53451036971717db15307d52c0038c06b5b9f8903f87a2938ae8826569aaa">
 <title>Sherpa SDD Workflow</title>
 <style>
   /* Layout: a slim /sdd bar, then two rows of four cards that snake. Top row left to right (setup
@@ -143,10 +145,26 @@
   .actors { display: flex; flex-direction: column; gap: 8px; }
   .actor { display: flex; align-items: center; gap: 10px; font-size: .92rem; color: var(--ink); }
   .actor .icon { width: 1.4rem; height: 1.4rem; }
-  #p-body { display: flex; flex-direction: column; gap: 16px; }
-  .panel section h3 { font-size: .72rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
-  .panel section p { font-size: .95rem; max-width: 62ch; }
-  .panel section p + p { margin-top: 6px; }
+  /* Each section of the panel folds. The first one is open when a card opens the panel. */
+  #p-body { display: flex; flex-direction: column; }
+  .panel details { border-top: 1px solid var(--line); }
+  .panel details:last-child { border-bottom: 1px solid var(--line); }
+  .panel summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 4px 11px 0; border-radius: 6px; cursor: pointer; list-style: none; }
+  .panel summary::-webkit-details-marker { display: none; }
+  .panel summary::after { content: ""; flex: none; width: 7px; height: 7px; margin: -4px 4px 0; border: solid var(--faint); border-width: 0 1.7px 1.7px 0; transform: rotate(45deg); transition: transform .15s; }
+  .panel details[open] > summary::after { margin-top: 4px; transform: rotate(-135deg); }
+  .panel summary:hover h3 { color: var(--head); }
+  .panel summary:hover::after { border-color: var(--accent); }
+  .panel summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .panel summary h3 { font-size: .72rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .panel details[open] > summary h3 { color: var(--head); }
+  .fold { padding-bottom: 14px; }
+  .fold :is(p, ol, ul) { font-size: .95rem; max-width: 62ch; }
+  .fold :is(p, ol, ul) + :is(p, ol, ul) { margin-top: 8px; }
+  .fold :is(ol, ul) { padding-left: 1.4em; }
+  .fold li + li { margin-top: 4px; }
+  .fold li::marker { color: var(--accent); }
+  .fold ol li::marker { font-weight: 600; font-variant-numeric: tabular-nums; }
   .backdrop { display: none; }
 
   .layout.open .panel {
@@ -192,7 +210,7 @@
     .arrow.route { font-size: 2rem; font-weight: 700; color: var(--accent); }
     .node { min-height: 0; }
   }
-  @media (prefers-reduced-motion: reduce) { .node { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .node, .panel summary::after { transition: none; } }
 </style>
 </head>
 <body>
@@ -306,16 +324,61 @@
     script: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10l3 2-3 2M12.5 15H17"/></svg>'
   };
 
+  // The panel text. A section is a title, then its parts: p() is a paragraph, ol() a numbered list
+  // and ul() a bullet list. Use ol() only where the order matters. A pair of backticks marks code.
+  function fmt(text) { return text.replace(/`([^`]+)`/g, '<code>$1</code>'); }
+  function p(text) { return '<p>' + fmt(text) + '</p>'; }
+  function list(tag, items) { return '<' + tag + '><li>' + items.map(fmt).join('</li><li>') + '</li></' + tag + '>'; }
+  function ol(items) { return list('ol', items); }
+  function ul(items) { return list('ul', items); }
+
   var STEPS = {
     sdd: {
       eyebrow: 'Every request · the way in',
       title: '/sdd',
       actors: [['ai', 'reads the state and routes'], ['human', 'asks, and passes each gate']],
       sections: [
-        ['What happens', '<p><code>/sdd</code> reads the files, not memory: the Status of <code>spec.md</code>, the decisions and open questions of <code>design.md</code>, the rows of <code>plan.md</code>, the ideas in <code>unapproved-ideas.md</code>, and git. It names the step that comes next and starts that step\'s skill. It runs one step, then stops.</p>'],
-        ['Routing', '<p>New or changed behavior: <code>/write-spec</code>. A change of architecture, data, interfaces or libraries with no change of behavior: <code>/write-design</code>. Milestones, or a fix of behavior the spec already states: <code>/write-plan</code>. To build: the runner command (<code>python scripts/milestones-runner.py</code>), or one milestone in chat.</p>'],
-        ['Order', '<p>A draft spec comes first. Then a design that is stale or not approved, then a missing plan, then a blocked milestone, then uncommitted docs. A request that skips a step goes to that step. <code>/sdd</code> never passes an approval gate for the user.</p>'],
-        ['Ideas', '<p>An idea for later is one line in <code>docs/unapproved-ideas.md</code>. Nothing is designed, planned, tested or built from it. It becomes work only through Spec, Design or Plan, with that step\'s approval.</p>']
+        ['What happens',
+          p('`/sdd` reads the state from the files, not from memory:'),
+          ul([
+            'The Status of `spec.md`',
+            'The decisions and open questions of `design.md`',
+            'The rows of `plan.md`',
+            'The ideas in `unapproved-ideas.md`',
+            'Git'
+          ]),
+          p('Then `/sdd` does these steps:'),
+          ol([
+            'Names the step that comes next.',
+            'Starts the skill of that step.',
+            'Stops. It runs one step only.'
+          ])],
+        ['Routing',
+          ul([
+            'New or changed behavior: `/write-spec`',
+            'A change of architecture, data, interfaces or libraries, with no change of behavior: `/write-design`',
+            'Milestones, or a fix of behavior that the spec already states: `/write-plan`',
+            'To build: the runner command (`python scripts/milestones-runner.py`), or one milestone in chat'
+          ])],
+        ['Order',
+          p('An earlier item comes before a later one:'),
+          ol([
+            'A draft spec',
+            'A design that is stale or not approved',
+            'A missing plan',
+            'A blocked milestone',
+            'Uncommitted docs'
+          ]),
+          ul([
+            'A request that skips a step goes to that step.',
+            '`/sdd` never passes an approval gate for the user.'
+          ])],
+        ['Ideas',
+          ul([
+            'An idea for later is one line in `docs/unapproved-ideas.md`.',
+            'The AI does not design, plan, test or build from an idea.',
+            'An idea becomes work only through Spec, Design or Plan, with the approval of that step.'
+          ])]
       ]
     },
     constitution: {
@@ -323,9 +386,45 @@
       title: 'Constitution',
       actors: [['script', 'project-init builds it'], ['human', 'reviews the Project section']],
       sections: [
-        ['What happens', '<p>The <code>project-init</code> skill asks for a name, purpose, modules and visibility, then runs <code>init_project.py</code>. It checks the folder, git, gh and conda, runs git init, builds the files with <code>build_instance.py</code>, creates the conda environment, commits, turns on the pre-commit hook, creates the GitHub repository and pushes.</p>'],
-        ['Output', '<p><code>CLAUDE.md</code> (always-loaded rules), <code>.claude/rules/</code> (path-scoped rules), <code>.claude/settings.json</code>, the skills <code>/sdd</code>, <code>/write-spec</code>, <code>/write-design</code>, <code>/write-plan</code> and <code>/write-tests</code>, <code>.githooks/pre-commit</code>, <code>scripts/</code>, <code>docs/</code> (the workflow and this page, spec, design, plan, unapproved ideas), tool configs.</p>'],
-        ['Enforced by', '<p><code>settings.json</code> denies force-push, <code>--no-verify</code>, hard reset, <code>git clean</code>, <code>git restore</code> and changes to <code>core.hooksPath</code>. Edits to <code>CLAUDE.md</code>, <code>spec.md</code>, <code>workflow.md</code>, the settings, the hooks, the check scripts and the tool configs ask for permission first. So do installs and recursive deletes.</p>']
+        ['What happens',
+          p('The `project-init` skill asks for a name, purpose, modules and visibility. Then it runs `init_project.py`, which does these steps:'),
+          ol([
+            'Checks the folder, git, gh and conda.',
+            'Runs `git init`.',
+            'Builds the files with `build_instance.py`.',
+            'Creates the conda environment.',
+            'Commits.',
+            'Enables the pre-commit hook.',
+            'Creates the GitHub repository.',
+            'Pushes.'
+          ])],
+        ['Output',
+          ul([
+            '`CLAUDE.md`: the rules that are always loaded',
+            '`.claude/rules/`: the path-scoped rules',
+            '`.claude/settings.json`',
+            'The skills `/sdd`, `/write-spec`, `/write-design`, `/write-plan` and `/write-tests`',
+            '`.githooks/pre-commit`',
+            '`scripts/`',
+            '`docs/`: the workflow and this page, spec, design, plan, unapproved ideas',
+            'Tool configs'
+          ])],
+        ['Enforced by',
+          p('`settings.json` denies these actions:'),
+          ul([
+            'Force-push',
+            '`--no-verify`',
+            'Hard reset',
+            '`git clean`',
+            '`git restore`',
+            'Changes to `core.hooksPath`'
+          ]),
+          p('These actions ask for permission first:'),
+          ul([
+            'Edits to `CLAUDE.md`, `spec.md`, `workflow.md`, the settings, the hooks, the check scripts and the tool configs',
+            'Installs',
+            'Recursive deletes'
+          ])]
       ]
     },
     spec: {
@@ -333,9 +432,28 @@
       title: 'Spec',
       actors: [['ai', 'interviews and drafts'], ['human', 'answers and approves']],
       sections: [
-        ['What happens', '<p><code>/write-spec</code> asks one question at a time. It writes each requirement as one EARS statement with a stable ID (<code>AREA-NNN</code> or <code>NFR-NNN</code>), which a test can check without the design. Where a requirement needs a concrete case, an acceptance example (<code>EX-NNN</code>) gives it. The file is marked <code>Status: Draft</code>. For an approved spec, it proposes each change first.</p>'],
-        ['Output', '<p><code>docs/spec.md</code>. The status becomes Approved when the human approves. The tests are written from its requirements and examples.</p>'],
-        ['Enforced by', '<p>Edits to <code>spec.md</code> ask for permission, so an unattended session cannot make them. A milestone never changes the spec: the runner counts a milestone that changed it as not finished. For a spec change, the human makes the edit and writes an Approval entry in the plan.</p>']
+        ['What happens',
+          p('`/write-spec` does these steps:'),
+          ol([
+            'Asks one question at a time.',
+            'Writes each requirement as one statement in the Easy Approach to Requirements Syntax (EARS). A test can check the statement without the design.',
+            'Gives each requirement a stable ID (`AREA-NNN` or `NFR-NNN`).',
+            'Adds an acceptance example (`EX-NNN`) where a requirement needs a concrete case.',
+            'Marks the file `Status: Draft`.'
+          ]),
+          p('For an approved spec, it proposes each change first.')],
+        ['Output',
+          ul([
+            '`docs/spec.md`',
+            'The status becomes `Approved` when the human approves.',
+            'The test session writes the tests from the requirements and examples of the spec.'
+          ])],
+        ['Enforced by',
+          ul([
+            'Edits to `spec.md` ask for permission. Thus an unattended session cannot make them.',
+            'A milestone never changes the spec. The runner counts a milestone that changed it as not finished.',
+            'For a spec change, the human makes the edit and writes an Approval entry in the plan.'
+          ])]
       ]
     },
     design: {
@@ -343,9 +461,30 @@
       title: 'Design',
       actors: [['ai', 'designs and asks'], ['human', 'answers and approves']],
       sections: [
-        ['What happens', '<p><code>/write-design</code> reads the approved spec and applies a light version of Attribute-Driven Design 3.0. It asks only what it cannot decide itself. It gives each requirement a test level (<code>unit</code>, <code>e2e</code> or <code>ui</code>) and names every interface a test needs.</p>'],
-        ['Output', '<p><code>docs/design.md</code>: Decisions (<code>DEC-NNN</code>), Architecture, Data model, Interfaces, Test design and Open design questions.</p>'],
-        ['Gate', '<p>The design is approved when no decision is <code>Proposed</code> and no design question is open. If the design needs a different requirement, it proposes a spec change for approval. When the spec and the design disagree, the spec wins.</p>']
+        ['What happens',
+          p('`/write-design` reads the approved spec and applies a light version of Attribute-Driven Design 3.0. It also does this:'),
+          ul([
+            'Asks only what it cannot decide itself.',
+            'Gives each requirement a test level (`unit`, `e2e` or `ui`).',
+            'Names every interface that a test needs.'
+          ])],
+        ['Output',
+          p('`docs/design.md`, with these sections:'),
+          ul([
+            'Decisions (`DEC-NNN`)',
+            'Architecture',
+            'Data model',
+            'Interfaces',
+            'Test design',
+            'Open design questions'
+          ])],
+        ['Gate',
+          p('The design is approved when both conditions are true:'),
+          ul([
+            'No decision is `Proposed`.',
+            'No design question is open.'
+          ]),
+          p('If the design needs a different requirement, `/write-design` proposes a spec change for approval. When the spec and the design disagree, the spec wins.')]
       ]
     },
     plan: {
@@ -353,9 +492,30 @@
       title: 'Plan',
       actors: [['ai', 'cuts the milestones'], ['human', 'approves the table']],
       sections: [
-        ['What happens', '<p><code>/write-plan</code> stops unless the spec and the design are approved. It cuts thin milestones and proposes a model and an effort for each. It shows the milestone table in chat first. After the human approves, it writes the table and one block per milestone. A fix, however small, is one milestone.</p>'],
-        ['Output', '<p><code>docs/plan.md</code>. The table "Milestones at a glance" has milestone, description, model, effort and status. Each block has Refs, Owner, Tests first, Build and Gate. Checks that need a live service or a person are listed under "Human checks": the human does them after the run.</p>'],
-        ['Gate', '<p>Every requirement ID in the spec must belong to at least one milestone. <code>spec_coverage.py</code> lists each ID as tested, manual, planned or missing. A <code>Decided</code> decision must name each dependency, and the human installs it before the run. The runner reads the table.</p>']
+        ['What happens',
+          p('`/write-plan` does these steps:'),
+          ol([
+            'Stops unless the spec and the design are approved.',
+            'Cuts thin milestones.',
+            'Proposes a model and an effort for each milestone.',
+            'Shows the milestone table in chat.',
+            'After the human approves, writes the table and one block for each milestone.'
+          ]),
+          p('A fix, however small, is one milestone.')],
+        ['Output',
+          p('`docs/plan.md`, with these parts:'),
+          ul([
+            'The table "Milestones at a glance": milestone, description, model, effort and status',
+            'One block for each milestone: Refs, Owner, Tests first, Build and Gate',
+            '"Human checks": the checks that need a live service or a person. The human does them after the run.'
+          ])],
+        ['Gate',
+          ul([
+            'Every requirement ID in the spec must belong to at least one milestone.',
+            '`spec_coverage.py` lists each ID as tested, manual, planned or missing.',
+            'A `Decided` decision must name each dependency. The human installs it before the run.',
+            'The runner reads the table.'
+          ])]
       ]
     },
     tests: {
@@ -363,11 +523,37 @@
       title: 'Tests first',
       actors: [['script', 'runner starts the test session'], ['ai', 'writes and runs the tests']],
       sections: [
-        ['What happens', '<p>The runner starts a fresh <code>claude -p</code> session for the next open row, with that row\'s model and effort. The session runs <code>/write-tests</code>. It writes one test for each name under Tests first, from the spec\'s requirements and examples and the design\'s interfaces. Then it runs them: each must fail because the behavior is missing. It does not commit.</p>'],
-        ['Output', '<p><code>tests/unit/</code>, <code>tests/e2e/</code> and <code>tests/e2e/ui/</code>, each test named after the requirement ID it verifies. The report names each requirement without a test as <code>Manual:</code>.</p>'],
-        ['Enforced by', '<p>The session cannot read the code: Read, Grep and Glob are disallowed for <code>src/</code>. So the tests catch code that drifts from the spec. After the session, the runner stores a hash of every file under <code>tests/</code>.</p>'],
-        ['Before the first milestone', '<p>The runner checks that the conda environment is active, the settings file is there, the commit hook is on, git is clean and the branch has an upstream. Sessions run with <code>bypassPermissions</code>. Their guard rails are the deny and ask rules of <code>settings.json</code>.</p>'],
-        ['In chat', '<p>When <code>/sdd</code> builds one milestone in chat, a subagent is the test session.</p>']
+        ['What happens',
+          ol([
+            'The runner starts a fresh `claude -p` session for the next open row, with the model and effort of that row.',
+            'The session runs `/write-tests`.',
+            'The session writes one test for each name under Tests first. It uses the requirements and examples of the spec and the interfaces of the design.',
+            'The session runs the tests. Each test must fail because the behavior is missing.',
+            'The session does not commit.'
+          ])],
+        ['Output',
+          ul([
+            '`tests/unit/`, `tests/e2e/` and `tests/e2e/ui/`',
+            'Each test is named after the requirement ID that it verifies.',
+            'The report names each requirement without a test as `Manual:`.'
+          ])],
+        ['Enforced by',
+          ul([
+            'The session cannot read the code: Read, Grep and Glob are disallowed for `src/`. Thus the tests catch code that drifts from the spec.',
+            'After the session, the runner stores a hash of every file under `tests/`.'
+          ])],
+        ['Before the first milestone',
+          p('The runner checks these conditions:'),
+          ul([
+            'The conda environment is active.',
+            'The settings file is there.',
+            'The commit hook is on.',
+            'Git is clean.',
+            'The branch has an upstream.'
+          ]),
+          p('Sessions run with `bypassPermissions`. Their guard rails are the deny and ask rules of `settings.json`.')],
+        ['In chat',
+          p('When `/sdd` builds one milestone in chat, a subagent is the test session.')]
       ]
     },
     code: {
@@ -375,9 +561,30 @@
       title: 'Code',
       actors: [['script', 'runner starts the build session'], ['ai', 'writes the change'], ['script', 'edit hook checks each file']],
       sections: [
-        ['What happens', '<p>A second fresh session writes the smallest change that passes the new tests. It does not change a file in <code>tests/</code>. A test that looks wrong is a blocker.</p>'],
-        ['Decisions', '<p>Only the spec is locked. For everything else that is not a blocker, the session picks the most conservative option and carries on. When that changes the design, it adds a <code>DEC-NNN</code> with the Status <code>Proposed</code>. Its report has one <code>DECISION:</code> line per decision. The human reviews these after the run.</p>'],
-        ['Enforced by', '<p>Edit and Write are disallowed for <code>tests/</code> in this session. After every edit, a hook runs <code>check.py --edited</code>. It formats and fixes the file (ruff for Python, ESLint, Stylelint and Prettier for web files). Remaining errors go back to Claude as a block decision.</p>']
+        ['What happens',
+          ul([
+            'A second fresh session writes the smallest change that passes the new tests.',
+            'It does not change a file in `tests/`.',
+            'A test that looks wrong is a blocker.'
+          ])],
+        ['Decisions',
+          p('Only the spec is locked. For everything else that is not a blocker, the session does these steps:'),
+          ol([
+            'Picks the most conservative option and continues.',
+            'When the option changes the design, adds a `DEC-NNN` with the Status `Proposed`.',
+            'Writes one `DECISION:` line for each decision in its report.'
+          ]),
+          p('The human reviews these lines after the run.')],
+        ['Enforced by',
+          ul([
+            'Edit and Write are disallowed for `tests/` in this session.',
+            'After every edit, a hook runs `check.py --edited`.'
+          ]),
+          p('`check.py --edited` does these steps:'),
+          ol([
+            'Formats and fixes the file: ruff for Python, and ESLint, Stylelint and Prettier for web files.',
+            'Sends the remaining errors to Claude as a block decision.'
+          ])]
       ]
     },
     check: {
@@ -385,10 +592,30 @@
       title: 'Check',
       actors: [['script', 'runs the checks']],
       sections: [
-        ['What happens', '<p>The session runs <code>python scripts/check.py</code> and <code>python scripts/spec_coverage.py M&lt;n&gt;</code>. If one fails, it goes back to Code.</p>'],
-        ['Checks', '<p>Python: ruff check and format, mypy (once <code>src/</code> has Python), pytest with an 80% branch-coverage floor (once tests exist). Web: ESLint, tsc, Prettier, Stylelint, <code>node --test</code>. Spec coverage: each requirement ID in the milestone\'s Refs has a test or a <code>Manual:</code> entry.</p>'],
-        ['Enforced by', '<p>The pre-commit hook runs the same full check on every commit and refuses the commit if anything fails. After the build session, the runner compares the hashes of <code>tests/</code> and runs the spec coverage itself.</p>'],
-        ['Offline', '<p>A milestone run calls no live external service and uses no real user data. Tests use fakes at the external boundaries.</p>']
+        ['What happens',
+          p('The session runs these commands:'),
+          ol([
+            '`python scripts/check.py`',
+            '`python scripts/spec_coverage.py M&lt;n&gt;`'
+          ]),
+          p('If one fails, the session returns to Code.')],
+        ['Checks',
+          ul([
+            'Python: ruff check and format, mypy (when `src/` has Python), pytest with an 80% branch-coverage floor (when tests exist)',
+            'Web: ESLint, tsc, Prettier, Stylelint, `node --test`',
+            'Spec coverage: each requirement ID in the Refs of the milestone has a test or a `Manual:` entry'
+          ])],
+        ['Enforced by',
+          ul([
+            'The pre-commit hook runs the same full check on every commit. It refuses the commit if a check fails.',
+            'After the build session, the runner compares the hashes of `tests/` and runs the spec coverage itself.'
+          ])],
+        ['Offline',
+          ul([
+            'A milestone run calls no live external service.',
+            'A milestone run uses no real user data.',
+            'Tests use fakes at the external boundaries.'
+          ])]
       ]
     },
     commit: {
@@ -396,9 +623,55 @@
       title: 'Commit & push',
       actors: [['ai', 'commits and pushes'], ['script', 'runner verifies'], ['human', 'only when blocked']],
       sections: [
-        ['What happens', '<p>The session updates docs that the change made inaccurate and deletes the milestone\'s row and block from <code>plan.md</code>. It commits only the files it changed as <code>M&lt;n&gt;: title</code> and pushes.</p>'],
-        ['Runner check', '<p>The runner checks that the row left the plan, git is clean, the push happened, and <code>tests/</code> and <code>spec.md</code> did not change. If so, it starts the next open row. If not, it tries the session again (<code>--retries</code>, default 1; a session over 90 minutes counts as not finished), then stops. <code>--resume</code> continues from the changes that are left.</p>'],
-        ['Blocked', '<p>A milestone stops when it needs a spec change, a forbidden action, a new flow of user data to an external service, real user data, a secret in a committed file, a dependency that no <code>Decided</code> decision names, or a change to a test. It sets its status to blocked, adds a Blocked entry, undoes its other changes, commits only <code>plan.md</code> as <code>M&lt;n&gt;: blocked</code> and pushes. The runner stops and prints the question.</p><p>The human adds an Approval entry, sets the status to approved, commits and runs again. The approval permits exactly what it says.</p>']
+        ['What happens',
+          p('The session does these steps:'),
+          ol([
+            'Updates the docs that the change made inaccurate.',
+            'Deletes the row and the block of the milestone from `plan.md`.',
+            'Commits only the files that it changed, as `M&lt;n&gt;: title`.',
+            'Pushes.'
+          ])],
+        ['Runner check',
+          p('The runner checks these conditions:'),
+          ul([
+            'The row left the plan.',
+            'Git is clean.',
+            'The push happened.',
+            '`tests/` and `spec.md` did not change.'
+          ]),
+          p('If all are true, the runner starts the next open row. If not, it does these steps:'),
+          ol([
+            'Tries the session again (`--retries`, default 1). A session that runs longer than 90 minutes counts as not finished.',
+            'Stops after the last try.'
+          ]),
+          p('`--resume` continues from the changes that are left.')],
+        ['Blocked',
+          p('A milestone stops when it needs one of these:'),
+          ul([
+            'A spec change',
+            'A forbidden action',
+            'A new flow of user data to an external service',
+            'Real user data',
+            'A secret in a committed file',
+            'A dependency that no `Decided` decision names',
+            'A change to a test'
+          ]),
+          p('Then the session does these steps:'),
+          ol([
+            'Sets the status of the milestone to blocked.',
+            'Adds a Blocked entry.',
+            'Undoes its other changes.',
+            'Commits only `plan.md` as `M&lt;n&gt;: blocked`.',
+            'Pushes.'
+          ]),
+          p('The runner stops and prints the question. To continue, the human does these steps:'),
+          ol([
+            'Adds an Approval entry.',
+            'Sets the status to approved.',
+            'Commits.',
+            'Runs the runner again.'
+          ]),
+          p('The approval permits exactly what it says.')]
       ]
     }
   };
@@ -419,8 +692,9 @@
     actors.innerHTML = s.actors.map(function (a) {
       return '<div class="actor">' + ICONS[a[0]] + '<span>' + a[1] + '</span></div>';
     }).join('');
-    body.innerHTML = s.sections.map(function (sec) {
-      return '<section><h3>' + sec[0] + '</h3>' + sec[1] + '</section>';
+    body.innerHTML = s.sections.map(function (sec, i) {
+      return '<details' + (i === 0 ? ' open' : '') + '><summary><h3>' + sec[0] + '</h3></summary>' +
+        '<div class="fold">' + sec.slice(1).join('') + '</div></details>';
     }).join('');
   }
 

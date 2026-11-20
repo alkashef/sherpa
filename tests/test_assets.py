@@ -1,5 +1,6 @@
 """The skill's assets agree with what build_instance.py expects to find in them."""
 
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -172,6 +173,19 @@ def test_the_workflow_page_names_every_skill_and_script_of_the_workflow() -> Non
     scripts = sorted(set(re.findall(r"scripts/[\w-]+\.py", workflow_text())))
     assert scripts != []
     assert [name for name in [*skills, *scripts] if name not in workflow_page()] == []
+
+
+def test_the_workflow_page_carries_the_hash_of_the_workflow() -> None:
+    # The stamp is the SHA-256 of docs/workflow.md when the page was last made to agree with it.
+    # A change to the workflow fails here until someone reads the page, corrects it, and writes
+    # the new hash. The text is hashed with LF line endings, so the hash is the same on Windows.
+    current = hashlib.sha256(workflow_text().encode("utf-8")).hexdigest()
+    stamp = re.search(r'<meta name="workflow-md-sha256" content="([0-9a-f]{64})">', workflow_page())
+    assert stamp is not None, "assets/docs/workflow.html has no workflow-md-sha256 stamp."
+    assert stamp.group(1) == current, (
+        "assets/docs/workflow.md changed. Read assets/docs/workflow.html, correct what the change "
+        f"made wrong, then set its workflow-md-sha256 stamp to {current}"
+    )
 
 
 def test_every_card_of_the_workflow_page_has_its_panel() -> None:

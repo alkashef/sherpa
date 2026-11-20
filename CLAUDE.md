@@ -71,7 +71,9 @@ The lint and type-check commands are in README, "How to test".
 - Keep `assets/docs/workflow.html` in step with the workflow. A change to a step, a gate, a
   session, a check or a permission (in `assets/docs/workflow.md`, a project skill, the runner,
   `check.py` or `settings.json`) updates the diagram and the panel of each step it touches, in the
-  same commit.
+  same commit. The page carries the SHA-256 of `assets/docs/workflow.md` in its
+  `workflow-md-sha256` stamp, and a test fails when that file changes. Read the page and correct
+  it first; only then write the hash that the test prints into the stamp.
 - Do not edit `assets/CLAUDE_GOLDEN.md.646`. It is a reference copy that nothing reads.
 - Run the test suite before every commit.
 
