@@ -1,7 +1,7 @@
 """Run the project's checks and tests, for Python and for the web.
 
-Python: ruff, mypy, one class per file, module boundaries, pytest. Web: ESLint, tsc, Prettier,
-Stylelint, `node --test`.
+Python: ruff, mypy, one class per file, pytest. Web: ESLint, tsc, Prettier, Stylelint,
+`node --test`. Both: module boundaries.
 
 Two hooks run it, and so can you:
     python scripts/check.py            # everything. The git pre-commit hook runs this.
@@ -14,11 +14,12 @@ src/)`. Then the output of each failed check goes to standard error. The last li
 has no check, and the run prints `No check applied.`
 
 Each check runs once there is something for it to check. Python (with `ruff.toml`): ruff always,
-mypy and one class per file once `src/` holds Python, module boundaries once the design has
-rows for it, pytest with the 80% branch-coverage floor once `tests/` holds a `test_*.py`. Web
-(with `package.json`): ESLint and tsc (with `eslint.config.js`) once `src/` or `tests/` holds
-JavaScript, Prettier once they hold JavaScript, CSS or HTML, Stylelint once `src/` holds CSS,
-`node --test` once `tests/` holds a `*.test.js`.
+mypy and one class per file once `src/` holds Python, pytest with the 80% branch-coverage
+floor once `tests/` holds a `test_*.py`. Web (with `package.json`): ESLint and tsc (with
+`eslint.config.js`) once `src/` or `tests/` holds JavaScript, Prettier once they hold
+JavaScript, CSS or HTML, Stylelint once `src/` holds CSS, `node --test` once `tests/` holds a
+`*.test.js`. Module boundaries, with one line for the two stacks, once the design has rows for
+it.
 
 Code with no test fails. The pytest check fails when `src/` holds Python code and `tests/` holds
 no `test_*.py`. A Python file is code when it holds a statement other than a docstring, so a new
@@ -32,9 +33,12 @@ One class per file: a Python file under `src/` defines at most one class at the 
 
 Module boundaries: `docs/design.md` can hold a table under `### 2.4 Module boundaries`, with the
 columns `Module` and `May import`. A module is a folder or a file under `src/`, written as a path
-(`src/payments`). A Python file of a listed module must not import another listed module that its
-row does not permit. An import of something that the table does not list is always permitted.
-The check reads absolute imports from the project root, such as `import src.payments`.
+(`src/payments`). A Python or JavaScript file of a listed module must not import another listed
+module that its row does not permit. An import of something that the table does not list is
+always permitted. In Python, the check reads absolute imports from the project root, such as
+`import src.payments`. In JavaScript, it reads each `import`, `export ... from` and `require`
+that names a file: a path from the file (`./api.js`, `../orders/store.js`) or from the project
+root (`/src/api.js`, `src/api.js`). An import of a package names no file.
 
 The full run exits 2 if anything fails, so that git refuses the commit. With --edited, ruff,
 ESLint, Stylelint and Prettier fix what they can in that one file (tests do not run). The check
@@ -48,6 +52,7 @@ import argparse
 import ast
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -68,6 +73,12 @@ NO_WEB = "no JavaScript, CSS or HTML in src/ or tests/"
 ONE_CLASS = "one class per file"
 BOUNDARIES = "module boundaries"
 BOUNDARIES_HEADING = "### 2.4 Module boundaries"
+# A file that JavaScript names in an import: after `from`, `import`, `import(` or `require(`.
+SCRIPT_IMPORT = re.compile(
+    r"""(?:\bfrom\s*|\bimport\s*\(?\s*|\brequire\s*\(\s*)(["'])([^"'\n]+)\1"""
+)
+COMMENT_STARTS = ("//", "/*", "*")
+ROOT_PREFIXES = ("/src/", "src/")  # an import path from the project root
 
 
 class Result(NamedTuple):
@@ -194,6 +205,11 @@ def source_files() -> list[Path]:
     return sorted((ROOT / "src").rglob("*.py"))
 
 
+def script_files() -> list[Path]:
+    """Return the JavaScript files under `src/`, in a fixed order."""
+    return sorted(p for p in (ROOT / "src").rglob("*") if p.suffix in JS_SUFFIXES)
+
+
 def parse(path: Path) -> ast.Module | None:
     """Return the syntax tree of a Python file, or None if it does not parse (ruff reports it)."""
     try:
@@ -244,8 +260,14 @@ def table_rows(text: str, heading: str) -> list[list[str]]:
 
 
 def dotted(path: str) -> str:
-    """Return a module path of the design (`src/payments`) as a dotted name (`src.payments`)."""
-    return path.strip().strip("`").strip("/").removesuffix(".py").replace("/", ".")
+    """Return a module path of the design (`src/payments`) as a dotted name (`src.payments`).
+
+    The suffix of a file (`src/clock.py`, `src/api.js`) is not part of the name.
+    """
+    name = Path(path.strip().strip("`").strip("/"))
+    if name.suffix in JS_SUFFIXES | {".py"}:
+        name = name.with_suffix("")
+    return ".".join(name.parts)
 
 
 def permitted(cell: str) -> set[str]:
@@ -291,12 +313,49 @@ def imported_names(tree: ast.Module) -> list[tuple[int, str]]:
     return names
 
 
+def script_target(path: Path, specifier: str) -> str:
+    """Return the dotted name of the project file that a JavaScript import names, or ''.
+
+    A specifier that starts with `.` is a path from the file. One that starts with `/src/` or
+    `src/` is a path from the project root. Each other specifier names a package.
+    """
+    if specifier.startswith("."):
+        target = (path.parent / specifier).resolve()
+    elif specifier.startswith(ROOT_PREFIXES):
+        target = (ROOT / specifier.lstrip("/")).resolve()
+    else:
+        return ""
+    return dotted(relative(target)) if target.is_relative_to(ROOT) else ""
+
+
+def script_imports(path: Path) -> list[tuple[int, str]]:
+    """Return the line and the dotted name of each project file that a JavaScript file imports.
+
+    The file is read as text, one line at a time. A line that starts a comment is skipped.
+    """
+    names: list[tuple[int, str]] = []
+    lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    for number, line in enumerate(lines, start=1):
+        if line.lstrip().startswith(COMMENT_STARTS):
+            continue
+        targets = (script_target(path, found.group(2)) for found in SCRIPT_IMPORT.finditer(line))
+        names += [(number, target) for target in targets if target]
+    return names
+
+
+def imports_of(path: Path) -> list[tuple[int, str]]:
+    """Return the line and the dotted name of each import of a Python or JavaScript file."""
+    if path.suffix != ".py":
+        return script_imports(path)
+    tree = parse(path)
+    return imported_names(tree) if tree else []
+
+
 def file_boundary_problems(path: Path, table: dict[str, set[str]]) -> list[str]:
     """Return one message for each import of one file that its module's row does not permit."""
-    home = owner(".".join(path.relative_to(ROOT).with_suffix("").parts), table)
-    tree = parse(path) if home else None
+    home = owner(dotted(relative(path)), table)
     problems: list[str] = []
-    for line, name in imported_names(tree) if tree else []:
+    for line, name in imports_of(path) if home else []:
         target = owner(name, table)
         if target and target != home and target not in table[home]:
             imports = f"{relative(path)}:{line} imports {target.replace('.', '/')}."
@@ -311,7 +370,8 @@ def boundaries_result() -> Result:
         return Result(BOUNDARIES, SKIP, "docs/design.md has no table of module boundaries")
     if not table:
         return Result(BOUNDARIES, SKIP, "the table of module boundaries has no row")
-    problems = [p for path in source_files() for p in file_boundary_problems(path, table)]
+    files = source_files() + script_files()
+    problems = [p for path in files for p in file_boundary_problems(path, table)]
     return problems_result(BOUNDARIES, problems)
 
 
@@ -357,11 +417,14 @@ def web_results() -> list[Result]:
     web = has_files(["src", "tests"], WEB_SUFFIXES)
     css = has_files(["src"], {".css"})
     code = "JavaScript" if has_files(["src"], JS_SUFFIXES) else ""
+    # A project with Python already has the line of the module boundaries.
+    boundary = [] if (ROOT / "ruff.toml").is_file() else [boundaries_result()]
     return [
         npm_result("eslint", "lint", lint),
         npm_result("tsc", "typecheck", lint),
         npm_result("prettier", "format:check", "" if web else NO_WEB),
         npm_result("stylelint", "lint:css", "" if css else "no CSS in src/"),
+        *boundary,
         tests_result("node --test", npm_command("test"), "*.test.js", code),
     ]
 

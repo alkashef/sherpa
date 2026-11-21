@@ -254,6 +254,14 @@ def write_module(folder: Path, name: str, imports: str = "") -> None:
     path.write_text(f'"""A module."""\n\n{imports}', encoding="utf-8")
 
 
+def write_scripts(folder: Path, files: dict[str, str]) -> None:
+    """Write JavaScript files of the project: each name with its text."""
+    for name, text in files.items():
+        path = folder / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+
+
 def write_design(folder: Path, section: str) -> None:
     """Write a docs/design.md that holds the section, between two other sections."""
     text = f"# Design\n\n### 2.3 Settings\n\n{section}\n## 3. Data model\n"
@@ -279,6 +287,43 @@ def test_module_boundaries_follow_the_table_of_the_design(project: Sandbox) -> N
     for problem in [
         "src/clock.py:3 imports src/payments. The row of src/clock does not permit it.",
         "src/payments/core.py:3 imports src/orders. The row of src/payments does not permit it.",
+    ]:
+        assert problem in output
+
+
+JS_ROWS = "| `src/orders` | `src/payments` |\n| `src/payments` | none |\n| `src/api.js` | none |\n"
+JS_PERMITTED = {
+    "src/orders/list.js": 'import { pay } from "../payments/pay.js";\nimport fs from "node:fs";\n',
+    # A comment is not an import, and a package is not a module of the table.
+    "src/payments/pay.js": '// import "../orders/list.js";\nimport "left-pad";\n',
+    "src/api.js": "export const get = 1;\n",
+    # A module that the table does not list can import each module.
+    "src/main.js": 'import "./orders/list.js";\nimport "./api.js";\n',
+}
+JS_REFUSED = {
+    "src/payments/pay.js": 'const list = require("../orders/list.js");\n',
+    "src/api.js": (
+        'export { pay } from "/src/payments/pay.js";\nconst later = import("./orders/list.js");\n'
+    ),
+}
+
+
+def test_module_boundaries_cover_javascript(tmp_path: Path) -> None:
+    # No npm runs here: the check of the module boundaries needs no tool.
+    folder = tmp_path / "web"
+    build(folder, "--with", "javascript")
+    write_design(folder, BOUNDARIES + JS_ROWS)
+    write_scripts(folder, JS_PERMITTED)
+    _, output = check(folder)
+    assert "passed   module boundaries" in output
+    write_scripts(folder, JS_REFUSED)
+    code, output = check(folder)
+    assert code == 2
+    assert "failed   module boundaries" in output
+    for problem in [
+        "src/api.js:1 imports src/payments. The row of src/api does not permit it.",
+        "src/api.js:2 imports src/orders. The row of src/api does not permit it.",
+        "src/payments/pay.js:1 imports src/orders. The row of src/payments does not permit it.",
     ]:
         assert problem in output
 

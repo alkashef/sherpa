@@ -476,6 +476,30 @@ def test_a_blocked_milestone_keeps_its_work_in_its_branch(planned: Sandbox) -> N
     assert not (planned.folder / "src" / "m1.py").exists()
 
 
+def test_a_refused_commit_of_the_blocked_plan_says_how_to_finish(planned: Sandbox) -> None:
+    # A lint error on the base branch makes the pre-commit hook refuse each commit there.
+    (planned.folder / "src" / "bad.py").write_text("import os\n", encoding="utf-8")
+    planned.git("add", "-A")
+    planned.git("commit", "--no-verify", "-m", "A lint error")
+    planned.git("push")
+    planned.env["FAKE_CLAUDE_STATE"] = "blocked-build"
+    code, output = run_runner(planned)
+    assert code == 1
+    for line in [
+        "ERROR: M1 is blocked, but `git commit` failed on main.",
+        "The work of M1 is safe in the branch milestone/M1.",
+        "docs/plan.md with the blocked row is staged and not committed on main.",
+        'Then run: git commit -m "M1: blocked", and then: git push',
+        "failed   ruff check",  # the output of the hook
+    ]:
+        assert line in output
+    # The plan waits on the base branch, and the work is in the milestone branch.
+    assert planned.git("rev-parse", "--abbrev-ref", "HEAD") == "main"
+    assert subjects(planned, "-1") == ["A lint error"]
+    assert planned.git("status", "--porcelain") == "M  docs/plan.md"
+    assert subjects(planned, "-1", "milestone/M1") == ["M1: partial work"]
+
+
 def test_an_approved_milestone_continues_from_its_partial_work(planned: Sandbox) -> None:
     planned.env["FAKE_CLAUDE_STATE"] = "blocked-build"
     run_runner(planned)

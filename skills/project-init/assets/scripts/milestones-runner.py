@@ -1745,6 +1745,36 @@ def waiting_for_approval(plan_lines: Sequence[str], row: Row) -> RunStoppedError
     return RunStoppedError(message, milestone_block(plan_lines, row.id), "yellow")
 
 
+def blocked_plan_refused(
+    base: str, row: Row, step: str, done: subprocess.CompletedProcess[str]
+) -> RunStoppedError:
+    """Build the stop for a blocked plan that git did not commit or push on the base branch.
+
+    Args:
+        base: The base branch.
+        row: The blocked milestone.
+        step: The git command that failed: `commit` (the pre-commit hook refused it) or `push`.
+        done: The result of that command.
+
+    Returns:
+        The stop: where the work is, how to finish the step by hand, then the output of git.
+    """
+    commit = f'git commit -m "M{row.id}: blocked"'
+    finish = f"{commit}, and then: git push" if step == "commit" else "git push"
+    state = "staged and not committed" if step == "commit" else "committed and not pushed"
+    details = [
+        f"The work of M{row.id} is safe in the branch {branch_name(row.id)}.",
+        f"{PLAN_PATH} with the blocked row is {state} on {base}.",
+        f"Correct the cause that the output below names. Then run: {finish}",
+        f"Then answer the question of M{row.id}: add an Approval entry to its block in "
+        f"{PLAN_PATH}, set its Status to `approved`, commit, and run the runner again.",
+        *_all_output(done),
+    ]
+    return RunStoppedError(
+        f"ERROR: M{row.id} is blocked, but `git {step}` failed on {base}.", details
+    )
+
+
 def block_milestone(session: Session, row: Row) -> NoReturn:
     """Do the git work of a milestone that a session blocked, then stop the run with its question.
 
@@ -1754,7 +1784,8 @@ def block_milestone(session: Session, row: Row) -> NoReturn:
     committed alone on the base branch as `M<n>: blocked`, through the hook, and pushed.
 
     Raises:
-        RunStoppedError: Always. It carries the question of the milestone, or a git failure.
+        RunStoppedError: Always. It carries the question of the milestone, or a git failure. When
+            the commit or the push of the plan fails, it says how to finish that step by hand.
     """
     paths, root = session.paths, session.paths.root
     blocked_plan = paths.plan.read_bytes()
@@ -1765,8 +1796,10 @@ def block_milestone(session: Session, row: Row) -> NoReturn:
     _git_must(root, "checkout", session.base)
     paths.plan.write_bytes(blocked_plan)
     _git_must(root, "add", PLAN_PATH)
-    _git_must(root, "commit", "-m", f"M{row.id}: blocked")
-    _git_must(root, "push")
+    for step in (("commit", "-m", f"M{row.id}: blocked"), ("push",)):
+        done = _git(root, *step)
+        if done.returncode != 0:
+            raise blocked_plan_refused(session.base, row, step[0], done)
     raise waiting_for_approval(_read_lines(paths.plan), row)
 
 

@@ -43,11 +43,11 @@ wording where it costs nothing.
 - `skills/project-init/assets/docs/workflow.html`: the workflow as a diagram, for the developer.
   `assets/docs/workflow.md` owns the rules; the page shows them.
 - `tests/`: the test suite. It is not installed with the skill.
-- `docs/`: the SDD report, presentation and demo, one folder per version (`v2/` is current, `v1/`
-  is the workflow before the test session); `unapproved-ideas.md` holds proposed workflow changes.
-  Never implement one without the user's approval. `implementation-order.md` holds the approved
-  changes that are not finished, in the order of the work: delete a stage in the commit that
-  finishes it.
+- `docs/`: the SDD report, presentation and demo, one folder per version (`v3/` is current, `v2/`
+  is the workflow before the review session and the milestone branches, `v1/` before the test
+  session). `unapproved-ideas.md` has two parts. Part 1 holds what is left of the approved
+  workflow changes, in the order of the work: delete an item in the commit that finishes it.
+  Part 2 holds proposed workflow changes. Never implement one without the user's approval.
 - `README.md`: the full description, usage, contribution and test guide. Read it before changing
   what new projects get.
 
