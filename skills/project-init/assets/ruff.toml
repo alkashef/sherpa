@@ -32,6 +32,7 @@ select = [
     "PT",            # pytest style
     "RUF",
     "PLW1514",       # open text files with an explicit encoding (preview rule)
+    "PLC0415",       # imports at the top of the file, not inside a function
 ]
 ignore = [
     "TRY003",        # long messages in exceptions are fine (no custom exception classes)
@@ -56,3 +57,5 @@ ban-relative-imports = "all"
 "scripts/**" = ["T20"]                                    # scripts print their output
 "scripts/check.py" = ["S603"]                             # runs the check tools, without a shell
 "scripts/milestones-runner.py" = ["S603"]                 # runs git and claude, without a shell
+"scripts/live_checks.py" = ["S603"]                       # runs pytest and node, without a shell
+"scripts/release.py" = ["S603"]                           # runs git, without a shell

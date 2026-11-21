@@ -16,6 +16,9 @@ replaced it: keep its row, and name the replacement in Why. Never reuse or renum
 
 ### 2.1 Components
 
+One Mermaid diagram of the components and their interfaces, then one line for each component:
+what it does and what it owns.
+
 TBD
 
 ### 2.2 Directory structure
@@ -28,6 +31,14 @@ Create a folder only when it is listed here, and update this table in the same c
 
 | Setting | Default | Meaning |
 | --- | --- | --- |
+
+### 2.4 Module boundaries
+
+A module is a folder or a file under `src/`. `May import` lists the other modules of this table
+that it can import, or `none`. `scripts/check.py` fails when the code breaks a row.
+
+| Module | May import |
+| --- | --- |
 
 ## 3. Data model
 
@@ -42,10 +53,12 @@ TBD
 
 ## 5. Test design
 
-The test level of each requirement (`unit`, `e2e` or `ui`), the test tools, and the fake for each
-external system. `CLAUDE.md` (Testing) owns the test rules.
+The test level of each requirement (`unit`, `e2e`, `ui` or `live`), the test tool, and the real
+local part or the fake that the test uses. `CLAUDE.md` (Testing) owns the test rules.
+`scripts/spec_coverage.py --consistency` fails when a requirement has no row here.
 
-TBD
+| Requirement | Level | Test tool | Real local part or fake |
+| --- | --- | --- | --- |
 
 ## 6. Open design questions
 

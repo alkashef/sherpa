@@ -19,6 +19,7 @@ export default [
       "max-params": ["error", 4],
       complexity: ["error", 8],
       "max-lines": ["warn", { max: 300, skipBlankLines: true, skipComments: true }],
+      "max-classes-per-file": ["error", 1],
       // Plain, predictable code.
       "no-var": "error",
       "prefer-const": "error",

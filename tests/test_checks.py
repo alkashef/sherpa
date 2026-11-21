@@ -15,6 +15,15 @@ from helpers import Sandbox, build, git_path, run
 
 BAD = "import os\n"  # an unused import, and no module docstring
 GOOD = '"""A module."""\n'
+CALC = '"""Arithmetic."""\n\n\ndef add(a: int, b: int) -> int:\n    """Add."""\n    return a + b\n'
+CIRCLE = '"""Shapes."""\n\n\nclass Circle:\n    """A circle."""\n'
+SHAPES = CIRCLE + '\n\nclass Square:\n    """A square."""\n'
+TWO_CLASSES = "src/shapes.py defines 2 classes: Circle, Square. Keep one class in a file."
+LATE_IMPORT = (
+    '"""A module."""\n\n\n'
+    'def dump() -> str:\n    """Dump."""\n    import json\n\n    return json.dumps({})\n'
+)
+BOUNDARIES = "### 2.4 Module boundaries\n\n| Module | May import |\n| --- | --- |\n"
 
 
 @pytest.fixture
@@ -62,13 +71,38 @@ def test_shell_scripts_have_lf_endings(tmp_path: Path) -> None:
 def test_checks_pass_on_a_new_project(project: Sandbox) -> None:
     code, output = check(project.folder)
     assert code == 0, output
+    # One line for each check of the stack, with its result. A skipped line gives the reason.
+    lines = output.splitlines()
+    assert lines[:4] == [
+        "passed   ruff check",
+        "passed   ruff format",
+        "skipped  mypy (no Python in src/)",
+        "skipped  one class per file (no Python in src/)",
+    ]
+    assert lines[4].startswith("skipped  module boundaries (")
+    assert lines[5:] == ["skipped  pytest (no test_*.py in tests/)", "All checks passed."]
+
+
+def test_a_project_with_no_stack_says_that_no_check_applied(tmp_path: Path) -> None:
+    build(tmp_path / "plain")
+    assert check(tmp_path / "plain") == (0, "No check applied.\n")
 
 
 def test_checks_fail_on_a_lint_error(project: Sandbox) -> None:
     (project.folder / "src" / "bad.py").write_text(BAD, encoding="utf-8")
     code, output = check(project.folder)
     assert code == 2
+    assert "failed   ruff check" in output
+    assert "All checks passed." not in output
     assert "bad.py" in output
+
+
+def test_an_import_inside_a_function_fails(project: Sandbox) -> None:
+    (project.folder / "src" / "late.py").write_text(LATE_IMPORT, encoding="utf-8")
+    code, output = check(project.folder)
+    assert code == 2
+    assert "failed   ruff check" in output
+    assert "import-outside-top-level" in output  # the name of PLC0415
 
 
 def test_edited_file_is_fixed_and_the_rest_reported(project: Sandbox) -> None:
@@ -90,6 +124,30 @@ def test_clean_edit_and_other_files_pass(project: Sandbox) -> None:
         assert check(project.folder, "--edited", stdin=edited(path)) == (0, ""), path
 
 
+def test_a_second_class_in_a_source_file_fails(project: Sandbox) -> None:
+    (project.folder / "src" / "circle.py").write_text(CIRCLE, encoding="utf-8")
+    _, output = check(project.folder)
+    assert "passed   one class per file" in output
+    (project.folder / "src" / "shapes.py").write_text(SHAPES, encoding="utf-8")
+    code, output = check(project.folder)
+    assert code == 2
+    assert "failed   one class per file" in output
+    assert f"`one class per file` failed:\n{TWO_CLASSES}" in output
+
+
+def test_edit_reports_a_second_class_in_a_source_file_only(project: Sandbox) -> None:
+    source = project.folder / "src" / "shapes.py"
+    source.write_text(SHAPES, encoding="utf-8")
+    code, output = check(project.folder, "--edited", stdin=edited(source))
+    assert code == 0
+    decision = json.loads(output)
+    assert decision["decision"] == "block"
+    assert TWO_CLASSES in decision["reason"]
+    helper = project.folder / "tests" / "unit" / "shapes.py"
+    helper.write_text(SHAPES, encoding="utf-8")
+    assert check(project.folder, "--edited", stdin=edited(helper)) == (0, "")
+
+
 def test_missing_tool_is_named() -> None:
     reason = load_check().why_not_runnable([sys.executable, "-m", "no_such_tool"])
     assert "`no-such-tool` not installed" in reason
@@ -98,10 +156,7 @@ def test_missing_tool_is_named() -> None:
 def write_tested_module(folder: Path, expected: int) -> None:
     """Write src/calc.py and a test of it that passes when `expected` is 3."""
     (folder / "src" / "__init__.py").write_text('"""Source."""\n', encoding="utf-8")
-    calc = (
-        '"""Arithmetic."""\n\n\ndef add(a: int, b: int) -> int:\n    """Add."""\n    return a + b\n'
-    )
-    (folder / "src" / "calc.py").write_text(calc, encoding="utf-8")
+    (folder / "src" / "calc.py").write_text(CALC, encoding="utf-8")
     test = (
         "from src.calc import add\n\n\n"
         f"def test_add() -> None:\n    assert add(1, 2) == {expected}\n"
@@ -120,6 +175,118 @@ def test_checks_run_the_tests_once_there_are_some(project: Sandbox) -> None:
     assert "test_add" in output
 
 
+def test_code_with_no_test_fails(project: Sandbox) -> None:
+    # A package file that holds only a docstring is not code.
+    (project.folder / "src" / "__init__.py").write_text(GOOD, encoding="utf-8")
+    code, output = check(project.folder)
+    assert code == 0, output
+    assert "skipped  pytest (no test_*.py in tests/)" in output
+    (project.folder / "src" / "calc.py").write_text(CALC, encoding="utf-8")
+    code, output = check(project.folder)
+    assert code == 2
+    assert "failed   pytest" in output
+    assert "`src/` holds Python code, and `tests/` holds no `test_*.py` file." in output
+    # The rule does not apply when the tests are skipped.
+    (project.folder / "docs" / "plan.md").write_text("# Plan\n", encoding="utf-8")
+    project.git("add", "docs/plan.md")
+    code, output = check(project.folder)
+    assert code == 0, output
+
+
+def test_a_live_test_does_not_count_as_a_test(project: Sandbox) -> None:
+    # The normal test runs skip tests/live/, so pytest would collect nothing there.
+    live = project.folder / "tests" / "live"
+    live.mkdir(exist_ok=True)
+    (live / "test_x.py").write_text("def test_x() -> None:\n    assert True\n", encoding="utf-8")
+    code, output = check(project.folder)
+    assert code == 0, output
+    assert "skipped  pytest (no test_*.py in tests/)" in output
+    (project.folder / "src" / "calc.py").write_text(CALC, encoding="utf-8")
+    code, output = check(project.folder)
+    assert code == 2
+    assert "`src/` holds Python code, and `tests/` holds no `test_*.py` file." in output
+
+
+def test_javascript_with_no_test_fails(tmp_path: Path) -> None:
+    # No npm runs here: each check is skipped, or it fails before it needs a tool.
+    folder = tmp_path / "web"
+    build(folder, "--with", "javascript")
+    code, output = check(folder)
+    assert code == 0, output
+    assert "skipped  eslint (no JavaScript in src/ or tests/)" in output
+    assert "skipped  node --test (no *.test.js in tests/)" in output
+    assert "All checks passed." in output
+    (folder / "src" / "main.js").write_text("export const one = 1;\n", encoding="utf-8")
+    code, output = check(folder)
+    assert code == 2
+    assert "failed   node --test" in output
+    assert "`src/` holds JavaScript code, and `tests/` holds no `*.test.js` file." in output
+
+
+def test_eslint_allows_one_class_per_file() -> None:
+    config = (bi.assets_dir() / "eslint.config.js").read_text(encoding="utf-8")
+    assert '"max-classes-per-file": ["error", 1]' in config
+
+
+def test_a_new_project_ignores_the_release_folder(tmp_path: Path) -> None:
+    build(tmp_path / "my-app")
+    assert "dist/" in (tmp_path / "my-app" / ".gitignore").read_text("utf-8").splitlines()
+
+
+def write_module(folder: Path, name: str, imports: str = "") -> None:
+    """Write a Python file of the project: a docstring, then the import lines."""
+    path = folder / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(f'"""A module."""\n\n{imports}', encoding="utf-8")
+
+
+def write_design(folder: Path, section: str) -> None:
+    """Write a docs/design.md that holds the section, between two other sections."""
+    text = f"# Design\n\n### 2.3 Settings\n\n{section}\n## 3. Data model\n"
+    (folder / "docs" / "design.md").write_text(text, encoding="utf-8")
+
+
+def test_module_boundaries_follow_the_table_of_the_design(project: Sandbox) -> None:
+    rows = "| `src/orders` | `src/payments`, `src/clock.py` |\n| `src/payments` | none |\n"
+    write_design(project.folder, BOUNDARIES + rows + "| `src/clock.py` | none |\n")
+    write_module(project.folder, "src/clock.py")
+    write_module(project.folder, "src/payments/core.py", "import json\n\nfrom src import util\n")
+    orders = "import src.clock\nfrom src.payments import core\nfrom src.payments.core import pay\n"
+    write_module(project.folder, "src/orders/api.py", orders)
+    # A module that the table does not list can import each module.
+    write_module(project.folder, "src/util.py", "from src.orders import api\n")
+    _, output = check(project.folder)
+    assert "passed   module boundaries" in output
+    write_module(project.folder, "src/payments/core.py", "import src.orders.api\n")
+    write_module(project.folder, "src/clock.py", "from src import payments\n")
+    code, output = check(project.folder)
+    assert code == 2
+    assert "failed   module boundaries" in output
+    for problem in [
+        "src/clock.py:3 imports src/payments. The row of src/clock does not permit it.",
+        "src/payments/core.py:3 imports src/orders. The row of src/payments does not permit it.",
+    ]:
+        assert problem in output
+
+
+def test_an_import_belongs_to_the_most_specific_listed_module() -> None:
+    owner = load_check().owner
+    modules = ["src.payments", "src.payments.core"]
+    assert owner("src.payments.core.fees", modules) == "src.payments.core"
+    assert owner("src.payments.api", modules) == "src.payments"
+    assert owner("src.payments_old", modules) == ""
+
+
+def test_module_boundaries_are_skipped_with_no_table_or_no_row(project: Sandbox) -> None:
+    write_module(project.folder, "src/payments/core.py", "import src.orders.api\n")
+    write_design(project.folder, "TBD\n")
+    _, output = check(project.folder)
+    assert "skipped  module boundaries (docs/design.md has no table of module boundaries)" in output
+    write_design(project.folder, BOUNDARIES)
+    _, output = check(project.folder)
+    assert "skipped  module boundaries (the table of module boundaries has no row)" in output
+
+
 def test_a_commit_of_docs_alone_skips_the_tests(project: Sandbox) -> None:
     # A blocked milestone and an approval commit docs/plan.md alone: no test result can change.
     write_tested_module(project.folder, 4)
@@ -127,7 +294,8 @@ def test_a_commit_of_docs_alone_skips_the_tests(project: Sandbox) -> None:
     project.git("add", "docs/plan.md")
     code, output = check(project.folder)
     assert code == 0, output
-    assert "Only files under docs/ are staged: tests skipped." in output
+    assert "skipped  pytest (only files under docs/ are staged)" in output
+    assert "All checks passed." in output
     project.git("add", "-A")
     code, output = check(project.folder)
     assert code == 2

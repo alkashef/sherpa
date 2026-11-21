@@ -27,25 +27,36 @@ Another session builds the code afterwards and may not change these tests. Write
 ## Write the tests
 
 1. Write one test for each name under **Tests first**, at the level the block gives it:
-   - `unit:` in `tests/unit/`: a logic module, through its public functions, with fakes.
+   - `unit:` in `tests/unit/`: a logic module, through its public functions.
    - `e2e:` in `tests/e2e/`: a user workflow, through the outermost non-browser entry point (HTTP
-     API, CLI or service), with fakes at the external boundaries.
-   - `ui:` in `tests/e2e/ui/`: the page, through the headless-browser tool that the design names,
-     against a server that a fixture starts on 127.0.0.1 with the same fakes.
+     API, CLI or service).
+   - `ui:` in `tests/e2e/ui/`: the page, through Playwright, against a server that a fixture
+     starts on 127.0.0.1.
+   - `live:` in `tests/live/`: a live external service, with the test account that the design
+     names. Write the test, but do not run it: no milestone session calls a live service. The
+     test reads the budget ceiling from the environment variable `LIVE_BUDGET_CEILING` and stops
+     before it passes it.
+
+   A test uses the real local part that the design names (a database file in a temporary folder,
+   a server that the test starts on 127.0.0.1). It uses a fake only for an external service.
 2. Each test checks one behavior and asserts the result its requirement or example names: what the
    system answers, what is stored, or what the user sees. Do not assert private functions, log
    lines, or the order of calls.
-3. Cover the success case of the requirement, and the failure or boundary case when the spec states
-   one (an unwanted-behavior requirement, `If ..., then ...`, is one).
-4. Use invented data. No test calls a live external service (an LLM, a network API) or reads the
-   user's data. A test keeps its files in a temporary folder. Fix the clock and any random value, so
+3. Cover each acceptance example that cites the requirement: first the most likely cases, in
+   full, then the edge cases (an unwanted-behavior requirement, `If ..., then ...`, is one). A
+   test that comes from an example carries the example ID in its name
+   (`test_pay_001_ex_003_refund_over_limit`). So the source of each expected result is on record.
+   Take each expected result from the spec. Never work it out the way the code would.
+4. Use invented data. No test outside `tests/live/` calls a live external service (an LLM, a
+   network API), and no test reads the user's data. A test keeps its files in a temporary folder. Fix the clock and any random value, so
    the test gives the same result on every run.
 5. Do not change an existing test, unless its requirement changed in `spec.md`. Then name the test
    and the spec change in the report.
 
 ## Run them
 
-1. Run the new tests. Each must fail because the behavior is missing: a missing module named in
+1. Run the new tests, except those in `tests/live/`. Each must fail because the behavior is
+   missing: a missing module named in
    **Owner**, a missing entry point, a wrong value. A syntax error, a broken fixture, or a wrong
    import path of the test itself is not a valid failure: fix the test until it fails for the
    right reason.
@@ -54,6 +65,6 @@ Another session builds the code afterwards and may not change these tests. Write
 ## Finish
 
 Do not commit: the pre-commit hook refuses failing tests. Leave the files for the build session.
-Report, one line each: the test, the requirement ID it checks, and how it fails now. Then each
-requirement ID in **Refs** without a test, and why (`Manual: <requirement ID>`). Then the
-`DECISION:` lines.
+Report, one line each: the test, the requirement ID and the example ID it checks, and how it fails
+now. Then each requirement ID in **Refs** without a test, and why (`Manual: <requirement ID>`).
+Then each `live:` test that you wrote and did not run. Then the `DECISION:` lines.

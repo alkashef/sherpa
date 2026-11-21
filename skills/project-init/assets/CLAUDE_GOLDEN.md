@@ -94,9 +94,13 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 - Prefer composition to inheritance. Group values that always travel together into one typed
   object. Inject long-lived collaborators through the constructor, not through every call.
 - Do not write: duplicated logic (search for a helper first; extract on the second use); dead code;
-  abstractions or design patterns the task does not need; pass-through wrappers or classes too small
-  to justify themselves (the single owner of an external system is not one); mutable global state.
-- Write code a beginner-to-intermediate programmer can read. Prefer plain constructs to clever ones.
+  abstractions the task does not need; a design pattern that no `Decided` decision in
+  `docs/design.md` names; pass-through wrappers or classes too small to justify themselves (the
+  single owner of an external system is not one); mutable global state.
+- Write code a beginner-to-intermediate programmer can read. Readable code comes before clever
+  code: prefer plain constructs.
+- One class per file, and every import at the top of the file. Import only what the table "Module
+  boundaries" of `docs/design.md` permits. `scripts/check.py`, ruff, and ESLint enforce these.
 
 ## Architecture and layers
 <!-- A6. Applies when: always. -->
@@ -186,19 +190,22 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 ## Testing
 <!-- A11. Applies when: the project has automated tests. Test tools and naming syntax are in the language sections. Needs pytest.ini (see assets/). -->
 
-- Every requirement ID has a test at the lowest level that proves it. Every new public function in
-  the business-logic layer also has a unit test.
+- Every requirement ID and every acceptance example has a test at the lowest level that proves it,
+  named after its ID. Every new public function in the business-logic layer also has a unit test.
 - Every user workflow (an event-driven requirement, `When <trigger>, ...`) has an end-to-end test
-  through the outermost non-browser entry point (HTTP API, CLI, or service), with fakes at the
-  external boundaries. The UI is AI-built and never read by the user, so every UI workflow
-  requirement also gets one headless-browser test in `tests/e2e/ui/`. `docs/design.md` chooses the
-  browser tool, and the user approves it under Dependencies.
-- Layout: `tests/unit/` (logic with fakes, one test file per source module) and `tests/e2e/`.
-  Requirement coverage is the primary measure. Line and branch coverage on `src/` has a floor of 80%.
+  through the outermost non-browser entry point (HTTP API, CLI, or service). The UI is AI-built and
+  never read by the user, so every UI workflow requirement also gets one Playwright test in
+  `tests/e2e/ui/`. `docs/design.md` names the Playwright package; the user approves it under
+  Dependencies.
+- A test uses a real local part where one exists (a database file in a temporary folder, a server
+  it starts on 127.0.0.1) and a fake only for an external service.
+- Layout: `tests/unit/` (one test file per source module), `tests/e2e/`, and `tests/live/` (live
+  checks: no milestone runs them). Requirement coverage is the primary measure. Line and branch
+  coverage on `src/` has a floor of 80%.
 - Test public behavior, not private implementation: one behavior per test, and every test asserts
-  something. Tests are deterministic (seed randomness; no real clock, network, or sleeps; exact
-  outputs). They use temporary folders and invented data, and never touch real config, data, or user
-  files, or need a live LLM or external server.
+  something. Tests are deterministic (seed randomness; no real clock, external network, or sleeps;
+  exact outputs). They use temporary folders and invented data, and never touch real config, data,
+  or user files. Outside `tests/live/`, no test needs a live LLM or external server.
 - Never weaken or edit an existing test, baseline, or fixture to make it pass. Change one only when
   its requirement changed, and say so in the report.
 
@@ -208,7 +215,8 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 - Catch an exception only at an external boundary (file system, network, database, LLM,
   subprocess), and only to add context (what was being done, on which resource) and re-raise with
   the original error attached. Never catch to recover, fall back, continue, or swallow. Ruff and
-  ESLint block bare and blind catches.
+  ESLint block bare and blind catches. The one exception is a retry or a recovery that a
+  requirement in `docs/spec.md` asks for: a `Decided` decision says how, and a test covers it.
 - Do not catch unexpected errors. The top level shows the raw error and the full stack trace, logs
   it, and stops. No friendly message, no retry.
 - Invalid user input is not an error. Handle it as Input validation says. Error messages name what
@@ -239,7 +247,8 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
   config. The model ID (exact, not a moving alias), base URL, models folder path, and sampling and
   token limits also come from config.
 - Treat LLM output as untrusted input: parse and validate it against a schema. On failure raise an
-  error that includes the raw output. Do not repair it and do not retry.
+  error that includes the raw output. Do not repair it and do not retry, unless a requirement
+  asks for it (Error handling).
 - The LLM only produces data. It never executes tools, runs code, or decides transport or server
   behavior. Code runs the tools.
 - API-hosted model: data leaves the machine, so send only the fields the prompt needs.
@@ -396,7 +405,7 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
   `textContent`. Never keep app data in `localStorage` or `sessionStorage`; the API is the only
   source of data. UI preferences may use `localStorage`.
 - Checks. Run all of them and fix every failure: `npm run typecheck`, `npm run lint`, `npm test`,
-  and the headless-browser tests (the command is in the README under How to test).
+  and the Playwright tests (the command is in the README under How to test).
 - The UI is built and maintained entirely by AI. Report front-end changes by their behavior in plain
   language, and prove correctness with the checks.
 

@@ -1,6 +1,6 @@
 ---
 name: project-init
-description: Set up the current folder as a new project from the golden templates and push it to GitHub. Run it in a new, empty project folder that is open in VS Code. Builds CLAUDE.md, the path-scoped rules, docs/ (workflow, spec, design, plan, unapproved ideas), the /sdd, /write-spec, /write-design, /write-plan and /write-tests skills, README, tool configs and starting folders, then commits, creates the GitHub repository, pushes, and creates a conda environment with the project's name. Use whenever the user wants to start, init, bootstrap or scaffold a new project or repo, or says "new project", even if they do not mention GitHub or the docs. Not for adding files to an existing project.
+description: Set up the current folder as a new project from the golden templates and push it to GitHub. Run it in a new, empty project folder that is open in VS Code. Builds CLAUDE.md, the path-scoped rules, docs/ (workflow, spec, design, plan, unapproved ideas), the /sdd, /write-spec, /write-design, /write-plan, /write-tests and /code-review-sherpa skills, README, tool configs and starting folders, then commits, creates the GitHub repository, pushes, and creates a conda environment with the project's name. Use whenever the user wants to start, init, bootstrap or scaffold a new project or repo, or says "new project", even if they do not mention GitHub or the docs. Not for adding files to an existing project.
 ---
 
 # Project init
@@ -97,9 +97,13 @@ To change what new projects get, edit `assets/`, not this file.
      approves the design, `/write-plan` writes the milestones in `docs/plan.md`. `/sdd` runs one
      step, then stops: run it again for the next one.
      `python scripts/milestones-runner.py` runs the planned milestones unattended. Each milestone
-     gets two `claude -p` sessions: one writes its tests with `/write-tests`, without reading the
-     code, and one builds the code, without changing the tests. It stops at the first milestone
-     that fails or needs a decision.
+     runs in its own branch, in fresh `claude -p` sessions: one writes its tests with
+     `/write-tests`, without reading the code, one builds the code, without changing the tests,
+     and one reviews the change with `/code-review-sherpa`, without changing a file. The runner
+     merges the branch and pushes. It stops at the first milestone that fails, needs a decision,
+     or has a human test.
+   - `python scripts/release.py M<n>` makes a release that holds every milestone up to M<n>. Its
+     version is the date, and `docs/releases.md` records it.
    - Open `docs/workflow.html` in a browser: it shows this loop as a diagram. Click a step to see
      who does it, what it produces, and what enforces it. The rules themselves are in
      `docs/workflow.md`.

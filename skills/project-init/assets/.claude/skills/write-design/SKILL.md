@@ -77,12 +77,17 @@ Cover these concerns where they apply:
 - Data types, identities, ownership, relationships, integrity, persistence, and migration boundaries.
 - Public contracts, authorization boundaries, validation, errors, and recovery behavior.
 - Deployment, external data flows, secrets, settings, and operational failure handling.
-- How each requirement is tested: its level (`unit` for logic with fakes, `e2e` through the outermost non-browser entry point, `ui` for what only the page shows), the test tools, and the fake for each external system.
+- How each requirement is tested, as one row of the table in "Test design": its level (`unit` for logic, `e2e` through the outermost non-browser entry point, `ui` for what only the page shows, `live` for what only a live external service can prove), the test tool, and the real local part or the fake that the test uses.
+- A test uses a real local part where one exists: a database file in a temporary folder, a server that the test starts on 127.0.0.1. Name a fake only for an external service.
+- Every user scenario of a project with a browser front end gets a `ui` test. The browser tool is Playwright.
+- The module boundaries, as rows of the table "Module boundaries": each module under `src/`, and the other modules that it can import. `scripts/check.py` fails when the code breaks a row.
 
 The test writer reads only the spec and the design, never the code (`/write-tests`). So name every interface a test needs: entry points, request and response fields, stored records, and public functions.
 
 For an AI feature, define the provider or local runtime, outgoing data, output validation, failure handling, and test boundaries. Respect project rules.
-Choose diagrams only when they clarify boundaries, dependencies, or runtime behavior. Use the least detail that helps implementation.
+Draw one Mermaid diagram of the components and their interfaces under "Components". This diagram is required: show each component, each connection, and the contract or the data on each important connection. Add another diagram only when it clarifies boundaries, dependencies, or runtime behavior. Use the least detail that helps implementation.
+A retry, a fallback or a recovery needs a requirement that asks for it. Then a `Decided` decision says how, and the test design names the test that covers it (`CLAUDE.md`, Error handling).
+When `docs/releases.md` lists a release, and a change breaks the stored data or a public interface of a released version, record the transition in a decision: how the old data or the old callers move to the new version.
 Keep directory entries and technical settings concrete. Reference requirement IDs for user-visible rules and limits.
 
 ## Record decisions and evidence
@@ -103,7 +108,8 @@ Never mark a test, benchmark, compatibility check, or prototype as successful un
 Check that the design addresses the architectural drivers, respects the spec, and gives significant decisions real alternatives and validation methods.
 Check references, unique IDs, technology evidence, data flows, interface failures, and consistency with project rules.
 Check that material unknowns have an owner and a blocking condition. Do not call an unresolved stack choice final.
-Check that every requirement has a test level and that the interfaces its test needs are named.
+Check that every requirement has a test level and that the interfaces its test needs are named. `python scripts/spec_coverage.py --consistency` lists a requirement without a test level and an ID that the spec does not have.
+Check that the component diagram and the table of module boundaries agree with the directory structure.
 Present the concrete design before requesting any approval required by project rules. Allow review in chat or a draft without replacing approved content prematurely.
 Record only approval actually given: a decision becomes `Decided` when the user chooses or confirms it. The design is approved when no decision is `Proposed` and no design question is open. Technical review and user approval are separate facts.
 Save authorized design edits and follow applicable document checks and Git rules. Report the result and any remaining blocker briefly.

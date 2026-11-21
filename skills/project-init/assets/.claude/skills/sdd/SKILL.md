@@ -23,7 +23,8 @@ Read the files, not memory:
 - **Plan:** the rows of "Milestones at a glance" in `docs/plan.md`, and the Status of each (`open`,
   `blocked`, `approved`).
 - **Ideas:** the lines under "Ideas" in `docs/unapproved-ideas.md`. They are not requirements.
-- **Git:** `git status --short`, and whether the branch is ahead of its remote.
+- **Git:** `git status --short`, whether the branch is ahead of its remote, and whether a branch
+  `milestone/M<n>` exists (`git branch --list "milestone/*"`): a milestone that did not finish.
 
 If a state is unclear (for example, you cannot tell whether the design covers the newest spec), ask
 the user that one question before you route.
@@ -37,6 +38,7 @@ the user that one question before you route.
 | Milestones for an approved spec and design | 3. Plan | `/write-plan` |
 | A fix of any size, of behavior the spec already states | 3. Plan: one fix milestone | `/write-plan` |
 | To build, run or go on with the milestones | 4. Execute | see 4 below |
+| A release | none | see 4 below |
 | To note an idea for later | none | add one line to `docs/unapproved-ideas.md` |
 | To take up an idea from `docs/unapproved-ideas.md` | the row above that fits the idea | that row's skill |
 | Where the project stands, or what is next | none | the status report of 3 below |
@@ -71,11 +73,23 @@ For a status request, give only those lines, the number of unapproved ideas, and
   `python scripts/milestones-runner.py` (with `--start` and `--end` when the user names milestones).
   The user runs it in a terminal; it handles retries, timeouts and logs.
 - **When the user asks to build a milestone in this chat:** run it as `docs/workflow.md`, Execute,
-  says. Start a subagent that runs `/write-tests` for the milestone. It must not read the code in
-  `src/`. Then build in this session without changing any file in `tests/`, run the checks of step
-  4, and finish steps 5 to 7. Ask the user only for a blocker of step 5; decide everything else as
-  the Rules of `docs/workflow.md` say, and report each decision as a `DECISION:` line. One
-  milestone per request.
+  says, in this order:
+  1. Make the branch `milestone/M<n>` from the current branch.
+  2. Start a subagent that runs `/write-tests` for the milestone. It must not read the code in
+     `src/`.
+  3. Build in this session without changing any file in `tests/`, run the checks, and commit. Do
+     not push.
+  4. Start a second subagent that runs `/code-review-sherpa` on the diff of the branch. It must
+     not change a file. Repair its findings, then run that review one more time. Report each
+     finding that is left as a `FINDING:` line.
+  5. Merge with `git merge --ff-only`, push, and delete the milestone branch.
+  6. If the block has a **Human test** entry, tell the user what to test, and wait for the answer.
+
+  Ask the user only for a blocker of step 5 of the workflow; decide everything else as the Rules of
+  `docs/workflow.md` say, and report each decision as a `DECISION:` line. One milestone per
+  request.
+- **When the user asks for a release:** give the command `python scripts/release.py M<n>`, where
+  M<n> is the last milestone of the release. The user runs it in a terminal.
 
 ## 5. Stop
 

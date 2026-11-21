@@ -5,12 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="The sherpa spec-driven development workflow: who does each step, what it produces, and what enforces it.">
 <!-- The SHA-256 of docs/workflow.md when this page was last made to agree with it. -->
-<meta name="workflow-md-sha256" content="10e53451036971717db15307d52c0038c06b5b9f8903f87a2938ae8826569aaa">
+<meta name="workflow-md-sha256" content="a0ca919e721d28537e3ca06255856c06da74bb62c049c1d0392ea812f71f6b49">
 <title>Sherpa SDD Workflow</title>
 <style>
   /* Layout: a slim /sdd bar, then two rows of four cards that snake. Top row left to right (setup
-     and approvals), bottom row right to left (the milestone loop, in two sessions). A card opens a
-     docked right panel. The text follows docs/workflow.md, which owns the rules. */
+     and approvals), bottom row right to left (the milestone loop: a test, a build and a review
+     session), then the runner's Merge card under Review. A card opens a docked right panel. The
+     text follows docs/workflow.md, which owns the rules. */
   :root {
     --bg: #f3f5f8;
     --card: #ffffff;
@@ -74,9 +75,10 @@
       ".      .  r1    .   r2   .   r3"
       "con    a1 spec  a2  des  a3  plan"
       ".      .  .     .   .    .   d1"
-      "commit a6 check a5  code a4  test"
-      "loop loop loop loop loop loop loop";
-    grid-template-rows: auto 20px auto 56px auto 46px;
+      "review a6 check a5  code a4  test"
+      "d2     .  .     .   .    .   ."
+      "merge  .  .     .   .    .   .";
+    grid-template-rows: auto 20px auto 56px auto 56px auto;
     row-gap: 10px;
     align-items: center;
     min-width: 0;
@@ -118,18 +120,32 @@
   .tag { position: absolute; left: 50%; bottom: calc(100% + 6px); transform: translateX(-50%); white-space: nowrap; font-size: .68rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   .arrow .tag { padding: 2px 7px; border: 1px solid var(--accent); border-radius: 999px; background: var(--tint); color: var(--accent); font-size: .76rem; font-weight: 600; letter-spacing: 0; text-transform: none; bottom: calc(100% + 8px); }
   .arrow.down .tag { left: auto; right: calc(100% + 10px); bottom: auto; top: 50%; transform: translateY(-50%); }
+  .arrow.down.after .tag { right: auto; left: calc(100% + 10px); }
 
   /* One dashed box per session of a milestone. Its name sits on the top edge. */
   .bracket { align-self: stretch; margin: -12px; border: 1.5px dashed var(--rule); border-radius: 16px; pointer-events: none; position: relative; z-index: 0; }
-  .bracket.build { grid-area: 5 / 1 / 6 / 6; }
+  .bracket.review { grid-area: 5 / 1 / 6 / 2; }
+  .bracket.build { grid-area: 5 / 3 / 6 / 6; }
   .bracket.test { grid-area: 5 / 7 / 6 / 8; }
   .bracket .tag { left: 14px; bottom: auto; top: 0; transform: translateY(-50%); padding: 0 6px; background: var(--bg); }
 
-  .loop { grid-area: loop; align-self: stretch; margin: -10px calc((100% - 252px) / 8) 0; position: relative; border: 2px solid var(--accent); border-top: 0; border-radius: 0 0 44px 44px / 0 0 100% 100%; pointer-events: none; z-index: 2; }
-  .loop::after { content: ""; position: absolute; right: -8px; top: -3px; border-left: 7px solid transparent; border-right: 7px solid transparent; border-bottom: 10px solid var(--accent); }
-  .loop .tag { left: 50%; bottom: -8px; transform: translateX(-50%); padding: 0 10px; background: var(--bg); }
+  /* The way back: from the right side of Merge, along the bottom, then up to Tests first. A node
+     column is (100% - 252px) / 4 wide: the flow less its three arrow columns. */
+  .loop { grid-area: 6 / 1 / 8 / 8; align-self: stretch; margin-top: -10px; position: relative; pointer-events: none; z-index: 2; }
+  .loop::before { content: ""; position: absolute; left: calc((100% - 252px) / 4); right: calc((100% - 252px) / 8); top: 0; bottom: 45px; border: 2px solid var(--accent); border-top: 0; border-left: 0; border-radius: 0 0 28px 0; }
+  .loop::after { content: ""; position: absolute; right: calc((100% - 252px) / 8 - 6px); top: -3px; border-left: 7px solid transparent; border-right: 7px solid transparent; border-bottom: 10px solid var(--accent); }
+  .loop .tag { left: 60%; bottom: 37px; transform: translateX(-50%); padding: 0 10px; background: var(--bg); }
 
-  .src { margin-top: 44px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--faint); font-size: .82rem; }
+  /* The philosophy: one sentence under the title, and its principles under the flow. */
+  .lead { max-width: 70ch; margin: -12px 0 20px; font-size: 1.05rem; color: var(--ink); }
+  .philosophy { margin-top: 48px; }
+  .philosophy h2 { margin-bottom: 12px; font-size: .72rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .principles { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+  .principles div { padding: 12px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+  .principles dt { margin-bottom: 2px; font-weight: 600; color: var(--head); }
+  .principles dd { font-size: .92rem; color: var(--muted); }
+
+  .src { margin-top: 32px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--faint); font-size: .82rem; }
   code { font-family: var(--font-mono); font-size: .86em; color: var(--muted); overflow-wrap: anywhere; }
 
   /* Right panel: docked beside the flow on wide screens, a drawer over it on narrow ones. */
@@ -200,7 +216,7 @@
     .node:not(.bar) .who { position: absolute; }
     .flow {
       grid-template-columns: minmax(0, 1fr);
-      grid-template-areas: "con" "a1" "sdd" "r1" "spec" "a2" "des" "a3" "plan" "d1" "test" "a4" "code" "a5" "check" "a6" "commit";
+      grid-template-areas: "con" "a1" "sdd" "r1" "spec" "a2" "des" "a3" "plan" "d1" "test" "a4" "code" "a5" "check" "a6" "review" "d2" "merge";
       grid-template-rows: none;
       row-gap: 8px;
     }
@@ -217,6 +233,7 @@
 
 <main>
   <h1>Sherpa SDD workflow</h1>
+  <p class="lead">The human decides what to build. The AI builds it. The checks decide when it is done.</p>
 
   <div class="legend" aria-label="Who does the step">
     <span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>Human approves</span>
@@ -225,7 +242,7 @@
   </div>
 
   <div class="layout" id="layout">
-    <div class="flow" role="group" aria-label="Constitution, then /sdd routes to Spec, Design or Plan. Then per milestone: a test session writes the tests first, and a build session does Code, Check, and Commit and push. Repeated for the next milestone.">
+    <div class="flow" role="group" aria-label="Constitution, then /sdd routes to Spec, Design or Plan. Then per milestone, in its own branch: a test session writes the tests first, a build session does Code, then Check and commit, a review session reviews the change, and the runner merges and pushes. Repeated for the next milestone.">
 
       <button type="button" class="node bar" data-step="sdd" aria-pressed="false" aria-controls="panel" style="grid-area: sdd">
         <b>/sdd</b>
@@ -281,20 +298,33 @@
       </button>
       <div class="arrow left" style="grid-area: a5" aria-hidden="true">&larr;</div>
 
-      <button type="button" class="node script" data-step="check" aria-pressed="false" aria-controls="panel" style="grid-area: check">
-        <b>Check</b>
-        <span class="who"><svg class="icon" viewBox="0 0 24 24" role="img" aria-label="Script"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10l3 2-3 2M12.5 15H17"/></svg></span>
+      <button type="button" class="node duo" data-step="check" aria-pressed="false" aria-controls="panel" style="grid-area: check">
+        <b>Check &amp; commit</b>
+        <span class="who">
+          <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="Script"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10l3 2-3 2M12.5 15H17"/></svg>
+          <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="AI"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V5M2 13v3M22 13v3M9.5 17.5h5"/><circle class="dot" cx="12" cy="3.6" r="1.2"/><circle class="dot" cx="9" cy="13" r="1.3"/><circle class="dot" cx="15" cy="13" r="1.3"/></svg>
+        </span>
       </button>
       <div class="arrow left" style="grid-area: a6" aria-hidden="true">&larr;<span class="tag">Pass</span></div>
 
-      <button type="button" class="node" data-step="commit" aria-pressed="false" aria-controls="panel" style="grid-area: commit">
-        <b>Commit &amp; push</b>
+      <button type="button" class="node" data-step="review" aria-pressed="false" aria-controls="panel" style="grid-area: review">
+        <b>Review</b>
         <span class="who"><svg class="icon" viewBox="0 0 24 24" role="img" aria-label="AI"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V5M2 13v3M22 13v3M9.5 17.5h5"/><circle class="dot" cx="12" cy="3.6" r="1.2"/><circle class="dot" cx="9" cy="13" r="1.3"/><circle class="dot" cx="15" cy="13" r="1.3"/></svg></span>
+      </button>
+      <div class="arrow down after" style="grid-area: d2" aria-hidden="true">&darr;<span class="tag">Reviewed</span></div>
+
+      <button type="button" class="node duo script" data-step="merge" aria-pressed="false" aria-controls="panel" style="grid-area: merge">
+        <b>Merge &amp; push</b>
+        <span class="who">
+          <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="Script"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10l3 2-3 2M12.5 15H17"/></svg>
+          <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="Human"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+        </span>
       </button>
 
       <div class="bracket test" aria-hidden="true"><span class="tag">Test session</span></div>
       <div class="bracket build" aria-hidden="true"><span class="tag">Build session</span></div>
-      <div class="loop" aria-hidden="true"><span class="tag">Next milestone &middot; two fresh claude sessions each</span></div>
+      <div class="bracket review" aria-hidden="true"><span class="tag">Review session</span></div>
+      <div class="loop" aria-hidden="true"><span class="tag">Next milestone &middot; a new branch and fresh claude sessions</span></div>
     </div>
 
     <aside class="panel" id="panel" aria-label="Step details" hidden>
@@ -312,6 +342,19 @@
     </aside>
     <div class="backdrop" id="backdrop" aria-hidden="true"></div>
   </div>
+
+  <section class="philosophy" aria-labelledby="ph-title">
+    <h2 id="ph-title">Philosophy</h2>
+    <dl class="principles">
+      <div><dt>Intent</dt><dd>The human owns the spec and each release. No session changes the spec.</dd></div>
+      <div><dt>Method</dt><dd>The AI writes the design, the plan, the tests and the code.</dd></div>
+      <div><dt>Proof</dt><dd>A result counts only when a deterministic check confirms it.</dd></div>
+      <div><dt>Independence</dt><dd>No session checks its own work. One session writes the tests, one writes the code, and one reviews it.</dd></div>
+      <div><dt>Autonomy</dt><dd>The human approves before a run and reviews after it. During a run, the AI works alone. It stops only for a named blocker or a human test.</dd></div>
+      <div><dt>Cost</dt><dd>Proof comes before token cost.</dd></div>
+      <div><dt>Scope</dt><dd>sherpa is for Claude Code only.</dd></div>
+    </dl>
+  </section>
 
   <p class="src">The rules are in <code>docs/workflow.md</code>. This page shows them. If the two disagree, <code>workflow.md</code> is right.</p>
 </main>
@@ -345,7 +388,7 @@
             'The decisions and open questions of `design.md`',
             'The rows of `plan.md`',
             'The ideas in `unapproved-ideas.md`',
-            'Git'
+            'Git, and a branch `milestone/M&lt;n&gt;` that an earlier run left'
           ]),
           p('Then `/sdd` does these steps:'),
           ol([
@@ -358,7 +401,8 @@
             'New or changed behavior: `/write-spec`',
             'A change of architecture, data, interfaces or libraries, with no change of behavior: `/write-design`',
             'Milestones, or a fix of behavior that the spec already states: `/write-plan`',
-            'To build: the runner command (`python scripts/milestones-runner.py`), or one milestone in chat'
+            'To build: the runner command (`python scripts/milestones-runner.py`), or one milestone in chat',
+            'A release: the command `python scripts/release.py M&lt;n&gt;`'
           ])],
         ['Order',
           p('An earlier item comes before a later one:'),
@@ -403,10 +447,10 @@
             '`CLAUDE.md`: the rules that are always loaded',
             '`.claude/rules/`: the path-scoped rules',
             '`.claude/settings.json`',
-            'The skills `/sdd`, `/write-spec`, `/write-design`, `/write-plan` and `/write-tests`',
+            'The skills `/sdd`, `/write-spec`, `/write-design`, `/write-plan`, `/write-tests` and `/code-review-sherpa`',
             '`.githooks/pre-commit`',
-            '`scripts/`',
-            '`docs/`: the workflow and this page, spec, design, plan, unapproved ideas',
+            '`scripts/`: the checks, the runner, the live checks and the release script',
+            '`docs/`: the workflow and this page, spec, design, plan, unapproved ideas, releases',
             'Tool configs'
           ])],
         ['Enforced by',
@@ -438,7 +482,8 @@
             'Asks one question at a time.',
             'Writes each requirement as one statement in the Easy Approach to Requirements Syntax (EARS). A test can check the statement without the design.',
             'Gives each requirement a stable ID (`AREA-NNN` or `NFR-NNN`).',
-            'Adds an acceptance example (`EX-NNN`) where a requirement needs a concrete case.',
+            'Lists the cases of each user scenario as acceptance examples (`EX-NNN`): first the most likely cases, in full, then the edge cases.',
+            'Asks, for each external system, what the program must do when that system fails.',
             'Marks the file `Status: Draft`.'
           ]),
           p('For an approved spec, it proposes each change first.')],
@@ -446,7 +491,7 @@
           ul([
             '`docs/spec.md`',
             'The status becomes `Approved` when the human approves.',
-            'The test session writes the tests from the requirements and examples of the spec.'
+            'The test session writes the tests from the requirements and examples of the spec. Each example gets a test.'
           ])],
         ['Enforced by',
           ul([
@@ -459,20 +504,23 @@
     design: {
       eyebrow: 'Once per change · human approves',
       title: 'Design',
-      actors: [['ai', 'designs and asks'], ['human', 'answers and approves']],
+      actors: [['ai', 'designs and asks'], ['human', 'answers and approves'], ['script', 'checks the boundaries']],
       sections: [
         ['What happens',
           p('`/write-design` reads the approved spec and applies a light version of Attribute-Driven Design 3.0. It also does this:'),
           ul([
             'Asks only what it cannot decide itself.',
-            'Gives each requirement a test level (`unit`, `e2e` or `ui`).',
-            'Names every interface that a test needs.'
+            'Draws one diagram of the components and their interfaces.',
+            'Lists the module boundaries: which module can import which.',
+            'Gives each requirement a test level (`unit`, `e2e`, `ui` or `live`).',
+            'Names every interface that a test needs.',
+            'Names a real local part for a test where one exists, and a fake only for an external service.'
           ])],
         ['Output',
           p('`docs/design.md`, with these sections:'),
           ul([
             'Decisions (`DEC-NNN`)',
-            'Architecture',
+            'Architecture, with the diagram and the module boundaries',
             'Data model',
             'Interfaces',
             'Test design',
@@ -484,7 +532,14 @@
             'No decision is `Proposed`.',
             'No design question is open.'
           ]),
-          p('If the design needs a different requirement, `/write-design` proposes a spec change for approval. When the spec and the design disagree, the spec wins.')]
+          p('If the design needs a different requirement, `/write-design` proposes a spec change for approval. When the spec and the design disagree, the spec wins.')],
+        ['Enforced by',
+          ul([
+            '`check.py` fails when the code imports across a module boundary that the design does not permit.',
+            '`spec_coverage.py --consistency` fails when a requirement has no test level.',
+            'The browser tool is Playwright. Each user scenario of a project with a browser gets a `ui` test.',
+            'After the first release, a change that breaks released data or a released interface needs a decision that records the transition.'
+          ])]
       ]
     },
     plan: {
@@ -498,6 +553,7 @@
             'Stops unless the spec and the design are approved.',
             'Cuts thin milestones.',
             'Proposes a model and an effort for each milestone.',
+            'Gives a milestone a human test only when it completes a user scenario that no tool can prove. It keeps the human tests few.',
             'Shows the milestone table in chat.',
             'After the human approves, writes the table and one block for each milestone.'
           ]),
@@ -505,14 +561,15 @@
         ['Output',
           p('`docs/plan.md`, with these parts:'),
           ul([
-            'The table "Milestones at a glance": milestone, description, model, effort and status',
-            'One block for each milestone: Refs, Owner, Tests first, Build and Gate',
-            '"Human checks": the checks that need a live service or a person. The human does them after the run.'
+            'The table "Milestones at a glance": milestone, description, model, effort, human test and status',
+            'One block for each milestone: Refs, Owner, Tests first, Build, Gate and, for some, Human test',
+            '"Live checks": the tests that need a live external service, with the human\'s approval and a budget ceiling'
           ])],
         ['Gate',
           ul([
             'Every requirement ID in the spec must belong to at least one milestone.',
             '`spec_coverage.py` lists each ID as tested, manual, planned or missing.',
+            '`spec_coverage.py --consistency` fails when the plan names an ID that the spec or the design does not have.',
             'A `Decided` decision must name each dependency. The human installs it before the run.',
             'The runner reads the table.'
           ])]
@@ -521,25 +578,28 @@
     tests: {
       eyebrow: 'Per milestone · test session',
       title: 'Tests first',
-      actors: [['script', 'runner starts the test session'], ['ai', 'writes and runs the tests']],
+      actors: [['script', 'runner makes the branch and starts the session'], ['ai', 'writes and runs the tests']],
       sections: [
         ['What happens',
           ol([
+            'The runner makes the branch `milestone/M&lt;n&gt;` from the base branch.',
             'The runner starts a fresh `claude -p` session for the next open row, with the model and effort of that row.',
             'The session runs `/write-tests`.',
-            'The session writes one test for each name under Tests first. It uses the requirements and examples of the spec and the interfaces of the design.',
+            'The session writes the tests under Tests first: at least one for each requirement and one for each acceptance example. The most likely cases come first, then the edge cases.',
             'The session runs the tests. Each test must fail because the behavior is missing.',
             'The session does not commit.'
           ])],
         ['Output',
           ul([
             '`tests/unit/`, `tests/e2e/` and `tests/e2e/ui/`',
-            'Each test is named after the requirement ID that it verifies.',
+            '`tests/live/`: tests that call a live external service. The session writes them and does not run them.',
+            'Each test is named after the requirement ID that it verifies, and after the example ID when it comes from an example.',
             'The report names each requirement without a test as `Manual:`.'
           ])],
         ['Enforced by',
           ul([
             'The session cannot read the code: Read, Grep and Glob are disallowed for `src/`. Thus the tests catch code that drifts from the spec.',
+            'A test uses a real local part where one exists, and a fake only for an external service.',
             'After the session, the runner stores a hash of every file under `tests/`.'
           ])],
         ['Before the first milestone',
@@ -549,7 +609,8 @@
             'The settings file is there.',
             'The commit hook is on.',
             'Git is clean.',
-            'The branch has an upstream.'
+            'The branch has an upstream.',
+            '`python scripts/spec_coverage.py --consistency` passes: the spec, the design and the plan agree on each ID.'
           ]),
           p('Sessions run with `bypassPermissions`. Their guard rails are the deny and ask rules of `settings.json`.')],
         ['In chat',
@@ -562,8 +623,11 @@
       actors: [['script', 'runner starts the build session'], ['ai', 'writes the change'], ['script', 'edit hook checks each file']],
       sections: [
         ['What happens',
+          ol([
+            'A second fresh session reads the design sections that the Refs of the milestone name.',
+            'It writes the smallest change that passes the new tests.'
+          ]),
           ul([
-            'A second fresh session writes the smallest change that passes the new tests.',
             'It does not change a file in `tests/`.',
             'A test that looks wrong is a blocker.'
           ])],
@@ -583,14 +647,14 @@
           p('`check.py --edited` does these steps:'),
           ol([
             'Formats and fixes the file: ruff for Python, and ESLint, Stylelint and Prettier for web files.',
-            'Sends the remaining errors to Claude as a block decision.'
+            'Sends the remaining errors to Claude as a block decision. A second class in one file is such an error.'
           ])]
       ]
     },
     check: {
       eyebrow: 'Per milestone · build session',
-      title: 'Check',
-      actors: [['script', 'runs the checks']],
+      title: 'Check & commit',
+      actors: [['script', 'runs the checks'], ['ai', 'commits']],
       sections: [
         ['What happens',
           p('The session runs these commands:'),
@@ -598,13 +662,22 @@
             '`python scripts/check.py`',
             '`python scripts/spec_coverage.py M&lt;n&gt;`'
           ]),
-          p('If one fails, the session returns to Code.')],
+          p('If one fails, the session returns to Code. If the two pass, it does these steps:'),
+          ol([
+            'Updates the docs that the change made inaccurate.',
+            'Deletes the row and the block of the milestone from `plan.md`.',
+            'Commits only the files that it changed, as `M&lt;n&gt;: title`.'
+          ]),
+          p('It does not push. The runner merges and pushes after the review.')],
         ['Checks',
           ul([
-            'Python: ruff check and format, mypy (when `src/` has Python), pytest with an 80% branch-coverage floor (when tests exist)',
+            'Python: ruff check and format, mypy (when `src/` has Python), pytest with an 80% branch-coverage floor',
             'Web: ESLint, tsc, Prettier, Stylelint, `node --test`',
-            'Spec coverage: each requirement ID in the Refs of the milestone has a test or a `Manual:` entry'
-          ])],
+            'One class per file, and every import at the top of the file',
+            'Module boundaries: no import that the design does not permit',
+            'Spec coverage: each requirement ID in the Refs of the milestone, and each acceptance example of those requirements, has a test or a `Manual:` entry'
+          ]),
+          p('`check.py` prints one line for each check: passed, failed or skipped, with the reason for a skip. Code in `src/` with no test fails.')],
         ['Enforced by',
           ul([
             'The pre-commit hook runs the same full check on every commit. It refuses the commit if a check fails.',
@@ -614,34 +687,86 @@
           ul([
             'A milestone run calls no live external service.',
             'A milestone run uses no real user data.',
-            'Tests use fakes at the external boundaries.'
+            'Tests use real local parts, and fakes only for the external services.',
+            'No milestone runs the tests in `tests/live/`.'
           ])]
       ]
     },
-    commit: {
-      eyebrow: 'Per milestone · build session',
-      title: 'Commit & push',
-      actors: [['ai', 'commits and pushes'], ['script', 'runner verifies'], ['human', 'only when blocked']],
+    review: {
+      eyebrow: 'Per milestone · review session',
+      title: 'Review',
+      actors: [['script', 'runner starts each session'], ['ai', 'reviews, then repairs']],
       sections: [
         ['What happens',
-          p('The session does these steps:'),
           ol([
-            'Updates the docs that the change made inaccurate.',
-            'Deletes the row and the block of the milestone from `plan.md`.',
-            'Commits only the files that it changed, as `M&lt;n&gt;: title`.',
-            'Pushes.'
-          ])],
-        ['Runner check',
-          p('The runner checks these conditions:'),
-          ul([
-            'The row left the plan.',
-            'Git is clean.',
-            'The push happened.',
-            '`tests/` and `spec.md` did not change.'
+            'A fresh, read-only session reviews the diff of the branch. It runs the built-in `/code-review` first, if Claude Code has it, then `/code-review-sherpa`.',
+            'It writes one `FINDING:` line for each finding: severity, file and line, rule or smell, remedy.',
+            'With findings, a repair session repairs them and commits as `M&lt;n&gt;: review repairs`.',
+            'Then a last review runs.'
           ]),
-          p('If all are true, the runner starts the next open row. If not, it does these steps:'),
+          ul([
+            'A milestone gets at most two reviews.',
+            'A finding that the last review still reports stays in the log. It does not stop the milestone.',
+            'The human reads those findings after the run.'
+          ])],
+        ['Standards',
           ol([
-            'Tries the session again (`--retries`, default 1). A session that runs longer than 90 minutes counts as not finished.',
+            'Write for the average programmer.',
+            'No complicated patterns. A design pattern needs a `Decided` decision.',
+            'Readable code comes before clever code.',
+            'Only the 8 smells below.'
+          ])],
+        ['The 8 smells',
+          ul([
+            'Speculative Generality',
+            'Duplicate Code',
+            'Dead Code',
+            'Middle Man and Lazy Class',
+            'Comments that repeat the code',
+            'Long Method',
+            'Long Parameter List',
+            'Large Class'
+          ]),
+          p('The review never proposes "Replace Conditional with Polymorphism".')],
+        ['Enforced by',
+          ul([
+            'The review session cannot edit: Edit and Write are disallowed. A review that changed a file counts as not finished.',
+            'The repair session cannot change `tests/`, and the pre-commit hook runs each check again.',
+            'After a repair, the runner compares the hashes of `tests/` and runs the spec coverage again.'
+          ])],
+        ['In chat',
+          p('When `/sdd` builds one milestone in chat, a subagent is the review session.')]
+      ]
+    },
+    merge: {
+      eyebrow: 'Per milestone · the runner',
+      title: 'Merge & push',
+      actors: [['script', 'runner merges and pushes'], ['human', 'does the human test, and answers when blocked']],
+      sections: [
+        ['What happens',
+          p('The runner, not a session, does these steps:'),
+          ol([
+            'Makes sure that the row left the plan, git is clean, and `tests/` and `spec.md` did not change.',
+            'Moves the base branch to the milestone branch with `git merge --ff-only`.',
+            'Pushes the base branch.',
+            'Deletes the milestone branch.',
+            'Starts the next open row.'
+          ]),
+          p('Thus the base branch holds only commits that passed each check.')],
+        ['Human test',
+          p('Some milestones have a Human test entry in the plan. For such a milestone, the runner does these steps after the merge:'),
+          ol([
+            'Prints what to test and the result to expect.',
+            'Waits for the answer.'
+          ]),
+          ul([
+            'The answer `yes` continues the run.',
+            'Any other answer stops the run. A fault goes to `/sdd` as a fix milestone.'
+          ])],
+        ['Not finished',
+          p('When a session does not finish, the runner does these steps:'),
+          ol([
+            'Tries the session again (`--retries`, default 1), and gives it the reason for the failure. A session that runs longer than 90 minutes counts as not finished.',
             'Stops after the last try.'
           ]),
           p('`--resume` continues from the changes that are left.')],
@@ -656,22 +781,34 @@
             'A dependency that no `Decided` decision names',
             'A change to a test'
           ]),
-          p('Then the session does these steps:'),
+          p('The session sets the status of the milestone to blocked, adds a Blocked entry, and commits nothing. Then the runner does these steps:'),
           ol([
-            'Sets the status of the milestone to blocked.',
-            'Adds a Blocked entry.',
-            'Undoes its other changes.',
-            'Commits only `plan.md` as `M&lt;n&gt;: blocked`.',
-            'Pushes.'
+            'Commits the other changes on the milestone branch as `M&lt;n&gt;: partial work`.',
+            'Commits `plan.md` alone on the base branch as `M&lt;n&gt;: blocked`.',
+            'Pushes the base branch.',
+            'Stops and prints the question.'
           ]),
-          p('The runner stops and prints the question. To continue, the human does these steps:'),
+          p('To continue, the human does these steps:'),
           ol([
             'Adds an Approval entry.',
             'Sets the status to approved.',
             'Commits.',
-            'Runs the runner again.'
+            'Runs the runner again. The milestone continues from its partial work.'
           ]),
-          p('The approval permits exactly what it says.')]
+          p('The approval permits exactly what it says.')],
+        ['After the last milestone',
+          ul([
+            'The runner runs `python scripts/live_checks.py`. The live checks run only with the human\'s approval and a budget ceiling in `plan.md`. The result is passed, failed or not run.',
+            'The human reads the `DECISION:` lines and the `FINDING:` lines in the logs.'
+          ])],
+        ['Release',
+          p('The human starts `python scripts/release.py M&lt;n&gt;`. It uses no AI session. The release holds each milestone up to M&lt;n&gt;.'),
+          ol([
+            'Makes the version from the date: `YYYY.MM.DD`.',
+            'Builds the release into `dist/` from the commit of M&lt;n&gt;.',
+            'Adds the git tag `v&lt;version&gt;`.',
+            'Adds a row to `docs/releases.md`, commits and pushes.'
+          ])]
       ]
     }
   };

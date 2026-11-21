@@ -7,8 +7,8 @@ history is the record. Template: `docs/workflow.md`.
 
 ## Milestones at a glance
 
-| Milestone | Description | Model | Effort | Status |
-| --- | --- | --- | --- | --- |
+| Milestone | Description | Model | Effort | Human test | Status |
+| --- | --- | --- | --- | --- | --- |
 
 ## Milestones
 

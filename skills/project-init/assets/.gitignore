@@ -25,6 +25,9 @@ htmlcov/
 # JavaScript
 node_modules/
 
+# Releases (scripts/release.py builds them)
+dist/
+
 # Editor and OS
 .vscode/*
 !.vscode/settings.json

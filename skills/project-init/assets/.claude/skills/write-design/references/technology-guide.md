@@ -44,6 +44,7 @@ Do not infer shared access merely from the number of employees in the organizati
 
 ## Design tools and quality checks
 
-Reuse the project's check tools where adequate. Identify a browser test tool when UI workflow requirements need browser tests.
-Define test boundaries and fakes for external services. Keep live services and private data out of automated tests unless the project explicitly permits them.
+Reuse the project's check tools where adequate. The browser test tool is Playwright. Name its package and its browser in a decision, so that the user installs them before a run.
+Use a real local part in a test where one exists: a database file in a temporary folder, a server that the test starts on 127.0.0.1. Define a fake only for an external service.
+Keep live services and private data out of the tests that a milestone runs. A test that only a live external service can prove has the level `live`: it uses a test account, and it runs only as a live check (`docs/workflow.md`, Rules). Name the test account setting and what one run costs.
 Treat coverage and lint as implementation checks. Define separate evidence for requirement behavior and important quality attributes.

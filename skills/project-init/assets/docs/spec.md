@@ -25,6 +25,7 @@ For each `SCN-NNN`, record:
 - Trigger and preconditions
 - Main success path
 - Relevant alternate paths and failure paths
+- For each external system that the scenario uses: what the program does when that system fails
 - Observable result
 - Source and confirmation status
 
@@ -49,7 +50,8 @@ Keep unknown limits in the open questions. Do not invent values.
 | ID | Requirement IDs | Situation and input | Expected result | Reviewed by |
 | --- | --- | --- | --- | --- |
 
-Record the actual reviewer or mark the example as awaiting review.
+List the cases of each user scenario: first the most likely cases, in full, then the edge cases.
+Each example gets a test. Record the actual reviewer or mark the example as awaiting review.
 Link rules by ID instead of repeating their text.
 
 ## 7. Assumptions and open questions

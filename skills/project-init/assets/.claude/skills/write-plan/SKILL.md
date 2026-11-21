@@ -28,30 +28,42 @@ plan only. Do not write code, install dependencies, or start a milestone.
 1. List the requirements in `spec.md` and the decisions in `design.md` that the plan must deliver.
 2. Cut thin slices. Each milestone delivers behavior that tests can prove, and fits one unattended
    session. Order them by dependency: foundations first. The runner works without a person, so a
-   milestone's Gate must be one a session can meet alone: offline, with fakes at the external
-   boundaries, with no user data and no human step. A check that needs a live service or a person
-   is not a Gate. List it under "Human checks" (see 5).
+   milestone's Gate must be one a session can meet alone: offline, with real local parts and with
+   fakes for the external services, with no user data and no human step. What only a person can
+   judge is a human test (see 5). What needs a live service is a live check (see 6).
 3. Check coverage. Every requirement ID belongs to at least one milestone. List any that does not,
    and say why. Run `python scripts/spec_coverage.py`: it lists each requirement ID as tested,
    manual, planned or missing.
 4. Write one block per milestone, in the workflow's template:
    - **Refs:** the requirement IDs (`AREA-NNN`, `NFR-NNN`) and the `DEC-NNN` it implements.
    - **Owner:** the module or file that owns the change.
-   - **Tests first:** one test name per requirement ID, named after the ID, grouped by the level
-     the design gives it: `unit:`, `e2e:`, `ui:`. A separate test session writes them with
-     `/write-tests` from the spec's requirements and examples and the design, without the code, so
-     each name must say which case and which result it checks. Write `Manual: <requirement ID>`
-     only for what a session cannot check alone: a person's judgement, or a live external service.
+   - **Tests first:** at least one test name per requirement ID, and one per acceptance example
+     that cites it. A name carries its requirement ID, and the example ID when the test comes from
+     an example (`test_pay_001_ex_003_refund_over_limit`). Group the names by the level the design
+     gives the requirement: `unit:`, `e2e:`, `ui:`, `live:`. A separate test session writes them
+     with `/write-tests` from the spec's requirements and examples and the design, without the
+     code, so each name must say which case and which result it checks. Write
+     `Manual: <requirement ID>` only for what only a person can judge. Then the milestone has a
+     human test (see 5).
    - **Build:** the smallest change that passes the tests, in terms the design already fixed.
    - **Gate:** what must be true before the commit, by checks a session can run alone.
-5. The manual checks and every check that needs a live service or a person are not a milestone:
-   write them as a list under a heading "## Human checks", after the last milestone block, one
-   line each with its requirement or decision ID, for the user to do after the run.
-6. Do not add a requirement or a dependency that the spec and design do not have. If the plan needs
+   - **Human test:** only for a milestone whose row says `yes` (see 5).
+5. Keep the human tests few. A milestone gets a human test only when it completes a user scenario
+   that no tool can prove: a person's judgement. Where a tool can prove the result, plan a test
+   (a `ui` test with Playwright for what the page shows). Put the human test at the milestone
+   that completes the scenario, and join the judgements of one scenario in one entry. Set the
+   column Human test of its row to `yes`, and write in its **Human test** entry what the user
+   tests, step by step, and the result to expect. The runner stops after that milestone and waits
+   for the user's answer. Every other row says `no`.
+6. A test that only a live external service can prove has the level `live` and is in
+   `tests/live/`. No milestone runs it. List each one under a heading "## Live checks", after the
+   last milestone block (template in `docs/workflow.md`). Leave the entries **Approval** and
+   **Budget ceiling** for the user: the live checks run only after the user fills them.
+7. Do not add a requirement or a dependency that the spec and design do not have. If the plan needs
    one, stop and propose the spec or design change for approval. For a decision the design leaves
    open, the milestone's session decides and records it (`docs/workflow.md`, Rules): do not turn it
    into a question.
-7. List the dependencies each milestone first imports. Check that a `Decided` decision in
+8. List the dependencies each milestone first imports. Check that a `Decided` decision in
    `design.md` names each. Tell the user to approve and install every one before the run: an
    unattended session cannot install a dependency (`.claude/settings.json` asks first), and one
    that no `Decided` decision names stops the milestone.
@@ -65,8 +77,9 @@ user asks to pin a version.
 
 ## Show the table, then write the file
 
-1. Show the milestones table in chat first: milestone, description, model, effort, status. Add a
-   line for each uncovered requirement. Ask for the user's approval or changes.
+1. Show the milestones table in chat first: milestone, description, model, effort, human test,
+   status. Say how many milestones stop for a human test. Add a line for each uncovered
+   requirement. Ask for the user's approval or changes.
 2. After approval, write the rows under "Milestones at a glance" and the blocks under "Milestones".
    Set every Status to `open`. Advance the counter at the top.
 3. Keep the table at the top of the file, directly under the counter, so the user sees every
@@ -88,6 +101,7 @@ user asks to pin a version.
 ## Finish
 
 Check that every row has a block, every block has a row, every number is unique, and every ID in
-Refs exists in the spec or the design. Report the milestones and any requirement left uncovered.
+Refs exists in the spec or the design. Run `python scripts/spec_coverage.py --consistency` and
+correct what it lists. Report the milestones and any requirement left uncovered.
 Tell the user the next step: run `python scripts/milestones-runner.py`, or run `/sdd` to work the
 first milestone in chat. Stop there.

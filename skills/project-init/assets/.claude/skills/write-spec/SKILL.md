@@ -80,6 +80,10 @@ and interrupted work when relevant. Establish the responsible role and expected 
 Clarify domain terms, data relationships, ownership, validation, retention, and permissions.
 Record the required effect of a failure. Leave its technical mechanism to design.
 
+For each external system that the app uses, ask one question: what must the app do when this
+system fails? Record the answer as a requirement. With no such requirement, the app stops and
+shows the error: it does not retry and it does not fall back (`CLAUDE.md`, Error handling).
+
 ### Measurable quality needs
 
 Explore performance, reliability, recovery, privacy, security, usability, accessibility,
@@ -89,8 +93,11 @@ Treat an unknown target as an open question with a way to resolve it.
 
 ### Acceptance examples and confirmation
 
-For each consequential rule, capture a concrete input or situation and its expected result.
-Include a representative success case and a relevant exception or boundary case.
+List the cases of each user scenario as acceptance examples: a concrete input or situation and
+its expected result. Start with the most likely cases and cover them in full: each usual path
+of the scenario. Then add the edge cases: boundaries, invalid or missing input, duplicates, and
+failures. Write one case in one example, because each example gets its own test. Do not invent
+an expected result. When a case has no answer yet, ask the user.
 
 The requirements and the acceptance examples are the tests designed from the spec:
 `/write-tests` later turns them into code without reading the code. So write each
@@ -144,6 +151,7 @@ Review substance before wording:
 - Check that scenarios cover the agreed scope, including relevant roles and failure paths.
 - Check terminology, consistency, unique IDs, and unresolved conflicts.
 - Check that acceptance examples have domain-reviewed expected results.
+- Check that each user scenario has examples for its most likely cases and for its edge cases.
 - Check that every requirement states a result a test can observe.
 - Identify material unknowns that would change scope, behavior, or acceptance.
 

@@ -1,20 +1,36 @@
 """A stand-in for `claude -p`, used by the milestone runner tests. It never calls a model.
 
 `claude.cmd` (written by the tests, first on PATH) runs this file. It reads the runner's prompt on
-stdin, finds the session (test or build), the milestone number and the title, and acts by
-FAKE_CLAUDE_STATE:
+stdin, finds the session (test, build, review or repair), the milestone number and the title, and
+acts by FAKE_CLAUDE_STATE. No session pushes.
 
-    (unset)    the test session writes a failing test of the milestone and commits nothing; the
-               build session writes the code, deletes the milestone's row and block from
-               docs/plan.md, commits everything, and pushes
-    "blocked"  blocks it, unless its block has an Approval entry: sets its Status to `blocked`,
-               adds a Blocked entry to its block, commits docs/plan.md alone, and pushes
-    "idle"     does nothing
-    "retry"    the first build session does nothing; a later one finishes the milestone
-    "tamper"   the build session also changes the test that the test session wrote
-    "spec"     the build session also changes docs/spec.md
+    (unset)          the test session writes a failing test of the milestone and commits nothing;
+                     the build session writes the code, deletes the milestone's row and block
+                     from docs/plan.md and commits everything; the review session reports
+                     `NO FINDINGS` and changes nothing
+    "blocked"        the test session blocks the milestone, unless its block has an Approval
+                     entry: it sets its Status to `blocked`, adds a Blocked entry to its block,
+                     and commits nothing
+    "blocked-build"  the build session writes the code, then blocks the milestone in the same way
+    "idle"           does nothing
+    "retry"          the first build session of a milestone does nothing; a later one finishes it
+    "tamper"         the build session also changes the test that the test session wrote
+    "spec"           the build session also changes docs/spec.md
+    "no-remote"      the build session also points `origin` at a folder that does not exist, so
+                     a later push fails
+    "wanders"        the build session also checks out `main` when its commit is made
+    "findings"       the first review of a milestone reports two findings; the repair session
+                     changes the code and commits `M<n>: review repairs`; a later review reports
+                     one finding
+    "rejected"       each review reports two findings; the repair session rejects them and
+                     commits nothing
+    "repair-tamper"  as "findings", but the repair session also changes the test
+    "review-edits"   the review session changes a file of the code
+    "review-error"   the review session ends with exit code 1
 
-Every call's arguments are appended to FAKE_CLAUDE_LOG, one JSON list per line.
+Every call's arguments are appended to FAKE_CLAUDE_LOG, one JSON list per line. The kind, the
+milestone number and the prompt of every call are appended to `claude-sessions.jsonl` in the
+folder of that log, one JSON object per line.
 """
 
 import json
@@ -23,14 +39,39 @@ import re
 import shutil
 import subprocess
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 PLAN = Path("docs/plan.md")
 SPEC = Path("docs/spec.md")
 QUESTION = "- **Blocked:** Needs a decision: which database?"
-BUILD_MARK = "Edit(./tests/**)"  # only a build session is denied this tool
-TEST_PROMPT = r"Run /write-tests for milestone M(\d+) \((.*?)\) of docs/plan\.md"
-BUILD_PROMPT = r"Implement only milestone M(\d+) \((.*?)\) from docs/plan\.md"
+SESSIONS_LOG = "claude-sessions.jsonl"
+PROMPTS = {
+    "test": r"Run /write-tests for milestone M(\d+) \((.*?)\) of docs/plan\.md",
+    "build": r"Implement only milestone M(\d+) \((.*?)\) from docs/plan\.md",
+    "review": r"Review milestone M(\d+) \((.*?)\): the diff",
+    "repair": r"Repair the findings of the review of milestone M(\d+) \((.*?)\)\.",
+}
+FINDINGS = (
+    "FINDING: medium | src/m<n>.py:1 | Comments | Say what the module is for.",
+    "FINDING: low | src/m<n>.py:5 | Dead Code | Delete the name that nothing uses.",
+)
+REPAIR_STATES = ("findings", "repair-tamper")  # the repair session commits a repair
+
+
+@dataclass(frozen=True)
+class Call:
+    """One call of the fake: the state the test set, and the session the prompt names.
+
+    earlier counts the sessions of this kind that this milestone had before this call.
+    """
+
+    state: str
+    kind: str
+    number: int
+    title: str
+    earlier: int
+    prompt: str
 
 
 def log_path() -> Path:
@@ -38,17 +79,31 @@ def log_path() -> Path:
     return Path(os.environ["FAKE_CLAUDE_LOG"])
 
 
-def earlier_builds() -> int:
-    """Return how many build sessions were logged before this call."""
-    if not log_path().exists():
+def sessions_path() -> Path:
+    """Return the file that keeps the kind, the milestone and the prompt of every call."""
+    return log_path().with_name(SESSIONS_LOG)
+
+
+def earlier_sessions(kind: str, number: int) -> int:
+    """Return how many sessions of this kind were logged for the milestone before this call."""
+    if not sessions_path().exists():
         return 0
-    return sum(BUILD_MARK in line for line in log_path().read_text("utf-8").splitlines())
+    lines = sessions_path().read_text("utf-8").splitlines()
+    sessions = [json.loads(line) for line in lines]
+    return sum(s["kind"] == kind and s["milestone"] == number for s in sessions)
 
 
 def log_call(args: list[str]) -> None:
     """Append the arguments of this call to the log file."""
     with log_path().open("a", encoding="utf-8") as log:
         log.write(json.dumps(args) + "\n")
+
+
+def log_session(call: Call) -> None:
+    """Append the kind, the milestone number and the prompt of this call to the sessions file."""
+    record = {"kind": call.kind, "milestone": call.number, "prompt": call.prompt}
+    with sessions_path().open("a", encoding="utf-8") as log:
+        log.write(json.dumps(record) + "\n")
 
 
 def without_milestone(plan: str, number: int) -> str:
@@ -83,19 +138,24 @@ def git(*args: str) -> int:
     return subprocess.run([shutil.which("git") or "git", *args], check=False).returncode  # noqa: S603
 
 
-def commit(paths: list[str], message: str) -> int:
-    """Stage the paths, commit them with the message, and push."""
-    for args in (["add", *paths], ["commit", "-m", message], ["push"]):
+def commit(message: str) -> int:
+    """Stage every change and commit it with the message. Nothing is pushed."""
+    for args in (["add", "-A"], ["commit", "-m", message]):
         code = git(*args)
         if code != 0:
             return code
     return 0
 
 
-def block(plan: str, number: int) -> int:
-    """Block the milestone: write the question into the plan, commit the plan alone, and push."""
-    PLAN.write_text(with_question(plan, number), encoding="utf-8")
-    return commit([str(PLAN)], f"M{number}: blocked")
+def waits_for_approval(call: Call, blocking_state: str) -> bool:
+    """Tell whether this session blocks its milestone: the state says so, and no Approval exists."""
+    return call.state == blocking_state and "**Approval:**" not in PLAN.read_text("utf-8")
+
+
+def block(number: int) -> int:
+    """Block the milestone: write the question into the plan, and commit nothing."""
+    PLAN.write_text(with_question(PLAN.read_text("utf-8"), number), encoding="utf-8")
+    return 0
 
 
 def test_path(number: int) -> Path:
@@ -112,58 +172,117 @@ def write_test(number: int) -> None:
     test_path(number).write_text(text, encoding="utf-8")
 
 
-def write_code(number: int) -> None:
-    """Write src/m<n>.py so that the milestone's test passes."""
+def weaken_test(number: int) -> None:
+    """Change the test of a milestone, as a session that may not do so."""
+    weaker = test_path(number).read_text("utf-8").replace("==", ">=")
+    test_path(number).write_text(weaker, encoding="utf-8")
+
+
+def write_code(number: int, note: str = "") -> None:
+    """Write src/m<n>.py so that the milestone's test passes; the note goes into its docstring."""
     Path("src/__init__.py").write_text('"""Source."""\n', encoding="utf-8")
     text = (
-        f'"""Milestone {number}."""\n\n\n'
+        f'"""Milestone {number}{note}."""\n\n\n'
         f'def value() -> int:\n    """Return the milestone number."""\n    return {number}\n'
     )
     Path(f"src/m{number}.py").write_text(text, encoding="utf-8")
 
 
-def build(state: str, number: int, title: str) -> int:
-    """Do the build session: the code, the plan, and what the state adds; commit and push."""
-    write_code(number)
-    if state == "tamper":
-        weaker = test_path(number).read_text("utf-8").replace("==", ">=")
-        test_path(number).write_text(weaker, encoding="utf-8")
-    if state == "spec":
+def act_test(call: Call) -> int:
+    """Do the test session: block the milestone, or write its failing test. Commit nothing."""
+    if waits_for_approval(call, "blocked"):
+        return block(call.number)
+    write_test(call.number)
+    return 0
+
+
+def break_rule(call: Call) -> None:
+    """Do what the state adds to a build session, before its commit."""
+    if call.state == "tamper":
+        weaken_test(call.number)
+    if call.state == "spec":
         SPEC.write_text(SPEC.read_text("utf-8") + "\nA new requirement.\n", encoding="utf-8")
+    if call.state == "no-remote":
+        git("remote", "set-url", "origin", str(Path.cwd().parent / "no-remote.git"))
+
+
+def act_build(call: Call) -> int:
+    """Do the build session: the code, the plan, and what the state adds; commit, do not push."""
+    number = call.number
+    if call.state == "retry" and call.earlier == 0:
+        return 0
+    write_code(number)
+    if waits_for_approval(call, "blocked-build"):
+        return block(number)
+    break_rule(call)
     PLAN.write_text(without_milestone(PLAN.read_text("utf-8"), number), encoding="utf-8")
-    code = commit(["-A"], f"M{number}: {title}")
+    code = commit(f"M{number}: {call.title}")
+    if call.state == "wanders":
+        git("checkout", "main")
     sys.stdout.write("DECISION: keep the value in a function | the simplest way | none\n")
     sys.stdout.write(f"- **TLDR: M{number} is done.**\n")
     return code
 
 
-def act(state: str, is_build: bool, milestone: tuple[int, str], builds_before: int) -> int:
-    """Block, finish, or skip one session of the milestone, by the state the test set."""
-    number, title = milestone
-    plan = PLAN.read_text(encoding="utf-8")
-    if state == "idle" or (state == "retry" and is_build and builds_before == 0):
-        return 0
-    if state == "blocked" and "**Approval:**" not in plan:
-        return block(plan, number)
-    if is_build:
-        return build(state, number, title)
-    write_test(number)
+def reported_findings(call: Call) -> list[str]:
+    """Return the FINDING lines that this review reports, by the state and the earlier reviews."""
+    findings = [line.replace("<n>", str(call.number)) for line in FINDINGS]
+    if call.state == "rejected":
+        return findings
+    if call.state in REPAIR_STATES:
+        return findings if call.earlier == 0 else findings[:1]
+    return []
+
+
+def act_review(call: Call) -> int:
+    """Do the review session: report the findings of the state; change a file only if it says so."""
+    sys.stdout.write("BUILT-IN REVIEW: not available\n")
+    if call.state == "review-error":
+        return 1
+    if call.state == "review-edits":
+        with Path(f"src/m{call.number}.py").open("a", encoding="utf-8") as code:
+            code.write("# reviewed\n")
+    findings = reported_findings(call)
+    sys.stdout.write("\n".join(findings or ["NO FINDINGS"]) + "\n")
     return 0
+
+
+def act_repair(call: Call) -> int:
+    """Do the repair session: reject every finding, or change the code and commit the repair."""
+    if call.state not in REPAIR_STATES:
+        for finding in re.findall(r"^FINDING:.*$", call.prompt, re.MULTILINE):
+            sys.stdout.write(f"REJECTED: {finding} | the code is right\n")
+        return 0
+    write_code(call.number, note=", after the review")
+    if call.state == "repair-tamper":
+        weaken_test(call.number)
+    return commit(f"M{call.number}: review repairs")
+
+
+ACTIONS = {"test": act_test, "build": act_build, "review": act_review, "repair": act_repair}
+
+
+def read_call() -> Call | None:
+    """Read the prompt on stdin and return the session it names, or None when it names none."""
+    prompt = sys.stdin.buffer.read().decode("utf-8", "replace").replace("\r\n", "\n")
+    state = os.environ.get("FAKE_CLAUDE_STATE", "")
+    for kind, pattern in PROMPTS.items():
+        match = re.search(pattern, prompt)
+        if match is not None:
+            number = int(match[1])
+            return Call(state, kind, number, match[2], earlier_sessions(kind, number), prompt)
+    return None
 
 
 def main() -> int:
     """Log the call, then act on the session and the milestone named in the prompt."""
-    builds_before = earlier_builds()
     log_call(sys.argv[1:])
-    prompt = sys.stdin.read()
-    match = re.search(BUILD_PROMPT, prompt)
-    is_build = match is not None
-    match = match or re.search(TEST_PROMPT, prompt)
-    if match is None:
+    call = read_call()
+    if call is None:
         sys.stderr.write("fake claude: no milestone in the prompt\n")
         return 1
-    state = os.environ.get("FAKE_CLAUDE_STATE", "")
-    return act(state, is_build, (int(match[1]), match[2]), builds_before)
+    log_session(call)
+    return 0 if call.state == "idle" else ACTIONS[call.kind](call)
 
 
 if __name__ == "__main__":

@@ -45,7 +45,9 @@ wording where it costs nothing.
 - `tests/`: the test suite. It is not installed with the skill.
 - `docs/`: the SDD report, presentation and demo, one folder per version (`v2/` is current, `v1/`
   is the workflow before the test session); `unapproved-ideas.md` holds proposed workflow changes.
-  Never implement one without the user's approval.
+  Never implement one without the user's approval. `implementation-order.md` holds the approved
+  changes that are not finished, in the order of the work: delete a stage in the commit that
+  finishes it.
 - `README.md`: the full description, usage, contribution and test guide. Read it before changing
   what new projects get.
 

@@ -91,9 +91,16 @@ def project_skills() -> list[Path]:
     return sorted(p for p in (bi.assets_dir() / ".claude" / "skills").iterdir() if p.is_dir())
 
 
-def test_project_skills_are_the_five_slash_commands() -> None:
+def test_project_skills_are_the_six_slash_commands() -> None:
     names = [p.name for p in project_skills()]
-    assert names == ["sdd", "write-design", "write-plan", "write-spec", "write-tests"]
+    assert names == [
+        "code-review-sherpa",
+        "sdd",
+        "write-design",
+        "write-plan",
+        "write-spec",
+        "write-tests",
+    ]
 
 
 def test_every_project_skill_names_itself_after_its_folder() -> None:
@@ -156,9 +163,11 @@ def workflow_text() -> str:
 
 def test_sdd_is_the_way_in_and_routes_to_every_other_skill() -> None:
     assert "`/sdd` is the way in" in workflow_text()
-    for skill in ("/write-spec", "/write-design", "/write-plan", "/write-tests"):
+    skills = ("/write-spec", "/write-design", "/write-plan", "/write-tests", "/code-review-sherpa")
+    for skill in skills:
         assert skill in skill_text("sdd"), skill
     assert "scripts/milestones-runner.py" in skill_text("sdd")
+    assert "scripts/release.py" in skill_text("sdd")
 
 
 def workflow_page() -> str:
@@ -197,10 +206,12 @@ def test_every_card_of_the_workflow_page_has_its_panel() -> None:
     assert sorted(cards) == sorted(panels)
 
 
-def test_a_milestone_has_a_test_session_and_a_build_session() -> None:
+def test_a_milestone_has_a_test_a_build_and_a_review_session() -> None:
     workflow = workflow_text()
     assert "**Test session** (`/write-tests`)" in workflow
     assert "**Build session:**" in workflow
+    assert "**Review session** (`/code-review-sherpa`)" in workflow
+    assert "Do not change, create or delete a file" in skill_text("code-review-sherpa")
     assert "Do not change a file in `tests/`" in workflow
     assert "Do not read the code in `src/`" in skill_text("write-tests")
     assert "/write-tests" in skill_text("write-plan")
@@ -211,15 +222,60 @@ def test_a_milestone_has_a_test_session_and_a_build_session() -> None:
 def test_the_test_levels_are_the_same_everywhere() -> None:
     # The design gives each requirement a level, the plan groups the test names by it, and the
     # test session writes each test in that level's folder.
-    levels = ("unit:", "e2e:", "ui:")
+    levels = ("unit:", "e2e:", "ui:", "live:")
     sources = {
         "workflow": workflow_text(),
         "write-plan": skill_text("write-plan"),
         "write-tests": skill_text("write-tests"),
     }
     assert [(name, lv) for name, text in sources.items() for lv in levels if lv not in text] == []
-    for level in ("`unit`", "`e2e`", "`ui`"):
+    for level in ("`unit`", "`e2e`", "`ui`", "`live`"):
         assert level in skill_text("write-design"), level
+
+
+def test_the_review_checks_the_short_list_of_smells_and_no_polymorphism() -> None:
+    # The user chose 8 smells and banned one refactoring. The checklist is the only place
+    # that holds them, and only the review session loads it.
+    folder = bi.assets_dir() / ".claude" / "skills" / "code-review-sherpa"
+    checklist = (folder / "references" / "checklist.md").read_text(encoding="utf-8")
+    smells = (
+        "Speculative Generality",
+        "Duplicate Code",
+        "Dead Code",
+        "Middle Man and Lazy Class",
+        "Comments",
+        "Long Method",
+        "Long Parameter List",
+        "Large Class",
+    )
+    assert [smell for smell in smells if f"| {smell} |" not in checklist] == []
+    assert checklist.count("\n| ") == len(smells) + 2  # the header, its rule, and 8 rows
+    assert 'Never propose "Replace Conditional with Polymorphism"' in checklist
+    assert "FINDING: <high|medium|low> | <file>:<line> | <rule or smell> | <remedy>" in skill_text(
+        "code-review-sherpa"
+    )
+    assert "`FINDING: <high, medium or low> | <file>:<line> | <rule or smell> | <remedy>`" in (
+        workflow_text()
+    )
+
+
+def test_the_plan_table_has_the_human_test_column() -> None:
+    # The runner reads six cells of a row, and the user sees the stops when approving the table.
+    header = "| Milestone | Description | Model | Effort | Human test | Status |"
+    assert header in (bi.assets_dir() / "docs" / "plan.md").read_text(encoding="utf-8")
+    cells = ("**M<n>** <title>", "<one line: what it delivers>", "<model>", "<effort>")
+    row = "| " + " | ".join((*cells, "<yes or no>", "open")) + " |"
+    assert row in workflow_text()
+    assert "- **Human test:**" in workflow_text()
+    assert "**Human test**" in skill_text("write-plan")
+
+
+def test_the_workflow_page_holds_the_philosophy() -> None:
+    page = workflow_page()
+    lead = "The human decides what to build. The AI builds it. The checks decide when it is done."
+    assert lead in page
+    principles = ("Intent", "Method", "Proof", "Independence", "Autonomy", "Cost", "Scope")
+    assert [name for name in principles if f"<dt>{name}</dt>" not in page] == []
 
 
 def test_the_design_records_who_decided() -> None:
