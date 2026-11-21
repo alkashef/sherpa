@@ -134,10 +134,12 @@ SESSION_BUILD: Final = "build"  # the session that makes them pass
 SESSION_REVIEW: Final = "review"  # the session that reviews the diff of the milestone branch
 SESSION_REPAIR: Final = "repair"  # the session that repairs the findings of the review
 SESSION_REVIEW_LAST: Final = "review-last"  # the second review, after the repair
-# A test session may not read the code: its tests come from the spec and the design.
-TEST_SESSION_DENIED: Final = ("Read(./src/**)", "Grep(./src/**)", "Glob(./src/**)")
-BUILD_SESSION_DENIED: Final = ("Edit(./tests/**)", "Write(./tests/**)")
-REVIEW_SESSION_DENIED: Final = ("Edit", "Write", "MultiEdit", "NotebookEdit")  # it changes no file
+# A test session may not read the code: its tests come from the spec and the design. A Read rule
+# with a path also covers Grep and Glob, and an Edit rule with a path also covers Write: claude
+# warns about a Grep, Glob or Write rule with a path, because it matches nothing.
+TEST_SESSION_DENIED: Final = ("Read(./src/**)",)
+BUILD_SESSION_DENIED: Final = ("Edit(./tests/**)",)
+REVIEW_SESSION_DENIED: Final = ("Edit", "Write", "NotebookEdit")  # it changes no file
 DENIED_TOOLS: Final = {
     SESSION_TEST: TEST_SESSION_DENIED,
     SESSION_BUILD: BUILD_SESSION_DENIED,

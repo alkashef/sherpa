@@ -15,9 +15,9 @@ import pytest
 from helpers import Sandbox, build, logged_calls, run, shim
 
 FAKE_CLAUDE = Path(__file__).resolve().with_name("fake_claude.py")
-DENIED_TO_TEST = ["Read(./src/**)", "Grep(./src/**)", "Glob(./src/**)"]
-DENIED_TO_BUILD = ["Edit(./tests/**)", "Write(./tests/**)"]
-DENIED_TO_REVIEW = ["Edit", "Write", "MultiEdit", "NotebookEdit"]
+DENIED_TO_TEST = ["Read(./src/**)"]
+DENIED_TO_BUILD = ["Edit(./tests/**)"]
+DENIED_TO_REVIEW = ["Edit", "Write", "NotebookEdit"]
 M1_TEST = "from src.m1 import value\n\n\ndef test_m1_value() -> None:\n    assert value() == 1\n"
 M1_SESSIONS = ["test M1", "build M1", "review M1"]
 M2_SESSIONS = ["test M2", "build M2", "review M2"]

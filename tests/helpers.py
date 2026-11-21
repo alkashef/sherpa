@@ -23,8 +23,7 @@ def run(
     stdin: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
     """Run a command and capture its output. The caller checks the return code."""
-    # S603 is ignored on purpose: the tests run only git and the skill's own scripts.
-    return subprocess.run(  # noqa: S603
+    return subprocess.run(
         command,
         cwd=cwd,
         env=env,

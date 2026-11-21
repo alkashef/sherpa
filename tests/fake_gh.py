@@ -48,8 +48,7 @@ def repo_create() -> int:
         sys.stderr.write("fake gh: git not found\n")
         return 1
     remote = os.environ["FAKE_GH_REMOTE"]
-    # S603 is ignored on purpose: this fake runs only git, with arguments the test controls.
-    result = subprocess.run([git, "remote", "add", "origin", remote], check=False)  # noqa: S603
+    result = subprocess.run([git, "remote", "add", "origin", remote], check=False)
     sys.stdout.write(f"https://github.com/tester/{Path.cwd().name}\n")
     return result.returncode
 

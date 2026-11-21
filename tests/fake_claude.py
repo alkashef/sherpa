@@ -134,8 +134,7 @@ def with_question(plan: str, number: int) -> str:
 
 def git(*args: str) -> int:
     """Run git and return its exit code."""
-    # S603 is ignored on purpose: this fake runs only git, with arguments the test controls.
-    return subprocess.run([shutil.which("git") or "git", *args], check=False).returncode  # noqa: S603
+    return subprocess.run([shutil.which("git") or "git", *args], check=False).returncode
 
 
 def commit(message: str) -> int:

@@ -22,29 +22,40 @@ All paths are below `skills/project-init/` unless they start with `tests/` or `d
 
 ## Left to do, in this order
 
-1. **Prove the review in a real session.** The suite proves the runner with a fake `claude`
-   only. Run one milestone in a project that the skill built, and check these points:
-   - A `claude -p` session runs the built-in `/code-review` and `/code-review-sherpa` from the
-     runner's prompt. This is the condition of the user's decision on rank 3. If the built-in
-     command does not run, remove it from the review prompt.
-   - `--disallowedTools Edit Write MultiEdit NotebookEdit` keeps a review session from editing.
-   - A whole run: branch, test session, build session, review, repair, merge, push.
-   Then add the result to the README section "Checked in real Claude Code sessions".
-2. **A review that changed a file.** The runner finds the change and counts the session as
+Items 1 to 4 come from the real run of November 21, 2026 (README, "Checked in real Claude Code
+sessions"). That run proved the condition of the user's decision on rank 3: a `claude -p`
+session runs the built-in `/code-review` and `/code-review-sherpa`. The user did not decide
+items 1 to 4. A fifth problem of that run is solved: `assets/ruff.toml` now permits `subprocess`
+(S603) in `tests/**` (approved on November 21, 2026).
+
+1. **A finding in `tests/`.** The repair session may not edit `tests/`, so it rejects each
+   finding about a test, and the finding stays. Decide who repairs it.
+2. **The findings that stay.** The last review can report more findings than the first one, and
+   the milestone merges with them at each severity. In the real run one of them was a fault
+   against a requirement. Decide if a `high` finding stops the merge.
+3. **`python` on the PATH of a session.** The runner checks its own Python, not the PATH that
+   the sessions get. Started from the environment's `python.exe` without `conda activate`, the
+   sessions find no `python`. Decide if the runner puts the environment first on the PATH of each
+   session.
+4. **Files written through the shell.** The build session wrote its files with PowerShell. The
+   edit hook did not run, and a character in `docs/plan.md` was damaged. Decide if the prompts
+   tell a session to write files only with the Edit and Write tools.
+5. **A review that changed a file.** The runner finds the change and counts the session as
    failed. It does not undo the change, and the retry cannot edit, so the run stops and the user
    cleans the branch by hand. Decide if the runner must undo the change itself.
-3. **A refused `M<n>: blocked` commit.** If the pre-commit hook refuses that commit on the base
+6. **A refused `M<n>: blocked` commit.** If the pre-commit hook refuses that commit on the base
    branch, `docs/plan.md` stays uncommitted there and the runner shows only git's output. The
    partial work is safe in the milestone branch. Give the user the steps to finish.
-4. **Module boundaries for JavaScript.** `check.py` checks the table "Module boundaries" for
+7. **Module boundaries for JavaScript.** `check.py` checks the table "Module boundaries" for
    Python only.
-5. **Permissions for a milestone in chat.** `.claude/settings.json` asks before
+8. **Permissions for a milestone in chat.** `.claude/settings.json` asks before
    `git checkout -b`, `git merge --ff-only` and `git branch -d`. A milestone that `/sdd` builds
    in chat needs them. Decide if they go on the allow list.
-6. **The reports in `docs/v2/`.** The report, the presentation and the demo show the workflow
+9. **The reports in `docs/v2/`.** The report, the presentation and the demo show the workflow
    before these changes. A `v3/` must show the branch, the review, the human test, the live
    checks and the releases.
-7. **Deferred by the user:** property and mutation checks (rank 1).
+10. **Not run in a real session:** `/sdd`, a milestone that blocks, and a human test.
+11. **Deferred by the user:** property and mutation checks (rank 1).
 
 ## Decided with no work
 

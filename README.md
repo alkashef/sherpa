@@ -459,7 +459,7 @@ config, GitHub account and conda environments are never touched.
   its line (`passed`, `failed` or `skipped`), and a project with no check says so; code with no
   test fails, and a live test does not count as a test; a second class in a file fails, in the
   full run and after an edit; an import inside a function fails; an import that the table of
-  module boundaries does not permit fails; and a real `git commit` is refused by the hook, then
+  module boundaries does not permit fails; a test that runs a process passes; and a real `git commit` is refused by the hook, then
   accepted once fixed.
 - `test_spec_coverage.py`: each requirement is listed as tested, manual, planned or missing;
   examples, decisions and withdrawn rows are not requirements; a milestone passes when each
@@ -529,15 +529,6 @@ the suite):
   Before the `PowerShell(...)` twins were added they blocked nothing, because these sessions ran
   commands with the PowerShell tool.
 - An `ask` rule (`pip install`) blocks the command when no one can answer the prompt.
-
-Not checked in a real session yet (the suite proves these with a fake `claude` only):
-
-- A `claude -p` session runs the built-in `/code-review` and `/code-review-sherpa` from the
-  runner's prompt. If the built-in command is not there, the prompt tells the session to say
-  so and to go on with `/code-review-sherpa`.
-- `--disallowedTools Edit Write MultiEdit NotebookEdit` keeps a review session from editing.
-  The runner also checks after the session that no file and no commit changed.
-- A whole run with the branch for each milestone, the review, the repair and the merge.
 - An `Edit` ask rule holds even in accept-edits mode: asked to raise `line-length` in `ruff.toml`,
   Claude's edit waited for a permission no one gave, and the file stayed as it was.
 - A reworded command gets past a deny rule: `git -C . clean -n` ran. Deny rules match the command
@@ -563,8 +554,39 @@ pushed one commit to `main` (the same commit as the local one, 32 files and fold
 and created the conda environment. A second run with the same name in another empty folder was
 refused (`already exists`) and left that folder empty.
 
-Not checked in a real session yet: `/sdd`, `/write-tests`, the two sessions of a milestone and the
-runner's `--disallowedTools` rules, as they are here. They ran for 24 milestones in the project
-they came back from, but with that project's file names and IDs, and with a narrower rule for the
-test session (it denied the code files in `src/` by extension, not the whole folder). The suite
-covers them with a fake `claude` only.
+Also run once by hand, on November 21, 2026: the runner with real `claude -p` sessions (Claude
+Code 2.1.318, `sonnet`, effort `medium`), on one milestone of a project built by the skill, with a
+local bare repository as the remote. Six sessions ran in 4 minutes 16 seconds: test, build,
+review, repair (two tries) and last review.
+
+- The test session ran `/write-tests`. Each review session ran the built-in `/code-review` and
+  then `/code-review-sherpa`, changed no file, and reported `FINDING:` lines. The first review had
+  2 findings. The repair session repaired one and rejected the other, because its remedy changes a
+  file in `tests/`. The last review had 5 findings, and the runner counted them.
+- The runner made the branch `milestone/M1`, merged it with a fast-forward, pushed the base
+  branch and deleted the milestone branch.
+- The denied tools, each one in its own session: with `Edit`, `Write` and `NotebookEdit` denied, a
+  session has none of these tools. `Edit(./tests/**)` also refuses the Write tool in `tests/`.
+  `Read(./src/**)` also refuses Grep in `src/`, and Glob finds no file there. Claude Code warns
+  about a `Grep(...)`, `Glob(...)` or `Write(...)` rule with a path and about `MultiEdit`, so the
+  runner does not use them.
+
+The same run showed five problems. The first one is solved, and the others are not
+(`docs/implementation-order.md`):
+
+- Ruff refused `subprocess` in `tests/` (S603). The design asked for a test that runs the program
+  as a process, and the test session ran it in the test process instead. `ruff.toml` now permits
+  S603 in `tests/**`.
+- The review found that test. The repair session may not edit `tests/`, so the finding stayed.
+- The build session wrote its files with PowerShell, not with the Write tool. The edit hook did
+  not run for them, and PowerShell damaged a character in `docs/plan.md`: the session repaired it
+  and amended its commit. A path rule does not cover the shell, so the runner's hashes of `tests/`
+  are the guard there.
+- The sessions found no `python` on PATH, because the runner started from the environment's
+  `python.exe` without `conda activate`, and the runner's check passed. The test session did not
+  run its tests, and the first repair try did not run the Gate.
+- The last review reported 3 findings that the first review left out as not sure, one of them a
+  fault against a requirement. The milestone merged with them.
+
+Not checked in a real session yet: `/sdd`, a milestone that blocks, and a human test. The suite
+covers the runner's part of them with a fake `claude` only.

@@ -23,6 +23,12 @@ LATE_IMPORT = (
     '"""A module."""\n\n\n'
     'def dump() -> str:\n    """Dump."""\n    import json\n\n    return json.dumps({})\n'
 )
+PROCESS_TEST = (  # a test that runs a process, as an end-to-end test of a command line does
+    "import subprocess\nimport sys\n\n\n"
+    "def test_python_runs_as_a_process() -> None:\n"
+    '    done = subprocess.run([sys.executable, "-c", "print(1)"], check=False)\n'
+    "    assert done.returncode == 0\n"
+)
 BOUNDARIES = "### 2.4 Module boundaries\n\n| Module | May import |\n| --- | --- |\n"
 
 
@@ -173,6 +179,14 @@ def test_checks_run_the_tests_once_there_are_some(project: Sandbox) -> None:
     assert code == 2
     assert "`pytest -q --cov=src --cov-branch --cov-fail-under=80` failed" in output
     assert "test_add" in output
+
+
+def test_a_test_may_run_a_process(project: Sandbox) -> None:
+    write_tested_module(project.folder, 3)
+    test = project.folder / "tests" / "e2e" / "test_process.py"
+    test.write_text(PROCESS_TEST, encoding="utf-8")
+    code, output = check(project.folder)
+    assert code == 0, output
 
 
 def test_code_with_no_test_fails(project: Sandbox) -> None:

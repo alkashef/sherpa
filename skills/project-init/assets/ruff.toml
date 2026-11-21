@@ -53,7 +53,9 @@ max-statements = 15   # proxy for "20 lines or fewer": ruff has no line-count ru
 ban-relative-imports = "all"
 
 [lint.per-file-ignores]
-"tests/**" = ["D", "ANN", "S101", "PLR2004", "PLR0913"]   # tests need no docstrings (see Naming)
+# Tests need no docstrings (see Naming). S603: an end-to-end test runs the program as a process,
+# and a test starts a real local server, each without a shell.
+"tests/**" = ["D", "ANN", "S101", "S603", "PLR2004", "PLR0913"]
 "scripts/**" = ["T20"]                                    # scripts print their output
 "scripts/check.py" = ["S603"]                             # runs the check tools, without a shell
 "scripts/milestones-runner.py" = ["S603"]                 # runs git and claude, without a shell
