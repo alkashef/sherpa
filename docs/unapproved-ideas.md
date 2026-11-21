@@ -37,6 +37,7 @@ The approved changes are built. Their first text is in the git history of this f
 | 7 | `assets/scripts/milestones-runner.py`: a branch for each milestone, the review and repair sessions, the merge, the human test, the live stage, the start checks, the reason for a retry | USER-11, ranks 3, 6, 10, 2, 8 |
 | 8 | `assets/docs/workflow.md`, the page with the philosophy, the README, the builder, the tests | All |
 | 9 | `assets/scripts/check.py`: the module boundaries of JavaScript files. `assets/scripts/milestones-runner.py`: a refused `M<n>: blocked` commit or push says how to finish the step | Open work of the first build |
+| 10 | `assets/ruff.toml`: `known-first-party = ["src"]`, so that the order of the imports of a test does not depend on whether the code file exists. A bug that the second real run found | RUN-05, approved on November 21, 2026 |
 
 One real run followed on November 21, 2026 (README, "Checked in real Claude Code sessions"). It
 proved the condition of the user's decision on rank 3: a `claude -p` session runs the built-in
@@ -390,31 +391,6 @@ a guard.
 
 ---
 
-#### - [ ] RUN-05 | The first merge leaves a lint error in a test
-
-**Proposed resolution (Claude, November 21, 2026; the user did not decide it):** Add
-`[lint.isort]` with `known-first-party = ["src"]` to `assets/ruff.toml`, and a test of
-`check.py` that a test file sorted this way passes with and without `src/slug.py`.
-
-- **Current:** Ruff sorts the imports of `from src.slug import x` as first-party only when the
-  file `src/slug.py` exists. The test session writes a test before the code exists, so the test
-  has `import pytest` and `from src.slug import x` in one block. The build session then makes
-  `src/slug.py`. The test file is not sorted any more, but ruff's cache keeps the old result,
-  because the file did not change.
-- **Seen:** In the second real run (November 21, 2026), the commit of M1 passed. A checkout
-  changed the time stamp of the test file. The next commit on the base branch, `M2: blocked`,
-  made the pre-commit hook refuse it for `unsorted-imports` in `tests/unit/test_slug.py`, and
-  the run stopped. After `ruff check --fix` the commit passed. I proved the cause with a project
-  of two files, with and without `src/slug.py`, and with `known-first-party`.
-- **Alternative:** Tell the test session to put a blank line between the two import groups. This
-  is advice, not a guard, and the edit hook would then change the file when `src/slug.py` does
-  not exist.
-- **Why:** A rule that a tool can enforce belongs in the config of that tool. Without it, the
-  first commit that follows the first merge fails for a file that nobody changed.
-- **Cost:** One line in `ruff.toml`, and one test.
-
----
-
 ### F. Source map
 
 - Original user idea 1 -> USER-01, rank 21.
@@ -423,7 +399,7 @@ a guard.
 - Original user idea 6 -> USER-06, rank 17.
 - Original user idea 7 -> USER-07, rank 19.
 - REPORT-01 -> rank 13. REPORT-10 -> rank 14. REPORT-05 -> rank 15. REPORT-15 -> rank 16.
-- The real runs of November 21, 2026 -> RUN-01 to RUN-05, no rank.
+- The real runs of November 21, 2026 -> RUN-01 to RUN-04, no rank. RUN-05 is built (stage 10).
 - The build of the approved changes -> IMPL-01 and IMPL-02, no rank.
 
 The other user ideas and report proposals were decided on November 20, 2026 (Part 1). No

@@ -52,6 +52,12 @@ max-statements = 15   # proxy for "20 lines or fewer": ruff has no line-count ru
 [lint.flake8-tidy-imports]
 ban-relative-imports = "all"
 
+[lint.isort]
+# A test imports the code before the code exists. Without this line, ruff sorts
+# `from src.slug import x` as first-party only when `src/slug.py` exists, and its cache hides the
+# change of order until a checkout touches the file.
+known-first-party = ["src"]
+
 [lint.per-file-ignores]
 # Tests need no docstrings (see Naming). S603: an end-to-end test runs the program as a process,
 # and a test starts a real local server, each without a shell.

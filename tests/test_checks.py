@@ -23,6 +23,8 @@ LATE_IMPORT = (
     '"""A module."""\n\n\n'
     'def dump() -> str:\n    """Dump."""\n    import json\n\n    return json.dumps({})\n'
 )
+SORTED_IMPORTS = "import pytest\n\nfrom src.slug import make_slug\n\nassert (pytest, make_slug)\n"
+UNSORTED_IMPORTS = "import pytest\nfrom src.slug import make_slug\n\nassert (pytest, make_slug)\n"
 PROCESS_TEST = (  # a test that runs a process, as an end-to-end test of a command line does
     "import subprocess\nimport sys\n\n\n"
     "def test_python_runs_as_a_process() -> None:\n"
@@ -101,6 +103,24 @@ def test_checks_fail_on_a_lint_error(project: Sandbox) -> None:
     assert "failed   ruff check" in output
     assert "All checks passed." not in output
     assert "bad.py" in output
+
+
+def imports_sorted(folder: Path) -> bool:
+    """Tell whether ruff, with the config of the project and no cache, accepts the imports."""
+    command = [sys.executable, "-m", "ruff", "check", "--no-cache", "--select", "I", "tests"]
+    return run(command, folder).returncode == 0
+
+
+def test_src_is_first_party_before_and_after_the_code_exists(project: Sandbox) -> None:
+    test = project.folder / "tests" / "unit" / "test_slug.py"
+    test.write_text(SORTED_IMPORTS, encoding="utf-8")
+    assert imports_sorted(project.folder)  # src/slug.py does not exist yet
+    write_module(project.folder, "src/slug.py")
+    assert imports_sorted(project.folder)
+    test.write_text(UNSORTED_IMPORTS, encoding="utf-8")
+    assert not imports_sorted(project.folder)
+    (project.folder / "src" / "slug.py").unlink()
+    assert not imports_sorted(project.folder)
 
 
 def test_an_import_inside_a_function_fails(project: Sandbox) -> None:

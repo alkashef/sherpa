@@ -116,7 +116,7 @@ tool's config, where it is enforced on every run, and `CLAUDE.md` keeps only wha
 
 | File | What it is | Why |
 | --- | --- | --- |
-| `ruff.toml` | Linter and formatter config: line length 100, docstrings, type annotations, import order, imports only at the top of a file, naming, security checks, no `print` outside `scripts/`, pathlib, and limits on complexity (8), arguments (4) and statements per function (15). | Ruff checks style, common bugs and code smells in well under a second, so Claude can run it after every change. The limits keep functions small. |
+| `ruff.toml` | Linter and formatter config: line length 100, docstrings, type annotations, import order (`src` is first-party, whether or not its files exist yet), imports only at the top of a file, naming, security checks, no `print` outside `scripts/`, pathlib, and limits on complexity (8), arguments (4) and statements per function (15). | Ruff checks style, common bugs and code smells in well under a second, so Claude can run it after every change. The limits keep functions small. |
 | `mypy.ini` | Type checker config: `strict = True` on `src/`. | Strict typing finds wrong types and missing `None` checks before the code runs, and typed code is easier for Claude to change safely. |
 | `pytest.ini` | Test config: tests live in `tests/`, async tests run without decorators, and a normal run skips `tests/live/`. The test command requires 80% branch coverage. | Tests prove a change works. The coverage floor stops untested code from growing. |
 | `requirements.txt` | pytest, pytest-cov, mypy, ruff and python-dotenv, each pinned with `==`. With `--no-conda`, or if the install fails, only a comment naming them. | The skill installs the latest versions into the new environment and pins what pip installed, so it never guesses a version, and a clone gets the same tools. |
@@ -574,7 +574,7 @@ review, repair (two tries) and last review.
   runner does not use them.
 
 The same run showed five problems. The first one is solved, and the others are not
-(`docs/unapproved-ideas.md`, RUN-01 to RUN-05):
+(`docs/unapproved-ideas.md`, RUN-01 to RUN-04):
 
 - Ruff refused `subprocess` in `tests/` (S603). The design asked for a test that runs the program
   as a process, and the test session ran it in the test process instead. `ruff.toml` now permits
@@ -605,9 +605,10 @@ runner ran with the environment's folders first on the PATH, as after `conda act
   of `blocked_plan_refused`, and the steps in it worked as written: correct the cause, commit,
   push, approve in the plan, run again. The approved M2 ran in 3 minutes 29 seconds, from a
   milestone branch that was behind the base branch, and merged with a fast-forward.
-- The cause of the refusal is a bug (`docs/unapproved-ideas.md`, RUN-05). Ruff sorts the imports
-  of a test as first-party only when `src/slug.py` exists. The test session writes the test
-  before it exists, and ruff's cache hid the error until a checkout changed the file.
+- The cause of the refusal was a bug. Ruff sorted the imports of a test as first-party only
+  when `src/slug.py` existed. The test session writes the test before it exists, and ruff's
+  cache hid the error until a checkout changed the file. `ruff.toml` now names `src` as
+  first-party (`known-first-party`).
 - The built-in `/code-review` ran in 3 of the 4 review sessions. In the last review of M2 the
   session wrote `BUILT-IN REVIEW: not available` and went on with `/code-review-sherpa`, as the
   prompt says. The two kinds of review do not always run together.
