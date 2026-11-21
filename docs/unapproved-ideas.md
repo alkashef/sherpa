@@ -19,6 +19,9 @@ Ranks 13 to 21 are still here. Nobody approved them. In the review of November 2
 proposed a resolution for each one, and the user did not decide them. The review stopped at
 rank 13.
 
+RUN-01 came from the real run of November 21, 2026. The user had it recorded here and did not
+decide it.
+
 ## Source and review context
 
 Source: Fully_AI_Assisted_SDD_October_2026.html, dated October 16, 2026. Each Report reference
@@ -222,6 +225,34 @@ They do not imply that the report mandates a particular skill or file layout.
 
 ---
 
+## From the real run of November 21, 2026
+
+The run is in the README, "Checked in real Claude Code sessions". An idea from it has the ID
+RUN-NN and no rank.
+
+### - [ ] RUN-01 | A review finding about a test is never repaired
+
+**Proposed resolution (Claude, November 21, 2026; the user did not decide it):** The runner sends
+each finding about a file in `tests/` to a second test session, which cannot read `src/`. The
+build session then makes the changed tests pass.
+
+- **Current:** The repair session may not edit `tests/` (R). It rejects each finding about a
+  test, and the finding stays. The runner counts it, and the milestone merges with it.
+- **Seen:** In the real run, the test session did not obey the design: it ran the program in the
+  test process, not as a process. The two reviews reported this, and no session repaired it. The
+  cause of that test is solved (ruff now permits `subprocess` in `tests/**`), but the gap in the
+  repair is not.
+- **Proposal:** After the review, the runner divides the findings by their file. A finding about
+  a file in `tests/` goes to a second test session with the rules of the first one. If that
+  session changed a test, a build session runs again, and then the last review.
+- **Alternative:** Only report such a finding to the user. This adds no session, and the finding
+  stays until the user plans a fix milestone.
+- **Why:** The session that writes the code must never change its tests. Thus only a test
+  session can repair a test.
+- **Cost:** One or two more sessions for a milestone with such a finding.
+
+---
+
 ## Source map
 
 - Original user idea 1 -> USER-01, rank 21.
@@ -230,6 +261,7 @@ They do not imply that the report mandates a particular skill or file layout.
 - Original user idea 6 -> USER-06, rank 17.
 - Original user idea 7 -> USER-07, rank 19.
 - REPORT-01 -> rank 13. REPORT-10 -> rank 14. REPORT-05 -> rank 15. REPORT-15 -> rank 16.
+- The real run of November 21, 2026 -> RUN-01, no rank.
 
 The other user ideas and report proposals were decided on November 20, 2026
 (`docs/implementation-order.md`). No proposal in this file is implemented or approved.
