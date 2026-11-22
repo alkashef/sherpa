@@ -43,6 +43,8 @@ wording where it costs nothing.
 - `skills/project-init/assets/docs/workflow.html`: the workflow as a diagram, for the developer.
   `assets/docs/workflow.md` owns the rules; the page shows them.
 - `tests/`: the test suite. It is not installed with the skill.
+- `trials/test-writers/`: the trial of three test writers (November 21, 2026), and its kit for
+  the second trial. The suite does not collect it.
 - `docs/`: the SDD report, presentation and demo, one folder per version (`v3/` is current, `v2/`
   is the workflow before the review session and the milestone branches, `v1/` before the test
   session). `unapproved-ideas.md` has two parts. Part 1 holds what is left of the approved

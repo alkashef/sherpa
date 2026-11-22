@@ -1,0 +1,9 @@
+Write the tests of milestone M1 (Slug tool) of docs/plan.md, by the instructions in AGENTS.md. Part 3 of AGENTS.md is your procedure. This is the test session: another AI writes the code afterwards and may not change your tests. This is an unattended run: nobody can answer questions.
+
+Rules:
+(a) change only files under tests/. Never edit docs/ or any other file;
+(b) for anything that is open, such as a gap in docs/design.md or a detail of a library, decide the most conservative option and carry on. Write each such decision in the report as its own line: `DECISION: <what> | <why> | <DEC-NNN or none>`;
+(c) stop only if the tests need a new or changed requirement in docs/spec.md. Then end with one line `BLOCKED: <the exact question>`;
+(d) never call a live external service. A test uses the real local part that the design names, and a fake only for an external service;
+(e) run the new tests with `python -m pytest`. Each must fail because the code is missing, not because of an error in the test. Run `python -m ruff check --fix tests` and `python -m ruff format tests`, and fix what they still report;
+(f) end with the report of Part 3 ("Finish"): one line for each test with the requirement ID and the example ID it checks and how it fails now, then each requirement ID of the Refs without a test and why, then the DECISION lines.

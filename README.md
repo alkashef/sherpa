@@ -184,6 +184,7 @@ tests/                          the test suite (not installed with the skill)
   test_release.py               a release, on a git project with a bare remote
   test_runner.py                the milestone runner, with a fake claude
   fake_claude.py                stands in for `claude -p`: the sessions of a milestone
+trials/test-writers/            the trial of three test writers and its kit (not collected by pytest)
 pytest.ini                      points pytest at tests/ and the skill's scripts
 ```
 

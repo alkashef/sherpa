@@ -1,0 +1,17 @@
+This folder holds no `src/` and no code, on purpose: the tests come from `docs/spec.md` and
+`docs/design.md`, never from the code. Do not look for the code outside this folder. When you run
+the tests here, a test fails with `ModuleNotFoundError: No module named 'src'`, or because
+`main.py` does not exist: that is the expected failure ("a missing module named in Owner").
+
+Only the files under `tests/` go back to the project. An edit to any other file is lost. So do not
+edit `docs/`: write each decision as a `DECISION:` line in your final report.
+
+Run /write-tests for milestone M1 (Slug tool) of docs/plan.md. This is the test session: another AI writes the code afterwards and may not change your tests. This is an unattended run: nobody can answer questions.
+
+Rules:
+(a) change only files under tests/. Never edit docs/ or any other file;
+(b) for anything that is open, such as a gap in docs/design.md or a detail of a library, decide the most conservative option and carry on. Write each such decision in the report as its own line: `DECISION: <what> | <why> | <DEC-NNN or none>`;
+(c) stop only if the tests need a new or changed requirement in docs/spec.md. Then end with one line `BLOCKED: <the exact question>`;
+(d) never call a live external service. A test uses the real local part that the design names, and a fake only for an external service;
+(e) run the new tests with `python -m pytest`. Each must fail because the code is missing, not because of an error in the test. Run `python -m ruff check --fix tests` and `python -m ruff format tests`, and fix what they still report;
+(f) end with the report of /write-tests: one line for each test with the requirement ID and the example ID it checks and how it fails now, then each requirement ID of the Refs without a test and why, then the DECISION lines.
