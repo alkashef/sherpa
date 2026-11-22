@@ -153,7 +153,7 @@ CLAUDE.md                       instructions for working on this repository
 docs/
   unapproved-ideas.md           Part 1: what is left of the approved changes. Part 2: proposed
                                 changes, not approved
-  v1/, v2/, v3/                 SDD report, presentation and demo; v3 is the current workflow
+  v1/ to v4/                    SDD report, presentation and demo; v4 is the current workflow
 skills/project-init/            the skill. Install by copying this folder.
   SKILL.md                      what Claude reads: steps, questions, failure handling
   scripts/
@@ -649,6 +649,39 @@ runner ran with the environment's folders first on the PATH, as after `conda act
   new public function that has no unit test. The last review reported that, and the milestone
   merged with it.
 
-Not checked in a real session yet: `/sherpa`, and a milestone that a build session blocks with
-partial work in its branch (in the second run the test session blocked M2, which leaves no
-partial work). The suite covers the runner's part of them with a fake `claude` only.
+A third real run on November 23, 2026 checked version 4 (`sonnet`, effort `medium`, Claude as
+the test writer) on a project built by the skill, with a local bare repository as the remote and
+three milestones: M1, the slug tool; M2, Cyrillic titles, with a library that only a `Proposed`
+decision named; M3, short links from an outside service. A first attempt found three faults of
+sherpa; the second attempt ran after their repair, and all three milestones merged.
+
+- Each test session ran in a folder without `src/` and `.git`. Claude wrote a Hypothesis property
+  test and tests of the limits and the defaults. The runner's checks sent a test session back
+  once: ruff format failed on mixed line ends.
+- The reviews found real faults: a `--max` of 5000 digits passed the digit check and then broke
+  the limit of Python's `int()` (SLUG-007); letters of other Cyrillic alphabets were dropped
+  (SLUG-008, which the user then narrowed to the Russian alphabet); an HTTP error of the service
+  escaped as a traceback (SLUG-009). In the first attempt, a title that starts with `-` was read
+  as an option (SLUG-005).
+- In each milestone, a finding about a test went to a test session, and a build session made the
+  new tests pass (`M<n>: test repairs`).
+- The last review blocked each milestone once, with a high finding or a finding against a
+  requirement. The runner wrote the Blocked entry into the plan of the base branch and pushed it.
+  After the approval, the next run rebased the branch, resolved the conflict of `docs/plan.md`,
+  gave the decision to the repair session, and merged. M1 to M3 took 11, 11 and 16 minutes of
+  sessions, with the blocks.
+- The user (here, Claude in that role) added a design decision on the base branch while M2 was
+  open, and the build session of M2 had taken the same number, DEC-005. The rebase stopped with
+  its message, and a rebase by hand finished it.
+- `/sherpa` in a real session read the state: the plan done, five `Proposed` decisions in the
+  design, and the next step `/write-design`. The dashboard showed the same decisions, a high
+  finding that the approval of M1 had let through, and the map of the code.
+- No build session blocked. The build session of M2 replaced the library with a table of its own,
+  and that of M3 called the service: both recorded an auto-decision, as the rules allow. So a
+  milestone that a build session blocks with partial work is still checked only by the suite.
+- The first attempt found three faults, now repaired: the plan failed the plain-docs check at its
+  first commit (a milestone block counted as one long paragraph); a build session committed the
+  tests in a second commit; and a rebuild session that found a test wrong could not block, so the
+  run stopped on a dirty tree.
+- Two new ideas, not approved: an approval lets through the new findings of a later review
+  (RUN-08), and a low finding that names a requirement blocks (RUN-09).

@@ -45,9 +45,9 @@ wording where it costs nothing.
 - `tests/`: the test suite. It is not installed with the skill.
 - `trials/test-writers/`: the trial of three test writers (November 21, 2026), and its kit for
   the second trial. The suite does not collect it.
-- `docs/`: the SDD report, presentation and demo, one folder per version (`v3/` is current, `v2/`
-  is the workflow before the review session and the milestone branches, `v1/` before the test
-  session). `unapproved-ideas.md` has two parts. Part 1 holds what is left of the approved
+- `docs/`: the SDD report, presentation and demo, one folder per version (`v4/` is current, `v3/`
+  is the workflow before the test folder and the blocking review, `v2/` before the review session
+  and the milestone branches, `v1/` before the test session). `unapproved-ideas.md` has two parts. Part 1 holds what is left of the approved
   workflow changes, in the order of the work: delete an item in the commit that finishes it.
   Part 2 holds proposed workflow changes. Never implement one without the user's approval.
   `audit-claude-golden.md` is the audit table of rank 17, waiting for the user's approval.

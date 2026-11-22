@@ -65,6 +65,8 @@ The approved changes are built. Their first text is in the git history of this f
 | 33 | `assets/scripts/dashboard.py`, standard library only: one HTML page on 127.0.0.1 (or `--out`) with Needs you, Plan and releases, Trace (also to a milestone that a commit finished) and Code map (file boxes by lines, imports against the module boundaries, the class list). The Refresh button reads the files again, it writes nothing, and it never shows a bare ID | USER-22, USER-23 and USER-24, approved on November 21, 2026 |
 | 34 | `assets/.github/workflows/check.yml` in each project: at each push a clean Linux machine installs from `requirements.txt` (and `npm ci`, with the Playwright browsers for `ui` tests) and runs `python scripts/check.py`. `release.py` adds `versions/pip-freeze.txt` (and `versions/npm-ls.txt`) to the release archive | Rank 14 (REPORT-10), approved in part on November 22, 2026 |
 | 35 | Fixes that the second trial and the third real run found on November 23, 2026: a list item is its own paragraph in `ste_lint.py`, and the plan template drops a semicolon; the runner makes its folders with the usual permissions (`tempfile.mkdtemp` shut out the Codex sandbox); the build prompt asks for one commit; the check and test tools of a project are approved dependencies; a repair or rebuild session that finds a test wrong reports a `BLOCKED:` line, the runner keeps its work and blocks, and after the approval a test session gets the decision | Found while running the second trial and the third real run (open work) |
+| 36 | The third real run, November 23, 2026 (README, "Checked in real Claude Code sessions"): three milestones with real sessions, the test folder, findings about tests sent to test sessions, a block by the last review in each milestone, the approvals and the merges, `/sherpa` and the dashboard. No build session blocked, so that path is still checked by the suite only | Item of the open work, approved on November 22, 2026 |
+| 37 | `docs/v4/`: the report, the presentation and the demo of version 4. `docs/v3/` stays as the record of version 3, and sherpa's `CLAUDE.md` names `v4/` as current | Approved by the user on November 22, 2026 |
 
 One real run followed on November 21, 2026 (README, "Checked in real Claude Code sessions"). It
 proved the condition of the user's decision on rank 3: a `claude -p` session runs the built-in
@@ -99,13 +101,6 @@ the diagram one time.
     Of the qualified writers, the highest median of seeded bugs caught wins, and on a tie the
     faster one. If no writer qualifies, Claude stays the default, and each failed gate becomes a
     new idea. Then the user decides the default writer.
-3. **After the build, in a real session:** run the changes above, and also what is not
-   run in a real session yet: `/sherpa`, and a milestone that a build session blocks with
-   partial work in its branch. The second real run ran a human test, a block in the test
-   session, and the approval.
-4. **`docs/v4/`, approved by the user on November 22, 2026:** after the real run, make
-    `docs/v4/` with the report, the presentation and the demo of the new workflow. `docs/v3/`
-    stays as the record of the earlier version. sherpa's `CLAUDE.md` then names `v4/` as current.
 
 ### Decided with no work
 
@@ -168,9 +163,9 @@ The user decided these points of section G on November 21, 2026. They need no ch
 
 ## Part 2: ideas that nobody approved
 
-Since November 22, 2026, Part 2 holds no open idea: the user decided each one, and Part 1 holds
-the result. The sections below keep the context of the ideas. A new idea goes here, with its own
-entry.
+On November 22, 2026 the user decided each idea of Part 2, and Part 1 holds the result. The
+sections below keep the context of the ideas. A new idea goes here, with its own entry. Open on
+November 23, 2026: RUN-08 and RUN-09 (section E).
 
 ### A. Open decisions of the approved changes
 
@@ -218,8 +213,19 @@ They do not imply that the report mandates a particular skill or file layout.
 ### E. From the real runs and the trial of November 21, 2026
 
 The runs are in the README, "Checked in real Claude Code sessions". An idea from them has the ID
-RUN-NN and no rank. RUN-06 and RUN-07 came from the trial of three test writers. Each RUN idea is
-decided: RUN-05 is built, and the others are open work in Part 1.
+RUN-NN and no rank. RUN-06 and RUN-07 came from the trial of three test writers. RUN-01 to RUN-07
+are decided and built.
+
+New ideas from the third real run and the second trial (November 23, 2026). Nobody approved them.
+
+- **RUN-08: an approval covers only the findings that it answers.** After the user approves a
+  milestone that the last review blocked, no finding of a later review blocks it again. In the
+  third real run, the next review of M1 found two new medium faults against SLUG-005 and SLUG-007,
+  and the milestone merged with them. Proposal: a finding blocks again unless its file and rule
+  match a finding of the approved Blocked entry.
+- **RUN-09: a low finding that names a requirement need not block.** In the third real run, a
+  low "missing test" finding with SLUG-005 in its rule blocked M1. Proposal: block for a high
+  finding, or for a medium or high one that names a requirement.
 
 ### G. The user's list of November 21, 2026
 
@@ -259,4 +265,4 @@ on the quality of the code. A walk-through item can hold more than one idea.
   are decided (Part 1).
 
 The user decided ranks 1 to 12 on November 20, 2026, and ranks 13 to 21 on November 22, 2026
-(Part 1). Part 2 holds no open idea.
+(Part 1). Part 2 holds two open ideas: RUN-08 and RUN-09.
