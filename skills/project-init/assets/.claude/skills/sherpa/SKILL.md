@@ -74,15 +74,21 @@ For a status request, give only those lines, the number of unapproved ideas, and
   The user runs it in a terminal; it handles retries, timeouts and logs.
 - **When the user asks to build a milestone in this chat:** run it as `docs/workflow.md`, Execute,
   says, in this order:
-  1. Make the branch `milestone/M<n>` from the current branch.
-  2. Start a subagent that runs `/write-tests` for the milestone. It must not read the code in
-     `src/`.
+  1. Make the branch: `git switch -c milestone/M<n>`.
+  2. Run `python scripts/milestones-runner.py --tests-only M<n>`. It runs the test session in a
+     folder without the code, with the test writer of `config/test-writer.json`, and checks the
+     tests. If it reports a problem or a block, stop and show it to the user.
   3. Build in this session without changing any file in `tests/`, run the checks, and commit. Do
      not push.
-  4. Start a second subagent that runs `/code-review-sherpa` on the diff of the branch. It must
-     not change a file. Repair its findings, then run that review one more time. Report each
-     finding that is left as a `FINDING:` line.
-  5. Merge with `git merge --ff-only`, push, and delete the milestone branch.
+  4. Run `python scripts/milestones-runner.py --review-only M<n>`: the review with
+     `/code-review-sherpa`, in a worktree.
+     Repair the findings about the code. For the findings about tests, run
+     `python scripts/milestones-runner.py --tests-only M<n> --review-findings`; if it changed a
+     test, make the tests pass and commit as `M<n>: test repairs`. Then run `--review-only M<n>`
+     one more time. A finding of that last review that is `high`, or whose rule is a requirement
+     ID, blocks the milestone: ask the user. Report each other finding as a `FINDING:` line.
+  5. Merge: `git switch main` (the base branch), `git merge --ff-only milestone/M<n>`, `git push`
+     and `git branch -d milestone/M<n>`.
   6. If the block has a **Human test** entry, tell the user what to test, and wait for the answer.
 
   Ask the user only for a blocker of step 5 of the workflow; decide everything else as the Rules of

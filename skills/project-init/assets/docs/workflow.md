@@ -20,22 +20,22 @@ A requirement has an ID (`AREA-NNN`, or `NFR-NNN` for a non-functional one), an 
 
 `/sherpa` is the way in: it reads the state of these files and what the user asks, names the step below that comes next, and starts that step's skill. It runs one step, then stops.
 
-1. **Spec.** For a new project or a change, the user runs `/write-spec`. The AI interviews the user, one question at a time, and writes the requirements into `spec.md` as a draft (`Status: Draft`). For a spec that is already approved, it proposes each change first. The user approves the spec; then `Status` is `Approved`. Each requirement is one EARS statement that a test can check without the design. The acceptance examples (`EX-NNN`) list the cases of each user scenario: first the most likely cases, in full, then the edge cases. For each external system, the spec says what the program does when that system fails. The requirements and these examples are the tests designed from the spec.
-2. **Design.** Once the spec is approved, the user runs `/write-design`. The AI updates `design.md` and asks only what it cannot decide. If the design needs a different requirement, it proposes the spec change; the user approves it. The design shows the components and their interfaces in one diagram, lists the module boundaries (the checks enforce them), gives each requirement a test level (`unit`, `e2e`, `ui` or `live`) and names every interface a test needs. The user approves the design: then no decision is `Proposed` and no design question is open.
+1. **Spec.** For a new project or a change, the user runs `/write-spec`. The AI interviews the user, one question at a time, and writes the requirements into `spec.md` as a draft (`Status: Draft`). For a spec that is already approved, it proposes each change first. The spec gives each domain term one row in its glossary (Term, Meaning, Avoid), and the design and the code use the Term. The user approves the spec; then `Status` is `Approved`. Each requirement is one EARS statement that a test can check without the design. The acceptance examples (`EX-NNN`) list the cases of each user scenario: first the most likely cases, in full, then the edge cases. For each external system, the spec says what the program does when that system fails. The requirements and these examples are the tests designed from the spec.
+2. **Design.** Once the spec is approved, the user runs `/write-design`. The AI updates `design.md` and asks only what it cannot decide. If the design needs a different requirement, it proposes the spec change; the user approves it. The design shows the components and their interfaces in one diagram, draws the data model as one Mermaid `erDiagram`, lists the module boundaries (the checks enforce them), gives each requirement a test level (`unit`, `e2e`, `ui` or `live`) and names every interface a test needs. The user approves the design: then no decision is `Proposed` and no design question is open.
 3. **Plan.** Once the design is approved, the user runs `/write-plan`. The AI turns the spec and design into milestones in `plan.md`: for each, a row in the table "Milestones at a glance" (at the top, so the status of every milestone is visible at a glance) and a block under "Milestones" (templates below). A milestone gets a human test only when it completes a user scenario that no tool can prove; the plan keeps the human tests few, and the table shows them. It shows the table first; the user approves it. It numbers the milestones from the counter at the top of `plan.md`, then advances the counter.
-4. **Execute.** Work one milestone at a time, in order, in its own branch and in separate sessions. In chat, a subagent is the test session and another subagent is the review session.
-   1. Make the branch `milestone/M<n>` from the base branch (the branch where the work starts), and work there.
-   2. **Test session** (`/write-tests`): write the tests from the spec's requirements and examples and from the design, without reading `src/`. Name each after the requirement ID it verifies, and after the example ID when it comes from an example.
-   3. Run them; each new test must fail because the behavior is missing. Do not commit.
+4. **Execute.** Work one milestone at a time, in order, in its own branch and in separate sessions. In chat, `python scripts/milestones-runner.py --tests-only M<n>` is the test session and `python scripts/milestones-runner.py --review-only M<n>` is the review session, with the same guards as in an unattended run.
+   1. Make the branch with `git switch -c milestone/M<n>` from the base branch (the branch where the work starts), and work there.
+   2. **Test session** (`/write-tests`): write the tests from the spec's requirements and examples and from the design. Name each after the requirement ID it verifies, and after the example ID when it comes from an example. The session runs in a temporary folder without the code: it holds the docs, the rules, the tool configs and `tests/`, but no `src/` and no `.git`. The AI that `config/test-writer.json` names writes the tests: Claude (the default), Antigravity, Codex or GitHub Copilot.
+   3. The runner copies `tests/` back and checks it: ruff and mypy pass on `tests/`, each new test fails for a valid reason (a wrong value, or a missing module that the Owner names), and each older test passes. The exit code of the writer does not count. A problem goes back to the writer, with its error type and message and no line of the code, for one round of repair. Do not commit.
    4. **Build session:** read the design sections that the Refs name, then implement the smallest change that passes. Do not change a file in `tests/`; a test that looks wrong is a blocker (step 5).
    5. Run the checks: `python scripts/check.py` (the tests, and the type check and lint named in `CLAUDE.md`) and `python scripts/spec_coverage.py M<n>` (each requirement ID in its Refs, and each acceptance example of those requirements, has a test or a `Manual:` entry). If any fail, go back to step 4.4.
    6. Update docs the change made inaccurate (README, design).
    7. Delete the milestone's row and block from `plan.md`.
    8. Commit only the files this milestone changed, with the message `M<n>: <title>`. The pre-commit hook runs the checks again. Do not push.
-   9. **Review session** (`/code-review-sherpa`): a fresh session that changes no file reviews the diff of the branch, first with the built-in `/code-review` if Claude Code has it, and reports each finding as a `FINDING:` line. If it has findings, a session repairs them (it changes no file in `tests/`, passes the checks again and commits as `M<n>: review repairs`), then a last review runs. A finding that the last review still reports stays in the report; it does not stop the milestone.
-   10. Merge: move the base branch to the milestone branch with `git merge --ff-only`, push the base branch, and delete the milestone branch. Do not start the next milestone until the push succeeds.
+   9. **Review session** (`/code-review-sherpa`): a fresh session reviews the diff of the branch in a temporary git worktree, first with the built-in `/code-review` if Claude Code has it, and reports each finding as a `FINDING:` line. The worktree is deleted after the review, so a change that the review makes cannot reach the branch. A finding names the file where the fix goes. A finding about `tests/` goes to a test session in the folder of step 2; if it changes a test, a build session makes the tests pass and commits as `M<n>: test repairs`. Any other finding goes to a repair session (it changes no file in `tests/`, passes the checks again and commits as `M<n>: review repairs`). Then a last review runs. A finding of the last review blocks the milestone (step 5) when its severity is `high` or its rule is a requirement ID. The other findings stay in the report.
+   10. Merge: `git switch main` (the base branch), `git merge --ff-only milestone/M<n>`, `git push`, and `git branch -d milestone/M<n>`. Do not start the next milestone until the push succeeds.
    11. **Human test:** if the block has a **Human test** entry, tell the user what to test and wait for the answer. A fault that the user finds is a fix milestone.
-5. **Blocked.** If a milestone needs something it may not do on its own, stop it. These are the only reasons: a new or changed requirement in `spec.md`, an action `CLAUDE.md` forbids, a new flow of user data to an external service, real user data, a secret in a committed file, a dependency that `design.md` does not name in a `Decided` decision, or a test that the build session finds wrong. In `plan.md`, set its Status to `blocked` and add a **Blocked** entry to its block (template below). Change nothing else and commit nothing: the other changes stay in the milestone branch. In an unattended run, the runner commits them there as `M<n>: partial work`, commits `plan.md` alone on the base branch with the message `M<n>: blocked`, and pushes the base branch. In chat, ask the user and wait.
+5. **Blocked.** If a milestone needs something it may not do on its own, stop it. These are the only reasons: a new or changed requirement in `spec.md`, an action `CLAUDE.md` forbids, a new flow of user data to an external service, real user data, a secret in a committed file, a dependency that `design.md` does not name in a `Decided` decision, a test that the build session finds wrong, or a finding of the last review that blocks the merge (step 4.9). In `plan.md`, set its Status to `blocked` and add a **Blocked** entry to its block (template below). Change nothing else and commit nothing: the other changes stay in the milestone branch. In an unattended run, the runner commits them there as `M<n>: partial work`, commits `plan.md` alone on the base branch with the message `M<n>: blocked`, and pushes the base branch. In chat, ask the user and wait.
 6. **Approval.** The user answers in the milestone's block: an **Approval** entry with the decision, and Status `approved`. Then the user commits `plan.md` and the milestone runs again, from the work that its branch kept. The approval permits exactly what it says, even an action the rules otherwise forbid, and nothing more. A settings rule denies editing `spec.md` in an unattended run, so for a change to the spec the user makes the edit and the Approval says so. To refuse, the user rewrites or deletes the milestone instead.
 
 ## Rules
@@ -44,7 +44,7 @@ A requirement has an ID (`AREA-NNN`, or `NFR-NNN` for a non-functional one), an 
 - If the spec and the design disagree, the spec wins. In a milestone, in chat or unattended, fix the design and record it as a decision (below). Outside a milestone, stop and ask.
 - Stay in scope. When in doubt about the spec, ask. Only the spec is locked: a milestone never changes it. Everything else that step 5 does not name as a blocker may change in a milestone, in chat or unattended, without a question: a design decision (also a `Decided` one), a module, an interface, a setting. Decide it, record it and report it.
 - A decision in a milestone: pick the most conservative option and carry on. When it changes the design, add a `DEC-NNN` (the next free number) to `design.md` with the Status `Proposed`, and write "auto-decided in M<n>, review" in its Why. When it replaces a `Decided` decision, set that one to `Superseded`. The final report has one line per decision: `DECISION: <what> | <why> | <DEC-NNN or none>`. The user reviews these lines after the run and reverts or approves each.
-- A finding of a review: `FINDING: <high, medium or low> | <file>:<line> | <rule or smell> | <remedy>`. A review reports only a finding that it is sure of. The user reads the findings that a milestone kept after the run.
+- A finding of a review: `FINDING: <high, medium or low> | <file>:<line> | <rule or smell> | <remedy>`. The file is the file where the fix goes: a missing test names a test file. A fault against a requirement that no test catches is a missing test, with the requirement ID as its rule. A review reports only a finding that it is sure of. The user reads the findings that a milestone kept after the run.
 - An idea in `unapproved-ideas.md` is not a requirement and not a decision. Never design, plan, test or build from it. It becomes work only through step 1, 2 or 3, with the approval that step needs. The skill that takes an idea up deletes its entry. To note an idea, add one line; do not act on it.
 - Never report tests as passed unless they ran. Show failing output.
 - A milestone run calls no live external service (an LLM, a paid API, a production database) and uses no real user data. It does not start the app for a person. A test uses a real local part where one exists (a database file in a temporary folder, a server that the test starts on 127.0.0.1) and a fake only for an external service. Its Gate is the checks of step 4.
@@ -57,11 +57,13 @@ A requirement has an ID (`AREA-NNN`, or `NFR-NNN` for a non-functional one), an 
 `python scripts/milestones-runner.py [--start N] [--end N] [--retries N] [--resume]
 [--timeout-minutes N]`, run by the user from a terminal with the project's conda environment
 active, works through the table in order. Each milestone runs in its branch `milestone/M<n>`, in
-`claude -p` sessions with the model and effort of its row, following steps 4 to 6: a test session,
-a build session, a review session and, when the review has findings, a repair session and a last
-review. The runner, not a session, merges the branch into the base branch, pushes and deletes the
-branch. A build or repair session that changed a test file counts as not finished, and so does a
-milestone whose sessions changed `docs/spec.md`, and a review session that changed a file.
+`claude -p` sessions with the model and effort of its row, following steps 4 to 6: a test session
+(by the test writer, in a folder without the code), a build session, a review session in a
+worktree and, when the review has findings, the sessions that repair them and a last review. The
+runner, not a session, merges the branch into the base branch, pushes and deletes the branch. A
+build or repair session that changed a test file counts as not finished, and so does a milestone
+whose sessions changed `docs/spec.md`. Each session gets the folders of the project's conda
+environment first on its PATH, and writes files with the Edit and Write tools.
 
 The runner stops at a `blocked` row, at a milestone that becomes blocked (and prints its
 question), at a human test that the user does not confirm, or at a milestone that did not finish
@@ -82,9 +84,10 @@ branch that pushes to a remote.
 
 Each session starts with permission prompts off. Its guard rails are the rules in
 `.claude/settings.json`: a `deny` rule always refuses, and an `ask` rule refuses when nobody can
-answer. The runner does not start without that file, while the commit hook is off, or when
+answer. The runner does not start without that file, while the commit hook is off, when
 `python scripts/spec_coverage.py --consistency` finds an ID that the spec, the design and the plan
-do not agree on.
+do not agree on, when `python` on the PATH of a session is not the project's environment, or when
+a test writer other than Claude does not answer one short prompt.
 
 Before a run, so that it does not stop for something known in advance:
 
@@ -97,6 +100,9 @@ Before a run, so that it does not stop for something known in advance:
 5. Make sure that `git push` works without a prompt. A session cannot answer a sign-in window.
 6. For live checks, write your approval and the budget ceiling under "## Live checks" in
    `plan.md`.
+7. For a test writer other than Claude, sign in to its command line once: `codex login`, one
+   interactive `agy` session, or `COPILOT_GITHUB_TOKEN`. `--test-writer` overrides
+   `config/test-writer.json` for one run.
 
 A milestone's Gate must be one that a session can meet alone: offline, with real local parts and
 with fakes for the external services, in temporary folders, with no user data and no human step.

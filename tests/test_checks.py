@@ -81,14 +81,34 @@ def test_checks_pass_on_a_new_project(project: Sandbox) -> None:
     assert code == 0, output
     # One line for each check of the stack, with its result. A skipped line gives the reason.
     lines = output.splitlines()
-    assert lines[:4] == [
+    assert lines[:5] == [
+        "skipped  UTF-8 text (no staged file)",
         "passed   ruff check",
         "passed   ruff format",
         "skipped  mypy (no Python in src/)",
         "skipped  one class per file (no Python in src/)",
     ]
-    assert lines[4].startswith("skipped  module boundaries (")
-    assert lines[5:] == ["skipped  pytest (no test_*.py in tests/)", "All checks passed."]
+    assert lines[5].startswith("skipped  module boundaries (")
+    assert lines[6:] == ["skipped  pytest (no test_*.py in tests/)", "All checks passed."]
+
+
+def test_a_staged_file_that_is_not_utf8_fails(project: Sandbox) -> None:
+    # Windows PowerShell 5.1 writes in the ANSI code page: "café" becomes the byte 0xE9.
+    notes = project.folder / "docs" / "notes.md"
+    notes.write_bytes(b"caf\xe9\n")
+    project.git("add", "-A")
+    code, output = check(project.folder)
+    assert code == 2
+    assert "failed   UTF-8 text" in output
+    assert "docs/notes.md is not valid UTF-8, or it holds the character U+FFFD" in output
+    notes.write_text("caf\N{REPLACEMENT CHARACTER}\n", encoding="utf-8")
+    project.git("add", "-A")
+    assert "failed   UTF-8 text" in check(project.folder)[1]
+    notes.write_text("caf\N{LATIN SMALL LETTER E WITH ACUTE}\n", encoding="utf-8")
+    project.git("add", "-A")
+    code, output = check(project.folder)
+    assert code == 0, output
+    assert "passed   UTF-8 text" in output
 
 
 def test_a_project_with_no_stack_says_that_no_check_applied(tmp_path: Path) -> None:

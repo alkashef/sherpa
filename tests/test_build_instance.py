@@ -185,3 +185,13 @@ def test_a_new_design_starts_with_a_proposed_stack_decision(tmp_path: Path) -> N
     build(tmp_path / "my-app", "--with", "python")
     design = (tmp_path / "my-app" / "docs" / "design.md").read_text(encoding="utf-8")
     assert "| DEC-001 | Proposed | Python 3.12, conda environment `my-app`" in design
+
+
+def test_the_test_writer_is_recorded_with_its_model(tmp_path: Path) -> None:
+    build(tmp_path / "a", "--with", "python")
+    default = json.loads((tmp_path / "a" / "config" / "test-writer.json").read_text("utf-8"))
+    assert default == {"writer": "claude", "model": "", "effort": ""}
+    build(tmp_path / "b", "--with", "python", "--test-writer", "codex")
+    codex = json.loads((tmp_path / "b" / "config" / "test-writer.json").read_text("utf-8"))
+    assert codex == {"writer": "codex", "model": "gpt-6.2-astra", "effort": "high"}
+    assert build(tmp_path / "c", "--test-writer", "gpt").returncode != 0

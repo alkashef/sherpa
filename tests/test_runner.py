@@ -7,9 +7,11 @@ skips it, in a project set up by init_project.py, with the real git hooks.
 
 import importlib.util
 import json
+import os
 import sys
 from pathlib import Path
 from types import ModuleType
+from typing import Any
 
 import pytest
 from helpers import Sandbox, build, logged_calls, run, shim
@@ -41,10 +43,12 @@ PLAN = """# Plan — project-init
 ### M1 — First
 
 - **Refs:** R1.
+- **Owner:** `src/m1.py`.
 
 ### M2 — Second
 
 - **Refs:** R2.
+- **Owner:** `src/m2.py`.
 """
 HUMAN_TEST = "- **Human test:** Start the app and open the first page.\n  The page shows 1."
 NO_MILESTONES = PLAN[: PLAN.index("| **M1**")] + "\n## Milestones\n\nNone planned.\n"
@@ -111,8 +115,8 @@ def run_runner(sandbox: Sandbox, *options: str, typed: str = "") -> tuple[int, s
     return result.returncode, result.stdout + result.stderr
 
 
-def sessions(sandbox: Sandbox) -> list[dict[str, str]]:
-    """Return the kind, the milestone and the prompt of every session the fake claude played."""
+def sessions(sandbox: Sandbox) -> list[dict[str, Any]]:
+    """Return the kind, the milestone, the prompt and the folder of each session of the fake."""
     log = sandbox.folder.parent / "claude-sessions.jsonl"
     if not log.exists():
         return []
@@ -293,6 +297,9 @@ def test_each_session_is_denied_the_tools_of_its_kind(built: Path) -> None:
         runner.SESSION_REVIEW: DENIED_TO_REVIEW,
         runner.SESSION_REPAIR: DENIED_TO_BUILD,
         runner.SESSION_REVIEW_LAST: DENIED_TO_REVIEW,
+        runner.SESSION_TEST_FIX: DENIED_TO_TEST,
+        runner.SESSION_REVIEW_TESTS: DENIED_TO_TEST,
+        runner.SESSION_REBUILD: DENIED_TO_BUILD,
     }
 
 
@@ -306,6 +313,9 @@ def test_each_session_kind_has_its_log(built: Path) -> None:
         "M3-review.log",
         "M3-repair.log",
         "M3-review-last.log",
+        "M3-test-fix.log",
+        "M3-review-tests.log",
+        "M3-rebuild.log",
     ]
     assert runner.log_file_name(row, runner.SESSION_BUILD, 2) == "M3-2.log"
     assert runner.log_file_name(row, runner.SESSION_REVIEW_LAST, 2) == "M3-review-last-2.log"
@@ -397,12 +407,23 @@ def test_each_milestone_is_merged_from_its_branch_and_pushed_by_the_runner(
     assert branches(planned) == ["main"]
     assert planned.git("config", "--get-regexp", "^branch\\.main\\.") != ""
     assert "milestone/" not in planned.git("config", "--list")
-    # Each session worked in the branch of its milestone.
+    assert_session_folders(planned)
+
+
+def assert_session_folders(planned: Sandbox) -> None:
+    """Check that the build session worked in the branch of its milestone, the test session in a
+    folder without the code, and the review in a worktree of the branch."""
     for session in sessions(planned):
-        if session["kind"] != "review":
-            assert f"You work in the branch milestone/M{session['milestone']}" in session["prompt"]
+        branch = f"You work in the branch milestone/M{session['milestone']}"
+        if session["kind"] == "build":
+            assert branch in session["prompt"]
+            assert session["folder"] == str(planned.folder)
+        elif session["kind"] == "test":
+            assert "This folder holds no src/ and no .git" in session["prompt"]
+            assert (session["src"], session["git"]) == (False, False)
         else:
             assert "`git diff main...HEAD`" in session["prompt"]
+            assert session["folder"] != str(planned.folder)
 
 
 def approve(sandbox: Sandbox, decision: str) -> None:
@@ -523,10 +544,13 @@ def test_runner_stops_when_a_milestone_does_not_finish(planned: Sandbox) -> None
     planned.env["FAKE_CLAUDE_STATE"] = "idle"
     code, output = run_runner(planned)
     assert code == 1
-    assert "M1 stopped: its row is still in the plan table" in output
+    # The writer ends with 0 and writes nothing: only the runner's own checks judge it.
+    assert (
+        "M1 stopped: the runner's checks of the tests failed: The test session wrote no" in output
+    )
     assert "run again with --resume" in output
-    # One test session, then the build session and its one retry.
-    assert kinds(planned) == ["test M1", "build M1", "build M1"]
+    # The test session and its round of repair, then one retry of both.
+    assert kinds(planned) == ["test M1", "test-fix M1"] * 2
     # The run stops on the branch of the milestone, and git knows its base branch.
     assert planned.git("rev-parse", "--abbrev-ref", "HEAD") == "milestone/M1"
     assert planned.git("config", "branch.milestone/M1.base") == "main"
@@ -712,18 +736,17 @@ def test_a_repair_that_rejects_every_finding_commits_nothing(planned: Sandbox) -
     assert repair_log.read_text("utf-8").count("REJECTED: FINDING:") == 2
 
 
-def test_a_review_session_that_changes_a_file_does_not_count(planned: Sandbox) -> None:
+def test_a_review_that_changes_a_file_cannot_change_the_branch(planned: Sandbox) -> None:
     planned.env["FAKE_CLAUDE_STATE"] = "review-edits"
     code, output = run_runner(planned, "--end", "1")
-    assert code == 1
-    assert "M1 stopped: the review session changed files: git status is not clean." in output
-    # The review was tried again, with the reason, and the milestone is not merged.
-    assert kinds(planned) == [*M1_SESSIONS, "review M1"]
-    assert "The earlier try did not count: the review session" in sessions(planned)[3]["prompt"]
-    assert subjects(planned, "-1", "main") == ["Plan M1 and M2"]
-    assert planned.remote_head() == planned.git("rev-parse", "main")
-    assert "milestone/M1" in branches(planned)
-    assert table_cells(output, "M1")[-1] == "failed"
+    assert code == 0, output
+    # The review ran in a worktree that the runner deleted: the change did not reach the branch.
+    assert kinds(planned) == M1_SESSIONS
+    assert "# reviewed" not in (planned.folder / "src" / "m1.py").read_text("utf-8")
+    log = (planned.folder / ".claude" / "logs" / "M1-review.log").read_text("utf-8")
+    assert "WARNING: the review changed its worktree" in log
+    assert subjects(planned, "-1") == ["M1: First"]
+    assert planned.git("worktree", "list").count("\n") == 0
 
 
 def test_a_repair_session_that_changes_a_test_does_not_count(planned: Sandbox) -> None:
@@ -973,3 +996,302 @@ def test_a_plan_with_a_row_of_five_cells_is_refused(built: Path) -> None:
     runner.check_rows([new])
     with pytest.raises(runner.RunStoppedError, match="six cells"):
         runner.check_rows([old, new])
+
+
+# --- the test writer, its folder and its checks (USER-17, rank 15) -------------------------------
+
+
+def test_the_test_session_runs_in_a_folder_without_the_code(planned: Sandbox) -> None:
+    code, output = run_runner(planned, "--end", "1")
+    assert code == 0, output
+    [test] = [session for session in sessions(planned) if session["kind"] == "test"]
+    assert test["folder"] != str(planned.folder)
+    assert (test["src"], test["git"], test["agents"]) == (False, False, False)
+    # The folder is deleted after the session, and the test came back to the project.
+    assert not Path(test["folder"]).exists()
+    assert "tests/unit/test_m1.py" in planned.git("show", "--name-only", "--format=", "HEAD")
+
+
+def test_a_test_that_fails_for_a_wrong_reason_gets_one_round_of_repair(planned: Sandbox) -> None:
+    planned.env["FAKE_CLAUDE_STATE"] = "bad-test"
+    code, output = run_runner(planned, "--end", "1")
+    assert code == 0, output
+    assert kinds(planned) == ["test M1", "test-fix M1", "build M1", "review M1"]
+    fix = sessions(planned)[1]["prompt"]
+    assert "ModuleNotFoundError: No module named 'tests.unit.helpers_m1'" in fix
+    assert "Each problem gives the type and the message of an error, and no line of the code" in fix
+    assert (planned.folder / "tests" / "unit" / "test_m1.py").read_text("utf-8") == M1_TEST
+
+
+def test_a_test_that_stays_wrong_stops_the_milestone(planned: Sandbox) -> None:
+    planned.env["FAKE_CLAUDE_STATE"] = "bad-test-stays"
+    code, output = run_runner(planned, "--end", "1", "--retries", "0")
+    assert code == 1
+    assert "M1 stopped: the runner's checks of the tests failed:" in output
+    assert "No module named 'tests.unit.helpers_m1'" in output
+    assert kinds(planned) == ["test M1", "test-fix M1"]
+
+
+def test_another_test_writer_gets_agents_md_and_its_own_command(planned: Sandbox) -> None:
+    shim(planned.fake_bin, "codex", FAKE_CLAUDE)
+    code, output = run_runner(planned, "--end", "1", "--test-writer", "codex")
+    assert code == 0, output
+    [test] = [session for session in sessions(planned) if session["kind"] == "test"]
+    assert test["agents"] is True
+    assert (
+        "Write the failing tests of milestone M1 (First) of docs/plan.md, as AGENTS.md"
+        in (test["prompt"])
+    )
+    calls = logged_calls(planned.folder.parent / "claude.log")
+    codex = [call for call in calls if call[:1] == ["exec"]]
+    # The start check, then the test session; the build and the review stay with claude.
+    assert len(codex) == 2
+    assert {"--sandbox", "workspace-write", "--skip-git-repo-check", "-"} <= set(codex[1])
+    assert kinds(planned) == M1_SESSIONS
+
+
+def test_the_writer_recorded_in_the_config_is_used(planned: Sandbox) -> None:
+    shim(planned.fake_bin, "agy", FAKE_CLAUDE)
+    config = {"writer": "antigravity", "model": "gemini-4-neon-high", "effort": "high"}
+    commit_file(planned, "config/test-writer.json", json.dumps(config), "Choose Antigravity")
+    planned.git("push")
+    code, output = run_runner(planned, "--end", "1")
+    assert code == 0, output
+    calls = logged_calls(planned.folder.parent / "claude.log")
+    agy = [call for call in calls if "--dangerously-skip-permissions" in call]
+    assert len(agy) == 2
+    assert agy[1][agy[1].index("--model") + 1] == "gemini-4-neon-high"
+
+
+def test_review_findings_about_tests_go_to_a_test_session(planned: Sandbox) -> None:
+    planned.env["FAKE_CLAUDE_STATE"] = "review-tests"
+    code, output = run_runner(planned, "--end", "1")
+    assert code == 0, output
+    assert kinds(planned) == [*M1_SESSIONS, "review-tests M1", "rebuild M1", "review M1"]
+    review_tests = sessions(planned)[3]
+    assert "FINDING: medium | tests/unit/test_m1.py:4 | Weak Test" in review_tests["prompt"]
+    assert review_tests["src"] is False
+    assert subjects(planned, "-2") == ["M1: test repairs", "M1: First"]
+    assert "test_m1_value_is_an_int" in planned.git("show", "HEAD:tests/unit/test_m1.py")
+
+
+def approve_review_block(sandbox: Sandbox, decision: str) -> None:
+    """Do what the user does after a review blocked M1: approve the block, and commit."""
+    plan = sandbox.folder / "docs" / "plan.md"
+    text = plan.read_text(encoding="utf-8").replace("| blocked |", "| approved |")
+    last = "    2. Repair it in this way: <your instruction>."
+    plan.write_text(text.replace(last, f"{last}\n- **Approval:** {decision}"), encoding="utf-8")
+    sandbox.git("commit", "-am", "Approve M1")
+
+
+def test_a_high_finding_of_the_last_review_blocks_the_merge(planned: Sandbox) -> None:
+    planned.env["FAKE_CLAUDE_STATE"] = "blocking"
+    code, output = run_runner(planned, "--end", "1")
+    assert code == 1
+    assert "M1 waits for your approval." in output
+    assert "FINDING: high | src/m1.py:7 | Error Handling" in output
+    assert kinds(planned) == [*M1_SESSIONS, "repair M1", "review M1"]
+    # The base branch got the blocked plan; the branch keeps the build and its repair.
+    assert subjects(planned, "-1") == ["M1: blocked"]
+    assert planned.remote_head() == planned.git("rev-parse", "HEAD")
+    assert subjects(planned, "-2", "milestone/M1") == ["M1: review repairs", "M1: First"]
+    plan = (planned.folder / "docs" / "plan.md").read_text("utf-8")
+    assert "| **M1** First | Does one thing | sonnet | low | no | blocked |" in plan
+
+
+def test_an_approved_review_block_is_merged_on_the_next_run(planned: Sandbox) -> None:
+    planned.env["FAKE_CLAUDE_STATE"] = "blocking"
+    run_runner(planned, "--end", "1")
+    approve_review_block(planned, "Merge it as it is.")
+    code, output = run_runner(planned, "--end", "1")
+    assert code == 0, output
+    # The build exists: the runner rebased the branch on the approval and reviewed it again.
+    # The finding stays, but the user decided, so it no longer blocks.
+    assert kinds(planned)[5:] == ["review M1", "repair M1", "review M1"]
+    repair = sessions(planned)[6]["prompt"]
+    assert "The user's decision on an earlier review: Merge it as it is." in repair
+    # The second repair changed nothing, so it made no commit.
+    assert subjects(planned, "-3") == ["M1: review repairs", "M1: First", "Approve M1"]
+    plan = (planned.folder / "docs" / "plan.md").read_text("utf-8")
+    assert "**M1**" not in plan
+    assert "### M1" not in plan
+    assert branches(planned) == ["main"]
+
+
+@pytest.mark.parametrize(
+    ("finding", "blocks"),
+    [
+        ("FINDING: high | src/a.py:3 | Dead Code | Delete it.", True),
+        ("FINDING: medium | src/a.py:3 | PAY-001 | Refuse the refund.", True),
+        ("- **FINDING: low | tests/a.py:9 | NFR-002 | Add the test.**", True),
+        ("FINDING: medium | src/a.py:3 | DEC-004 | Follow the decision.", False),
+        ("FINDING: low | src/a.py:3 | Comments | Delete the comment.", False),
+    ],
+)
+def test_a_finding_blocks_when_it_is_high_or_names_a_requirement(
+    built: Path, finding: str, blocks: bool
+) -> None:
+    runner = load_runner(built)
+    assert runner.blocks_merge(finding) is blocks
+
+
+def test_a_finding_goes_to_the_session_of_the_file_it_names(built: Path) -> None:
+    runner = load_runner(built)
+    assert runner.is_test_finding("FINDING: low | tests/unit/test_a.py:3 | Weak Test | x")
+    assert runner.is_test_finding("FINDING: low | tests\\unit\\test_a.py:3 | Weak Test | x")
+    assert not runner.is_test_finding("FINDING: low | src/a.py:3 | Dead Code | x")
+
+
+def test_the_blocked_entry_of_a_review_names_the_kind_and_the_file(built: Path) -> None:
+    runner = load_runner(built)
+    finding = "FINDING: medium | src/a.py:3 | PAY-001 | Refuse the refund."
+    plan = runner.plan_with_block(PLAN.splitlines(), 1, runner.review_block_entry([finding]))
+    block = runner.milestone_block(plan, 1)
+    blocked = runner.block_entry(block, "Blocked")
+    assert f"  - {finding} (requirement PAY-001 in docs/spec.md)" in blocked
+    assert runner.parse_plan_rows(plan)[0].status == "blocked"
+    assert runner.milestone_block(plan, 2) == runner.milestone_block(PLAN.splitlines(), 2)
+
+
+def test_a_plan_without_a_milestone_keeps_the_others(built: Path) -> None:
+    runner = load_runner(built)
+    plan = runner.plan_without_milestone(PLAN.splitlines(), 1)
+    assert [row.id for row in runner.parse_plan_rows(plan)] == [2]
+    assert runner.milestone_block(plan, 1) == []
+    assert runner.milestone_block(plan, 2)[0] == "### M2 — Second"
+
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        ("t::a", "assert 1 == 2", "tests\\unit\\test_a.py:5: AssertionError", True),
+        ("t", "collection failure", "E   ModuleNotFoundError: No module named 'src.m1'", True),
+        ("t", "collection failure", "E   ImportError: cannot import name 'f' from 'src.m1'", True),
+        ("t::a", "KeyError: 'x'", "src\\m1.py:9: KeyError", True),
+        ("t", "collection failure", "E   ModuleNotFoundError: No module named 'tests.help'", False),
+        ("t::a", "failed on setup with \"fixture 'db' not found\"", "", False),
+        ("t::a", "NameError", "E   NameError: name 'x' is not defined", False),
+        (
+            "t::a",
+            "TypeError",
+            "E   TypeError: f() takes 1 argument\ntests/a.py:3: TypeError",
+            False,
+        ),
+        ("t", "collection failure", "E   SyntaxError: '(' was never closed", False),
+    ],
+)
+def test_a_new_test_may_fail_only_because_the_behavior_is_missing(
+    built: Path, case: tuple[str, str, str, bool]
+) -> None:
+    runner = load_runner(built)
+    test, message, text, valid = case
+    failure = runner._failure(test, message, text)
+    problem = runner.failure_problem(failure, ["src.m1"])
+    assert (problem is None) is valid, problem
+
+
+def test_the_owner_entry_gives_the_modules_of_the_milestone(built: Path) -> None:
+    runner = load_runner(built)
+    block = ["### M1 — Pay", "- **Owner:** `src/store/` and `src/pay.py`, `main.py`."]
+    assert runner.owner_modules(block) == ["main", "src.pay", "src.store"]
+    assert runner.owned("src.store.files", ["src.store"])
+    assert runner.owned("src", ["src.store"])
+    assert not runner.owned("src.other", ["src.store"])
+
+
+def test_the_runner_reads_the_failures_of_a_junit_report(built: Path, tmp_path: Path) -> None:
+    runner = load_runner(built)
+    report = tmp_path / "report.xml"
+    report.write_text(
+        '<testsuites><testsuite><testcase classname="tests.unit.test_a" name="test_x">'
+        '<failure message="assert 1 == 2">tests/unit/test_a.py:5: AssertionError</failure>'
+        '</testcase><testcase classname="" name="tests.unit.test_b">'
+        "<error message=\"collection failure\">E   NameError: name 'y' is not defined</error>"
+        "</testcase></testsuite></testsuites>",
+        encoding="utf-8",
+    )
+    failures = runner.read_failures(report)
+    assert [(f.test, f.kind) for f in failures] == [
+        ("tests.unit.test_a::test_x", "AssertionError"),
+        ("tests.unit.test_b", "NameError"),
+    ]
+
+
+@pytest.mark.parametrize("writer", ["claude", "codex", "antigravity", "copilot"])
+def test_each_writer_runs_with_its_prompts_off(built: Path, writer: str) -> None:
+    runner = load_runner(built)
+    row = runner.Row(3, "Login", "sonnet", "low", "open")
+    command, stdin = runner.writer_command(
+        runner.Writer(writer, "model-x", "high"), row, runner.SESSION_TEST, "the prompt"
+    )
+    expected = {
+        "claude": ["--permission-mode", "bypassPermissions"],
+        "codex": ["--sandbox", "workspace-write"],
+        "antigravity": ["--dangerously-skip-permissions"],
+        "copilot": ["--allow-all-tools", "--no-ask-user"],
+    }[writer]
+    assert all(option in command for option in expected)
+    assert command[command.index("--model") + 1] == "model-x"
+    # Claude and Codex read the prompt on standard input; the others take it as an argument.
+    assert (stdin == "the prompt") is (writer in {"claude", "codex"})
+    assert ("the prompt" in command) is (writer in {"antigravity", "copilot"})
+
+
+def test_agents_md_holds_the_rules_of_the_project(built: Path) -> None:
+    runner = load_runner(built)
+    text = runner.agents_text(built)
+    assert text.startswith("# AGENTS.md\n")
+    assert "## CLAUDE.md" in text
+    assert "## .claude/rules/python.md" in text
+    assert "## .claude/skills/write-tests/SKILL.md" in text
+    assert "a missing module that the Owner entry" not in text  # that is the fix prompt
+    assert "Put every import at the top of a test file." in text
+    assert "paths:" not in text  # the frontmatter of the rules files is left out
+
+
+def test_an_unknown_test_writer_is_refused(built: Path) -> None:
+    runner = load_runner(built)
+    assert runner.load_writer(built, "") == runner.Writer("claude", "", "")
+    (built / "config" / "test-writer.json").write_text('{"writer": "gpt"}', encoding="utf-8")
+    with pytest.raises(runner.RunStoppedError, match="not one of"):
+        runner.load_writer(built, "")
+    assert runner.load_writer(built, "codex") == runner.Writer("codex")
+
+
+def test_the_sessions_get_the_folders_of_the_environment_first(built: Path) -> None:
+    runner = load_runner(built)
+    environment = runner.session_environment()
+    first = environment["PATH"].split(os.pathsep)[0]
+    assert Path(first) == runner.environment_folders(Path(sys.prefix))[0]
+    runner.check_session_python(environment)
+
+
+# --- one step in chat (C2) ------------------------------------------------------------------------
+
+
+def test_tests_only_writes_the_tests_of_one_milestone_in_chat(planned: Sandbox) -> None:
+    planned.git("switch", "-c", "milestone/M1")
+    code, output = run_runner(planned, "--tests-only", "M1")
+    assert code == 0, output
+    assert "The tests of M1 are written and pass the runner's checks." in output
+    assert (planned.folder / "tests" / "unit" / "test_m1.py").read_text("utf-8") == M1_TEST
+    assert subjects(planned, "-1") == ["Plan M1 and M2"]
+    assert kinds(planned) == ["test M1"]
+
+
+def test_review_only_reviews_in_a_worktree_and_routes_test_findings(planned: Sandbox) -> None:
+    planned.git("switch", "-c", "milestone/M1")
+    run_runner(planned, "--tests-only", "M1")
+    m1_code = '"""M1."""\n\n\ndef value() -> int:\n    """1."""\n    return 1\n'
+    commit_file(planned, "src/m1.py", m1_code, "M1: First")
+    planned.env["FAKE_CLAUDE_STATE"] = "review-tests"
+    code, output = run_runner(planned, "--review-only", "M1")
+    assert code == 0, output
+    assert "FINDING: medium | tests/unit/test_m1.py:4 | Weak Test" in output
+    assert "--tests-only M1 --review-findings" in output
+    code, output = run_runner(planned, "--tests-only", "M1", "--review-findings")
+    assert code == 0, output
+    assert kinds(planned) == ["test M1", "review M1", "review-tests M1"]
+    assert "test_m1_value_is_an_int" in (
+        planned.folder / "tests" / "unit" / "test_m1.py"
+    ).read_text("utf-8")

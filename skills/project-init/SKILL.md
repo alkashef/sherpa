@@ -24,6 +24,17 @@ To change what new projects get, edit `assets/`, not this file.
    - **Purpose.** One line. It fills CLAUDE.md, the spec, the README, and the repository description.
    - **Modules.** Propose the ones the purpose implies and let the user adjust. Default: `python`.
    - **Visibility.** Private by default. Use `--public` only if the user says so.
+   - **Test writer.** The AI that writes the tests of each milestone, in a folder without the
+     code. Default: Claude. Each other writer needs one sign-in to its command line; after that
+     the runner needs nobody. The builder writes the recommended model and effort to
+     `config/test-writer.json`.
+
+     | Writer | Option | One-time sign-in |
+     | --- | --- | --- |
+     | Claude (default) | `--test-writer claude` | None: the sign-in of Claude Code |
+     | Antigravity | `--test-writer antigravity` | One interactive `agy` session, or `GEMINI_API_KEY` |
+     | Codex | `--test-writer codex` | `codex login`, or `CODEX_API_KEY` |
+     | GitHub Copilot | `--test-writer copilot` | `COPILOT_GITHUB_TOKEN`, a fine-grained token |
 
    | Module | Add when the project has | Adds |
    | --- | --- | --- |
@@ -42,13 +53,13 @@ To change what new projects get, edit `assets/`, not this file.
    and changes nothing if a check fails:
 
    ```powershell
-   python "<this skill's folder>\scripts\init_project.py" --name <name> --with <modules> --purpose "<purpose>"
+   python "<this skill's folder>\scripts\init_project.py" --name <name> --with <modules> --purpose "<purpose>" --test-writer <writer>
    ```
 
    Plain `python` on this machine can be the Microsoft Store stub. If it fails, use
    `C:\Users\aa186095\AppData\Local\miniconda3\python.exe`. Options: `--public`, `--no-github`
    (local repository only), `--remote-url <url>` (push to a repository that already exists),
-   `--no-conda` (no conda environment).
+   `--no-conda` (no conda environment), `--test-writer` (default `claude`).
 
    The script: (1) checks the name, that the folder is empty (apart from `.git`, `.claude`,
    `.vscode`), git and its identity, the `gh` login, that no GitHub repository has that name, and

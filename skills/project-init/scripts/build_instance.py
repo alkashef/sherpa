@@ -6,8 +6,12 @@ the skill's `assets/` folder. `.vscode/extensions.json` is built from the module
 NOT edit the master. Never overwrites an existing file unless --force is given. The project name
 is the name of the TARGET folder unless --name is given.
 
+`config/test-writer.json` names the AI that writes the tests (--test-writer, default claude), with
+the model and effort recommended for it.
+
 Usage:
     python build_instance.py TARGET --with python http-apis validation --purpose "Does X"
+    python build_instance.py TARGET --with python --test-writer codex
     python build_instance.py TARGET --with python --dry-run
 """
 
@@ -77,6 +81,27 @@ def optional_flags() -> dict[str, str]:
         "mcp": "B8",
         "docker": "B9",
     }
+
+
+def test_writers() -> dict[str, tuple[str, str]]:
+    """Map each AI that can write the tests to its recommended model and effort.
+
+    From the vendor docs of November 21, 2026; check the names before a release, because they
+    change. Claude takes the model and effort of each row of the plan, so it names none. The
+    model ID of Antigravity holds its effort.
+    """
+    return {
+        "claude": ("", ""),
+        "antigravity": ("gemini-4-neon-high", "high"),
+        "codex": ("gpt-6.2-astra", "high"),
+        "copilot": ("gpt-6.2-astra", "high"),
+    }
+
+
+def writer_config(writer: str) -> str:
+    """Render `config/test-writer.json`: the test writer, its model and its effort."""
+    model, effort = test_writers()[writer]
+    return json.dumps({"writer": writer, "model": model, "effort": effort}, indent=2) + "\n"
 
 
 def skill_files() -> list[str]:
@@ -161,7 +186,8 @@ def always_folders() -> dict[str, str]:
         "src/": "All source code.",
         "tests/": "`unit/` and `e2e/` tests, and `live/` checks that no milestone runs.",
         "docs/": "Workflow (text and diagram), spec, design, plan, unapproved ideas, and releases.",
-        "config/": "`.env` (never committed) and `.env.example`.",
+        "config/": "`.env` (never committed), `.env.example`, and `test-writer.json` (the AI "
+        "that writes the tests).",
         "scripts/": "`check.py` and `spec_coverage.py` (the checks), `milestones-runner.py`, "
         "`live_checks.py`, `release.py`, `cleanup.py`, setup scripts.",
         ".claude/": "Claude Code settings, including the hook that checks each edit.",
@@ -381,6 +407,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--name", default="", help="project name (default: the TARGET folder name)")
     parser.add_argument("--purpose", default="", help="fills {{PURPOSE}}")
+    parser.add_argument(
+        "--test-writer",
+        default="claude",
+        choices=sorted(test_writers()),
+        help="the AI that writes the tests (default: claude)",
+    )
     parser.add_argument("--stack", default="", help="fills {{STACK}}")
     parser.add_argument("--test-command", default="", help="fills {{TEST_COMMAND}}")
     parser.add_argument("--run-command", default="", help="fills {{RUN_COMMAND}}")
@@ -409,6 +441,7 @@ def main() -> int:
     sections = select_sections(read_sections(assets / "CLAUDE_GOLDEN.md"), args.flags)
     outputs = plan_outputs(assets, args.target, sections, fills_from(args))
     outputs[args.target / ".vscode" / "extensions.json"] = extensions_json(args.flags)
+    outputs[args.target / "config" / "test-writer.json"] = writer_config(args.test_writer)
     copies = plan_copies(assets, args.target, args.flags)
     for path, text in outputs.items():
         print(f"{write_text(path, text, args.force, args.dry_run):18} {path}")

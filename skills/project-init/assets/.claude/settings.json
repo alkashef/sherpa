@@ -11,6 +11,12 @@
       "Bash(python scripts/cleanup.py *)",
       "Bash(python scripts/check.py *)",
       "Bash(python scripts/spec_coverage.py *)",
+      "Bash(python scripts/milestones-runner.py --tests-only *)",
+      "Bash(python scripts/milestones-runner.py --review-only *)",
+      "Bash(git switch -c milestone/*)",
+      "Bash(git switch main)",
+      "Bash(git merge --ff-only milestone/*)",
+      "Bash(git branch -d milestone/*)",
       "PowerShell(git status *)",
       "PowerShell(git diff *)",
       "PowerShell(git log *)",
@@ -19,7 +25,13 @@
       "PowerShell(git push *)",
       "PowerShell(python scripts/cleanup.py *)",
       "PowerShell(python scripts/check.py *)",
-      "PowerShell(python scripts/spec_coverage.py *)"
+      "PowerShell(python scripts/spec_coverage.py *)",
+      "PowerShell(python scripts/milestones-runner.py --tests-only *)",
+      "PowerShell(python scripts/milestones-runner.py --review-only *)",
+      "PowerShell(git switch -c milestone/*)",
+      "PowerShell(git switch main)",
+      "PowerShell(git merge --ff-only milestone/*)",
+      "PowerShell(git branch -d milestone/*)"
     ],
     "ask": [
       "Edit(/docs/spec.md)",
@@ -94,7 +106,10 @@
       "PowerShell(docker volume prune *)",
       "PowerShell(docker compose down *-v*)",
       "PowerShell(docker-compose down *-v*)",
-      "PowerShell(docker system prune *)"
+      "PowerShell(docker system prune *)",
+      "PowerShell(Set-Content *)",
+      "PowerShell(Out-File *)",
+      "PowerShell(Add-Content *)"
     ]
   },
   "hooks": {

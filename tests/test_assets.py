@@ -74,6 +74,31 @@ def test_check_configs_and_hooks_ask_before_an_edit() -> None:
     assert [f for f in protected if f"Edit(/{f})" not in ask] == []
 
 
+def test_a_milestone_in_chat_needs_no_permission_prompt() -> None:
+    # IMPL-02 and C2: the git steps of a milestone branch and the two chat steps of the runner.
+    # `git switch`, not `git checkout`: `git checkout <file>` discards changes.
+    settings = json.loads((bi.assets_dir() / ".claude" / "settings.json").read_text("utf-8"))
+    allow = settings["permissions"]["allow"]
+    for command in (
+        "git switch -c milestone/*",
+        "git switch main",
+        "git merge --ff-only milestone/*",
+        "git branch -d milestone/*",
+        "python scripts/milestones-runner.py --tests-only *",
+        "python scripts/milestones-runner.py --review-only *",
+    ):
+        assert f"Bash({command})" in allow, command
+    assert [rule for rule in allow if "checkout" in rule] == []
+
+
+def test_a_shell_may_not_write_a_file_in_another_encoding() -> None:
+    # RUN-04: Windows PowerShell 5.1 writes these in the ANSI code page, not in UTF-8.
+    settings = json.loads((bi.assets_dir() / ".claude" / "settings.json").read_text("utf-8"))
+    deny = settings["permissions"]["deny"]
+    for cmdlet in ("Set-Content", "Out-File", "Add-Content"):
+        assert f"PowerShell({cmdlet} *)" in deny, cmdlet
+
+
 def test_the_spec_and_the_workflow_ask_before_an_edit() -> None:
     # An ask rule refuses when nobody can answer, so an unattended milestone cannot change the
     # requirements or the rules it works under (docs/workflow.md, Approval).

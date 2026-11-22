@@ -1,30 +1,42 @@
 """Run the milestones of docs/plan.md one after another, each in its own branch.
 
-Each milestone of the table "Milestones at a glance" runs in fresh `claude -p` sessions with the
-model and effort its row names, following the loop of docs/workflow.md (Execute). The branch where
-the run starts is the base branch. The runner reads the table from the plan of that branch
+Each milestone of the table "Milestones at a glance" runs in fresh sessions with the model and
+effort its row names, following the loop of docs/workflow.md (Execute). The branch where the run
+starts is the base branch. The runner reads the table from the plan of that branch
 (`git show <base>:docs/plan.md`). For each milestone it makes the branch `milestone/M<n>` from the
-base branch, and records the base branch in the git setting `branch.milestone/M<n>.base`. The
-sessions work in the milestone branch:
+base branch, and records the base branch in the git setting `branch.milestone/M<n>.base`.
 
-1. The test session runs /write-tests. It writes the milestone's tests and may not read the code
-   in src/. Before it, the runner reads the milestone's block from the plan. After it, the runner
-   writes that block and the SHA-256 of every file under tests/ (not __pycache__, and with CRLF
-   line ends read as LF) to .claude/logs/M<n>-tests.json.
+1. The test session writes the milestone's tests in a temporary folder outside the project: the
+   docs, the rules, the tool configs and tests/, but no src/ and no .git. The AI that
+   config/test-writer.json names writes them (--test-writer overrides it): claude (the default,
+   with the row's model and effort, through /write-tests), codex, antigravity or copilot (they
+   read one AGENTS.md made from CLAUDE.md, the rules files and /write-tests). The runner copies
+   tests/ back, with docs/plan.md and docs/design.md when they changed, and runs its own checks:
+   ruff and mypy on tests/ in the folder, each new test file with --junitxml (a failure is valid
+   when it is a wrong value, an error that src/ raised, or a missing module that the Owner entry
+   names), and each older test file, which must pass. It never judges a writer by its exit code.
+   With problems, the writer gets one round of repair in the same folder, with the type and the
+   message of each problem. Then the runner writes the milestone's block and the SHA-256 of every
+   file under tests/ (not __pycache__, and with CRLF line ends read as LF) to
+   .claude/logs/M<n>-tests.json.
 2. The build session makes the tests pass and may not edit tests/. It deletes the milestone's row
    and block from the plan and commits. It does not push.
-3. The review session changes no file. It reviews the diff of the branch and reports each finding
-   as a `FINDING:` line. With findings, a repair session repairs them (it may not edit tests/ and
-   commits as `M<n>: review repairs`), then a last review runs. The findings of the last review
-   stay: the table counts them, and they do not stop the milestone. A milestone has at most two
-   reviews in one run.
+3. The review session runs in a temporary git worktree of the branch, which the runner deletes
+   after it: a change that the review makes only adds a warning to the log. It reports each
+   finding as a `FINDING:` line that names the file of the fix. A finding about tests/ goes to a
+   test session in the folder of the test writer; if it changed a test, a build session makes the
+   tests pass and commits `M<n>: test repairs`. Any other finding goes to a repair session (it may
+   not edit tests/ and commits `M<n>: review repairs`). Then a last review runs. A finding of the
+   last review blocks the milestone when its severity is high or its rule is a requirement ID,
+   unless the user approved the milestone after an earlier review blocked it. The other findings
+   stay: the table counts them. A milestone has at most two reviews in one run.
 
-After a build session and after a repair session, the runner does its own checks. It compares the
-hashes of tests/. It runs `python scripts/spec_coverage.py M<n>` over a temporary copy of
-docs/spec.md and tests/, with the saved block. It compares docs/spec.md with the base branch. A
-test file that changed, was added or was removed, a failed coverage check or a changed spec means
-that the session did not finish. A review session that changed a file, made a commit or ended
-with an error did not finish either. The same holds for a session that left its branch.
+After a build, rebuild or repair session, the runner does its own checks. It compares the hashes
+of tests/. It runs `python scripts/spec_coverage.py M<n>` over a temporary copy of docs/spec.md
+and tests/, with the saved block. It compares docs/spec.md with the base branch. A test file that
+changed, was added or was removed, a failed coverage check or a changed spec means that the
+session did not finish. A review that ended with an error did not finish either. The same holds
+for a session that left its branch.
 
 Then the runner merges: `git checkout <base>`, `git merge --ff-only milestone/M<n>`, `git push`
 and `git branch -d milestone/M<n>`. If the fast-forward or the push fails, the run stops and the
@@ -35,8 +47,10 @@ A session blocks its milestone in the plan and commits nothing. The runner then 
 docs/plan.md in the milestone branch and commits the other changes there as `M<n>: partial work`
 (with --no-verify: the hook checks the base branch, not this branch). It commits the blocked plan
 alone on the base branch as `M<n>: blocked` (through the hook), pushes, and prints the block with
-its question. The user adds an Approval entry, sets the Status to `approved`, commits, and runs
-again.
+its question. A milestone that the last review blocks keeps its commits in its branch; the runner
+writes the Blocked entry with the findings into the plan of the base branch, and commits and
+pushes it in the same way. The user adds an Approval entry, sets the Status to `approved`,
+commits, and runs again.
 
 A branch `milestone/M<n>` that exists when its milestone starts is left from an earlier run. The
 runner handles these states:
@@ -47,7 +61,9 @@ runner handles these states:
    base branch and puts the work back in the working tree (`git reset --mixed <base>`). The
    sessions continue from it. A rebase conflict stops the run.
 4. The tree is clean and the row left the plan of the branch: the build commit exists. Only the
-   runner's checks, the review and the merge run.
+   runner's checks, the review and the merge run. When the row is `approved` and the base branch
+   moved (a review blocked the milestone), the runner first rebases the branch on the base
+   branch; a conflict in docs/plan.md takes the base plan without the milestone.
 5. The tree is clean and the branch has no commit of its own: the branch moves to the base
    branch, and the milestone runs from its start.
 6. The tree is clean and the branch has other commits: the sessions continue on the branch.
@@ -55,33 +71,43 @@ runner handles these states:
 Sessions that continue skip the test session when the hashes file of the milestone exists.
 
 Before the first milestone, the runner checks the conda environment, the settings file, the commit
-hook, a clean git tree, the upstream of the base branch, .gitignore and
-`python scripts/spec_coverage.py --consistency`. It stops at a row whose Status is `blocked`. A
-session that did not finish is tried again (--retries, default 1) in a new session that resumes
-from the changes the first one left; its prompt gets the reason why the earlier try did not
-count. A retry repeats only that session. A session that runs over --timeout-minutes counts as
-not finished. If the last try also fails, the run stops and HEAD stays on the milestone branch;
---resume starts the next run on a dirty tree. When the range is done, the runner runs
-`python scripts/live_checks.py` and prints its last line; failed live checks end the run with
-exit code 1.
+hook, a clean git tree, the upstream of the base branch, .gitignore,
+`python scripts/spec_coverage.py --consistency`, that `python` on the PATH of a session is the
+project's environment, and that a test writer other than claude answers one short prompt. Each
+session gets the folders of the conda environment first on its PATH. It stops at a row whose
+Status is `blocked`. A session that did not finish is tried again (--retries, default 1) in a new
+session that resumes from the changes the first one left; its prompt gets the reason why the
+earlier try did not count. A retry repeats only that session. A session that runs over
+--timeout-minutes counts as not finished. If the last try also fails, the run stops and HEAD
+stays on the milestone branch; --resume starts the next run on a dirty tree. When the range is
+done, the runner runs `python scripts/live_checks.py` and prints its last line; failed live
+checks end the run with exit code 1.
 
 The runner clears the screen and shows a table that it redraws every second: a row for each
 milestone of the run (the one that runs now last), and a footer with the total time, the percent
 and the count of the milestones done. The Decisions column counts the DECISION lines of the
 reports, and the Findings column counts the FINDING lines of the last review. It logs each
-session to .claude/logs/ (M<n>-test.log, M<n>.log, M<n>-review.log, M<n>-repair.log and
-M<n>-review-last.log, with -<try> for a retry), and appends a timing to
-.claude/logs/timings.csv.
+session to .claude/logs/ (M<n>-test.log, M<n>-test-fix.log, M<n>.log, M<n>-review.log,
+M<n>-review-tests.log, M<n>-rebuild.log, M<n>-repair.log and M<n>-review-last.log, with -<try>
+for a retry), and appends a timing to .claude/logs/timings.csv.
 
-The runner writes no code, no test and no text of the plan: the claude sessions do that. Its git
-work is the branch, the merge, the push and the two commits of a blocked milestone. The git
-pre-commit hook still runs every check and test on each commit of a session. Each session starts
-with permission prompts off, so its guard rails are the rules in .claude/settings.json, plus the
---disallowedTools of its kind: the runner refuses to start without that file.
+The runner writes no code, no test and no text of the plan except the Blocked entry of a review:
+the sessions do that. Its git work is the branch, the worktree of a review, the merge, the push
+and the commits of a blocked milestone. The git pre-commit hook still runs every check and test on
+each commit of a session. Each session starts with permission prompts off, so its guard rails are
+the rules in .claude/settings.json, plus the --disallowedTools of its kind: the runner refuses to
+start without that file.
+
+One step of a milestone in chat (docs/workflow.md, Execute) uses the same guards:
+`--tests-only M<n>` runs the test session in the current branch and commits nothing, and
+`--review-only M<n>` runs the review in a worktree of HEAD and prints its findings. With
+`--review-findings`, `--tests-only` repairs the findings about tests of the last review.
 
 Run, after `conda activate {{PROJECT_NAME}}`:
     python scripts/milestones-runner.py [--start N] [--end N] [--retries N] [--resume]
-        [--timeout-minutes N]
+        [--timeout-minutes N] [--test-writer NAME]
+    python scripts/milestones-runner.py --tests-only M<n> [--review-findings]
+    python scripts/milestones-runner.py --review-only M<n>
 """
 
 import argparse
@@ -90,6 +116,7 @@ import ctypes
 import hashlib
 import io
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -103,6 +130,7 @@ from functools import partial
 from pathlib import Path
 from types import TracebackType
 from typing import Final, NoReturn, Self
+from xml.etree import ElementTree
 
 # The rules of a run (docs/workflow.md).
 ENV_NAME: Final = "{{PROJECT_NAME}}"
@@ -118,8 +146,7 @@ RESUME_NOTE: Final = (
 )
 TEST_RESUME_NOTE: Final = (
     "A previous test session worked on this milestone and did not finish. Its test files may "
-    "still be in tests/. First run git status and read them, then continue from there. Do not "
-    "redo finished work."
+    "still be in tests/. First read them, then continue from there. Do not redo finished work."
 )
 REVIEW_RESUME_NOTE: Final = (
     "An earlier review session of this milestone did not count. Do the whole review again."
@@ -134,6 +161,9 @@ SESSION_BUILD: Final = "build"  # the session that makes them pass
 SESSION_REVIEW: Final = "review"  # the session that reviews the diff of the milestone branch
 SESSION_REPAIR: Final = "repair"  # the session that repairs the findings of the review
 SESSION_REVIEW_LAST: Final = "review-last"  # the second review, after the repair
+SESSION_TEST_FIX: Final = "test-fix"  # the round of repair of a test session, after the checks
+SESSION_REVIEW_TESTS: Final = "review-tests"  # a test session for the review findings on tests
+SESSION_REBUILD: Final = "rebuild"  # a build session after the review-tests session changed tests
 # A test session may not read the code: its tests come from the spec and the design. A Read rule
 # with a path also covers Grep and Glob, and an Edit rule with a path also covers Write: claude
 # warns about a Grep, Glob or Write rule with a path, because it matches nothing.
@@ -146,7 +176,81 @@ DENIED_TOOLS: Final = {
     SESSION_REVIEW: REVIEW_SESSION_DENIED,
     SESSION_REPAIR: BUILD_SESSION_DENIED,
     SESSION_REVIEW_LAST: REVIEW_SESSION_DENIED,
+    SESSION_TEST_FIX: TEST_SESSION_DENIED,
+    SESSION_REVIEW_TESTS: TEST_SESSION_DENIED,
+    SESSION_REBUILD: BUILD_SESSION_DENIED,
 }
+# The sessions that the test writer runs, in a folder without the code (docs/workflow.md).
+WRITER_SESSIONS: Final = (SESSION_TEST, SESSION_TEST_FIX, SESSION_REVIEW_TESTS)
+WRITER_CLAUDE: Final = "claude"
+WRITER_CODEX: Final = "codex"
+WRITER_ANTIGRAVITY: Final = "antigravity"
+WRITER_COPILOT: Final = "copilot"
+TEST_WRITERS: Final = (WRITER_CLAUDE, WRITER_ANTIGRAVITY, WRITER_CODEX, WRITER_COPILOT)
+WRITER_PROGRAMS: Final = {
+    WRITER_CLAUDE: "claude",
+    WRITER_CODEX: "codex",
+    WRITER_ANTIGRAVITY: "agy",
+    WRITER_COPILOT: "copilot",
+}
+WRITER_SIGN_IN: Final = {  # what the user does once, so that the writer runs with nobody there
+    WRITER_CLAUDE: "claude",
+    WRITER_CODEX: "codex login, or set CODEX_API_KEY",
+    WRITER_ANTIGRAVITY: "one interactive agy session, or set GEMINI_API_KEY",
+    WRITER_COPILOT: "set COPILOT_GITHUB_TOKEN to a fine-grained token",
+}
+WRITER_FILE: Final = "config/test-writer.json"  # the writer that /project-init recorded
+START_CHECK_PROMPT: Final = "Reply with the single word ok."
+START_CHECK_SECONDS: Final = 300
+# What the folder of a test session holds: no src/ and no .git. tests/ is copied too.
+FOLDER_FILES: Final = (
+    "docs/spec.md",
+    "docs/design.md",
+    "docs/plan.md",
+    "docs/workflow.md",
+    "scripts/spec_coverage.py",
+    "scripts/check.py",
+    "scripts/run-check.sh",
+    ".coveragerc",
+    "ruff.toml",
+    "mypy.ini",
+    "pytest.ini",
+    "requirements.txt",
+    "package.json",
+    "tsconfig.json",
+    "eslint.config.js",
+    ".prettierrc.json",
+    ".stylelintrc.json",
+)
+CLAUDE_FOLDER_FILES: Final = ("CLAUDE.md", ".claude/settings.json")
+CLAUDE_FOLDER_DIRS: Final = (".claude/rules", ".claude/skills/write-tests")
+COPIED_BACK_DOCS: Final = ("docs/plan.md", "docs/design.md")  # an auto-decision, or a block
+CACHE_DIRS: Final = frozenset({"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"})
+# mypy reads the tests in the folder without the code, so an import of the code finds nothing.
+MYPY_TEST_OPTIONS: Final = (
+    "--disable-error-code",
+    "import-not-found",
+    "--disable-error-code",
+    "import-untyped",
+    "--disable-error-code",
+    "no-any-return",
+)
+VALID_FAILURE: Final = "AssertionError"  # a test that fails because a value is wrong
+IMPORT_FAILURES: Final = ("ModuleNotFoundError", "ImportError", "AttributeError")
+MISSING_MODULE: Final = re.compile(
+    r"No module named '([\w.]+)'|cannot import name '\w+' from '([\w.]+)'"
+    r"|module '([\w.]+)' has no attribute"
+)
+EXCEPTION_LINE: Final = re.compile(r"^E\s+([A-Za-z_][\w.]*(?:Error|Exception|Exit)): ?(.*)$")
+RAISED_AT: Final = re.compile(r"^(\S+):\d+: ([A-Za-z_][\w.]*)$")  # pytest: `path:line: Error`
+MISSING_FIXTURE: Final = re.compile(r"fixture '(\w+)' not found")
+OWNER_PATH: Final = re.compile(r"\b((?:src|main)[\w/.\-]*)")
+# A finding blocks the merge when its severity is high, or when its rule names a requirement.
+REQUIREMENT_RULE: Final = re.compile(r"^(?!DEC-|EX-|SCN-)[A-Z][A-Z0-9]*-\d{3,}\b")
+SEVERITY_HIGH: Final = "high"
+FILE_CELL: Final = 1  # the cells of a FINDING line: severity, file and line, rule, remedy
+RULE_CELL: Final = 2
+STATUS_APPROVED: Final = "approved"
 BRANCH_PREFIX: Final = "milestone/M"  # the branch of milestone 3 is milestone/M3
 MILESTONE_BRANCH: Final = re.compile(r"milestone/M\d+")
 PARTIAL_WORK: Final = "partial work"  # the commit `M<n>: partial work` of a blocked milestone
@@ -160,6 +264,8 @@ LIVE_SCRIPT: Final = "live_checks.py"  # in scripts/: runs the live checks after
 LIVE_NOT_RUN: Final = 3  # its exit code when it ran no live check
 LOCKED_PATHS: Final = (f"docs/{SPEC_FILE}",)  # a milestone may not change these
 SKIPPED_DIR: Final = "__pycache__"
+LIVE_DIR: Final = "live"  # tests/live/ holds the live checks: no milestone runs them
+PYTEST_NO_TESTS: Final = 5  # the exit code of pytest when it collected no test
 IGNORE_ENTRIES: Final = (".claude/logs/",)
 HOOKS_PATH: Final = ".githooks"  # the value of git's core.hooksPath that turns the commit hook on
 TAIL_LINES: Final = 30
@@ -221,13 +327,43 @@ class Result:
 
 @dataclass(frozen=True)
 class Options:
-    """The command-line arguments. A start or end of None means the whole table."""
+    """The command-line arguments. A start or end of None means the whole table.
+
+    tests_only and review_only name the one milestone of a chat step (docs/workflow.md), or are
+    None for a whole run. test_writer overrides config/test-writer.json when it is not empty.
+    """
 
     start: int | None
     end: int | None
     retries: int
     resume: bool
     timeout_minutes: int
+    tests_only: int | None = None
+    review_only: int | None = None
+    review_findings: bool = False
+    test_writer: str = ""
+
+
+@dataclass(frozen=True)
+class Writer:
+    """The AI that writes the tests: its name, model and effort (config/test-writer.json).
+
+    An empty model or effort means the CLI's own default, or, for Claude, the value of the row.
+    """
+
+    name: str
+    model: str = ""
+    effort: str = ""
+
+
+@dataclass(frozen=True)
+class Failure:
+    """Why one test failed: its name, the type and message of its error, and where it was raised."""
+
+    test: str
+    kind: str
+    message: str
+    raised_in: str = ""
 
 
 @dataclass(frozen=True)
@@ -290,11 +426,39 @@ class ClaudeRun:
 
 
 @dataclass(frozen=True)
+class Launch:
+    """How a session starts: its command, its folder, its standard input and its environment.
+
+    environment None means the environment of the runner.
+    """
+
+    command: list[str]
+    folder: Path
+    stdin: str
+    environment: dict[str, str] | None = None
+
+
+@dataclass(frozen=True)
 class SavedTests:
     """What the runner keeps after a test session: the milestone's block, the hashes of tests/."""
 
     block: list[str]
     hashes: dict[str, str]
+
+
+@dataclass(frozen=True)
+class TestsCheck:
+    """What the runner's checks of new tests need.
+
+    folder is the folder of the writer, reference the commit that the new tests are compared with,
+    owners the modules of the Owner entry, and needs_tests whether no change of tests/ is a fault.
+    """
+
+    root: Path
+    folder: Path
+    reference: str
+    owners: tuple[str, ...]
+    needs_tests: bool
 
 
 @dataclass(frozen=True)
@@ -310,12 +474,16 @@ class Job:
     """One session of a milestone: its kind, the text of its prompt, and the judge of a try.
 
     prompt takes two arguments: whether the try resumes earlier work, and why the earlier try did
-    not count. judge takes the run of a try and returns its verdict.
+    not count. judge takes the run of a try and returns its verdict. folder is where the session
+    runs (None: the project). writer is the AI of a test session (None: claude, with the row's
+    model and effort).
     """
 
     kind: str
     prompt: Callable[[bool, str], str]
     judge: Callable[[ClaudeRun], Verdict]
+    folder: Path | None = None
+    writer: Writer | None = None
 
 
 class RunStoppedError(Exception):
@@ -352,7 +520,10 @@ class Running:
     """The milestone that runs now: its row, its timer, its try and what was counted so far.
 
     saved is what its test session left: the block of the milestone and the hashes of tests/.
-    findings counts the findings that its last review kept.
+    findings counts the findings that its last review kept. block is the milestone's block as
+    the plan had it before the test session. decision is the Approval entry of the user, when an
+    earlier review blocked the milestone. blocking holds the findings of the last review that
+    block the merge.
     """
 
     row: Row
@@ -362,6 +533,9 @@ class Running:
     findings: int = 0
     saved: SavedTests | None = None
     started_at: str = field(default_factory=_now)
+    block: list[str] = field(default_factory=list)
+    decision: tuple[str, ...] = ()
+    blocking: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -442,6 +616,8 @@ class Session:
     last: int
     options: Options
     base: str
+    writer: Writer = field(default_factory=lambda: Writer(WRITER_CLAUDE))
+    environment: dict[str, str] = field(default_factory=dict)
 
 
 class LiveTable:
@@ -687,14 +863,20 @@ BUILD_RULES: Final = (
     "`python scripts/check.py` and `python scripts/spec_coverage.py M<n>`. A check that",
     "needs a live service is a live check, and one that needs a person is the human test of",
     "the milestone: neither is yours;",
-    "(k) end with the report in CLAUDE.md 'Communication and reporting'. In it, write each",
+    "(k) write and change files with the Edit and Write tools, not through the shell: a shell",
+    "can write a file in another encoding than UTF-8;",
+    "(l) end with the report in CLAUDE.md 'Communication and reporting'. In it, write each",
     "decision of (i) as its own line: `DECISION: <what> | <why> | <DEC-NNN or none>`.",
 )
-TEST_INTRO: Final = (
-    "Run /write-tests for milestone M<n> (<title>) of docs/plan.md.",
+TEST_INTRO: Final = ("Run /write-tests for milestone M<n> (<title>) of docs/plan.md.",)
+WRITER_TEST_INTRO: Final = (
+    "Write the failing tests of milestone M<n> (<title>) of docs/plan.md, as AGENTS.md says.",
+)
+TEST_CONTEXT: Final = (
     "This is the test session (docs/workflow.md, Execute); a build session",
     "writes the code afterwards and may not change your tests.",
-    "You work in the branch milestone/M<n>: stay on it.",
+    "This folder holds no src/ and no .git, on purpose: the tests come from the spec and the",
+    "design. The runner copies tests/ back to the project and checks them.",
     "This is an unattended run: nobody can answer questions.",
 )
 TEST_RULES: Final = (
@@ -723,8 +905,56 @@ TEST_RULES: Final = (
     "uses a real local part where one exists (a database file in a temporary folder, a",
     "server that it starts on 127.0.0.1) and a fake only for an external service. A test of",
     "the level `live` goes to tests/live/: write it, but do not run it;",
-    "(g) end with the report of /write-tests. In it, write each decision of (c) as its own",
+    "(g) write and change files with the file tools (Edit and Write), not through the shell;",
+    "(h) end with the report of /write-tests. In it, write each decision of (c) as its own",
     "line: `DECISION: <what> | <why> | <DEC-NNN or none>`.",
+)
+TEST_FIX_INTRO: Final = (
+    "The runner checked the tests of milestone M<n> (<title>) that you wrote, and found the",
+    "problems below. Repair them in tests/. Each problem gives the type and the message of an",
+    "error, and no line of the code. A new test may fail only because the behavior is",
+    "missing: a wrong value (an AssertionError), or a missing module that the Owner entry of",
+    "the milestone names. Each older test must pass.",
+    "This is an unattended run: nobody can answer questions.",
+)
+REVIEW_TESTS_INTRO: Final = (
+    "Repair the review findings about the tests of milestone M<n> (<title>).",
+    "The code of the milestone is built. The review found faults in tests/, or a missing test.",
+    "A missing test that you add may fail: a build session makes it pass afterwards.",
+    "This folder holds no src/ and no .git, on purpose: the tests come from the spec and the",
+    "design. The runner copies tests/ back to the project and checks them.",
+    "This is an unattended run: nobody can answer questions.",
+)
+REVIEW_TESTS_RULES: Final = (
+    "Rules:",
+    "(a) commit nothing;",
+    "(b) change only files under tests/. Never read the code in src/, also not through the",
+    "shell;",
+    "(c) write and change files with the file tools (Edit and Write), not through the shell;",
+    "(d) never call a live external service. A test uses a real local part where one exists",
+    "and a fake only for an external service;",
+    "(e) end with one line for each finding: `REPAIRED: <finding>`, or",
+    "`REJECTED: <finding> | <why>` for a finding that is wrong.",
+)
+REBUILD_INTRO: Final = (
+    "The tests of milestone M<n> (<title>) changed after the review: a test session repaired",
+    "the review findings about the tests. Make the tests pass, and change no file in tests/.",
+    "A new test that already passes needs no change of the code.",
+    "Run the Gate: `python scripts/check.py` must pass. Then commit all the changes, the",
+    "changed tests too, with the message `M<n>: test repairs`; do not push and do not",
+    "merge: the runner does that.",
+    "You work in the branch milestone/M<n>: stay on it.",
+    "This is an unattended run: nobody can answer questions.",
+)
+REBUILD_RULES: Final = (
+    "Rules:",
+    "(a) never edit docs/spec.md, and do not change behavior that it states;",
+    "(b) if the pre-commit hook refuses the commit, fix the cause; never bypass the hook;",
+    "(c) a tool call that a settings rule denies is not allowed: do not retry it or work",
+    "around it;",
+    "(d) a public function that you add goes into Interfaces of docs/design.md as a decision:",
+    "a DEC-NNN with the Status Proposed and 'auto-decided in M<n>, review' in its Why;",
+    "(e) write and change files with the Edit and Write tools, not through the shell.",
 )
 REVIEW_INTRO: Final = (
     "Review milestone M<n> (<title>): the diff `git diff <base>...HEAD` of this branch.",
@@ -737,6 +967,9 @@ REVIEW_INTRO: Final = (
 REVIEW_RULES: Final = (
     "Report each finding of the two reviews as its own line:",
     "`FINDING: <high|medium|low> | <file>:<line> | <rule or smell> | <remedy>`.",
+    "<file> is the file where the fix goes: a finding about a test, or a missing test, names a",
+    "file in tests/. A fault against a requirement that no test catches is a missing test:",
+    "name the test file that must catch it, and write the requirement ID as the rule.",
     "Write `NO FINDINGS` when there is none.",
 )
 REPAIR_INTRO: Final = (
@@ -755,7 +988,11 @@ REPAIR_RULES: Final = (
     "merge: the runner does that. When you rejected every finding, commit nothing;",
     "(g) if the pre-commit hook refuses the commit, fix the cause; never bypass the hook;",
     "(h) a tool call that a settings rule denies is not allowed: do not retry it or work",
-    "around it.",
+    "around it;",
+    "(i) a public function that you add goes into Interfaces of docs/design.md as a decision",
+    "(a DEC-NNN with the Status Proposed and 'auto-decided in M<n>, review' in its Why), so",
+    "that a test writer can test it from the design;",
+    "(j) write and change files with the Edit and Write tools, not through the shell.",
 )
 
 
@@ -786,10 +1023,44 @@ def build_prompt(row: Row, resume: bool = False, reason: str = "") -> str:
     return " ".join((_fill(BUILD_INTRO, row), *notes, _fill(BUILD_RULES, row)))
 
 
-def build_test_prompt(row: Row, resume: bool = False, reason: str = "") -> str:
-    """Return the text sent to the test session; a try that resumes gets the retry notes."""
+def build_test_prompt(
+    row: Row, resume: bool = False, reason: str = "", writer: str = WRITER_CLAUDE
+) -> str:
+    """Return the text sent to the test session; a try that resumes gets the retry notes.
+
+    Claude runs /write-tests. Another writer reads the same rules in AGENTS.md.
+    """
+    intro = TEST_INTRO if writer == WRITER_CLAUDE else WRITER_TEST_INTRO
     notes = retry_notes(TEST_RESUME_NOTE, resume, reason)
-    return " ".join((_fill(TEST_INTRO, row), *notes, _fill(TEST_RULES, row)))
+    parts = (_fill(intro, row), _fill(TEST_CONTEXT, row), *notes, _fill(TEST_RULES, row))
+    return " ".join(parts)
+
+
+def fix_tests_prompt(
+    row: Row, problems: Sequence[str], resume: bool = False, reason: str = ""
+) -> str:
+    """Return the text of the round of repair of a test session, with the problems of the checks.
+
+    The round runs once, in the same folder, so it takes no retry notes (resume and reason).
+    """
+    del resume, reason
+    intro = " ".join((_fill(TEST_FIX_INTRO, row), "The problems:"))
+    return "\n".join((intro, *problems, _fill(TEST_RULES, row)))
+
+
+def review_tests_prompt(
+    row: Row, findings: Sequence[str], resume: bool = False, reason: str = ""
+) -> str:
+    """Return the text of the test session that repairs the review findings about the tests."""
+    notes = retry_notes(TEST_RESUME_NOTE, resume, reason)
+    intro = " ".join((_fill(REVIEW_TESTS_INTRO, row), *notes, "The findings:"))
+    return "\n".join((intro, *findings, _fill(REVIEW_TESTS_RULES, row)))
+
+
+def rebuild_prompt(row: Row, resume: bool = False, reason: str = "") -> str:
+    """Return the text of the build session that runs after the review-tests session."""
+    notes = retry_notes(RESUME_NOTE, resume, reason)
+    return " ".join((_fill(REBUILD_INTRO, row), *notes, _fill(REBUILD_RULES, row)))
 
 
 def review_prompt(row: Row, base: str, resume: bool = False, reason: str = "") -> str:
@@ -816,10 +1087,10 @@ def session_command(row: Row, kind: str) -> list[str]:
 
     Returns:
         The command; --disallowedTools comes last, because it takes every argument after it.
+        Its program is a name: run_claude finds it on the PATH of the session.
     """
-    program = shutil.which("claude") or "claude"
     return [
-        program,
+        "claude",
         "-p",
         "--model",
         row.model,
@@ -830,6 +1101,41 @@ def session_command(row: Row, kind: str) -> list[str]:
         "--disallowedTools",
         *DENIED_TOOLS[kind],
     ]
+
+
+def writer_command(writer: Writer, row: Row, kind: str, prompt: str) -> tuple[list[str], str]:
+    """Return the command of a test writer's session, and the text it reads on standard input.
+
+    Each writer runs with its permission prompts off. Claude and Codex read the prompt on
+    standard input; Antigravity and Copilot take it as an argument. The model ID of Antigravity
+    holds its effort (gemini-4-neon-high), so the command does not repeat it.
+
+    Args:
+        writer: The test writer, with its model and effort (empty: the CLI's default).
+        row: The milestone; Claude takes its model and effort when the writer names none.
+        kind: The kind of the session, for the tools that Claude is denied.
+        prompt: The text of the session.
+
+    Returns:
+        The command, and the text for standard input ("" when the prompt is an argument).
+    """
+    if writer.name == WRITER_CLAUDE:
+        chosen = replace(row, model=writer.model or row.model, effort=writer.effort or row.effort)
+        return session_command(chosen, kind), prompt
+    program = WRITER_PROGRAMS[writer.name]
+    model = ["--model", writer.model] if writer.model else []
+    if writer.name == WRITER_CODEX:
+        effort = ["-c", f"model_reasoning_effort={writer.effort}"] if writer.effort else []
+        # --ignore-user-config drops the sandbox setting of Windows; without it, Codex refuses
+        # every shell command and still ends with 0 (the trial of November 21, 2026).
+        windows = ["-c", 'windows.sandbox="unelevated"'] if sys.platform == "win32" else []
+        options = ["--sandbox", "workspace-write", "--skip-git-repo-check", "--ignore-user-config"]
+        command = [program, "exec", *model, *effort, *options, "--ephemeral", *windows, "-"]
+        return command, prompt
+    if writer.name == WRITER_ANTIGRAVITY:
+        return [program, "-p", prompt, *model, "--dangerously-skip-permissions"], ""
+    effort = ["--effort", writer.effort] if writer.effort else []
+    return [program, "-p", prompt, "--allow-all-tools", "--no-ask-user", *model, *effort], ""
 
 
 # --- the tests a test session wrote --------------------------------------------------------------
@@ -909,6 +1215,304 @@ def tests_problem(paths: Paths, row: Row, saved: SavedTests, kind: str) -> str |
     return coverage_problem(paths.root, row.id, saved.block)
 
 
+# --- the test writer and its folder -------------------------------------------------------------
+
+
+def load_writer(root: Path, override: str) -> Writer:
+    """Return the test writer: config/test-writer.json, or Claude when the file is missing.
+
+    Args:
+        root: The repository root.
+        override: The name that --test-writer gave, or "". Another writer than the file's takes
+            the default model and effort of its CLI.
+
+    Raises:
+        RunStoppedError: If the name is not a known writer.
+    """
+    path = root / WRITER_FILE
+    data = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+    recorded = Writer(
+        str(data.get("writer", WRITER_CLAUDE)),
+        str(data.get("model", "")),
+        str(data.get("effort", "")),
+    )
+    writer = recorded if override in {"", recorded.name} else Writer(override)
+    if writer.name not in TEST_WRITERS:
+        raise _error(
+            f"The test writer '{writer.name}' is not one of {', '.join(TEST_WRITERS)}. "
+            f"Correct {WRITER_FILE}, or choose one with --test-writer."
+        )
+    return writer
+
+
+def _copy_file(source: Path, target: Path) -> None:
+    """Copy one file, and make its folder first."""
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(source, target)
+
+
+def _is_cache(relative: Path) -> bool:
+    """Tell whether a path is inside a cache folder (__pycache__, .pytest_cache and others)."""
+    return any(part in CACHE_DIRS for part in relative.parts)
+
+
+def _files_below(folder: Path) -> set[Path]:
+    """Return the path of every file below a folder, from that folder, without the caches."""
+    if not folder.is_dir():
+        return set()
+    found = (path.relative_to(folder) for path in folder.rglob("*") if path.is_file())
+    return {relative for relative in found if not _is_cache(relative)}
+
+
+def mirror_folder(source: Path, target: Path) -> None:
+    """Make the files below target the same as the files below source, caches left out."""
+    wanted, existing = _files_below(source), _files_below(target)
+    for relative in existing - wanted:
+        (target / relative).unlink()
+    for relative in sorted(wanted):
+        new = (source / relative).read_bytes()
+        old = (target / relative).read_bytes() if relative in existing else None
+        if new != old:
+            _copy_file(source / relative, target / relative)
+
+
+def _without_frontmatter(text: str) -> str:
+    """Return a Markdown text without its `---` frontmatter."""
+    if text.startswith("---"):
+        end = text.find("\n---", 3)
+        if end != -1:
+            return text[end + 4 :].lstrip("\n")
+    return text
+
+
+def _one_level_down(text: str) -> str:
+    """Return a Markdown text with each heading one level lower (`#` becomes `##`)."""
+    return "\n".join(f"#{line}" if line.startswith("#") else line for line in _split_lines(text))
+
+
+def agents_text(root: Path) -> str:
+    """Return AGENTS.md for a test writer that is not Claude: the same rules in one file.
+
+    It holds CLAUDE.md, every rules file and /write-tests of the project, under a short head.
+    Codex, Antigravity and Copilot read AGENTS.md.
+    """
+    head = [
+        "# AGENTS.md",
+        "",
+        "You write the tests of one milestone of this project. This folder holds the spec, the",
+        "design, the plan, the rules, the tool configs and tests/. It holds no src/ and no",
+        ".git, on purpose: the tests come from the spec and the design, not from the code.",
+        "",
+        "- Put every import at the top of a test file.",
+        "- A ModuleNotFoundError for a module that the Owner entry of the milestone names is a",
+        "  valid failure: that code does not exist yet.",
+        "- Write and change files with your file tools, not through the shell.",
+        "- Commit nothing. The runner copies tests/ back to the project and checks the tests.",
+        "",
+        "The rules below are the project's CLAUDE.md, its rules files and its skill /write-tests.",
+    ]
+    parts = ["\n".join(head)]
+    sources = [root / "CLAUDE.md", *sorted((root / ".claude" / "rules").glob("*.md"))]
+    sources.append(root / ".claude" / "skills" / "write-tests" / "SKILL.md")
+    for source in (path for path in sources if path.is_file()):
+        title = source.relative_to(root).as_posix()
+        body = _without_frontmatter(source.read_text(encoding="utf-8-sig")).strip()
+        parts.append(f"## {title}\n\n{_one_level_down(body)}")
+    return "\n\n".join(parts) + "\n"
+
+
+def make_test_folder(root: Path, writer: Writer) -> Path:
+    """Make the folder of a test session outside the project: no src/ and no .git.
+
+    It holds the docs, the scripts that check the tests, the tool configs, tests/ and the files
+    that the writer reads: for Claude its CLAUDE.md, rules, settings and /write-tests, for the
+    others one AGENTS.md. The caller deletes the folder.
+
+    Returns:
+        The path of the new folder.
+    """
+    folder = Path(tempfile.mkdtemp(prefix="sherpa-tests-"))
+    for name in FOLDER_FILES:
+        if (root / name).is_file():
+            _copy_file(root / name, folder / name)
+    mirror_folder(root / "tests", folder / "tests")
+    if writer.name == WRITER_CLAUDE:
+        for name in CLAUDE_FOLDER_FILES:
+            if (root / name).is_file():
+                _copy_file(root / name, folder / name)
+        for name in CLAUDE_FOLDER_DIRS:
+            mirror_folder(root / name, folder / name)
+    else:
+        (folder / "AGENTS.md").write_text(agents_text(root), encoding="utf-8", newline="\n")
+    return folder
+
+
+def copy_back(folder: Path, root: Path) -> None:
+    """Copy tests/ of the folder back to the project, and the plan and the design if they changed.
+
+    Only these files come back: a change to the spec, or to any other file, stays in the folder.
+    """
+    mirror_folder(folder / "tests", root / "tests")
+    for name in COPIED_BACK_DOCS:
+        source, target = folder / name, root / name
+        if source.is_file() and source.read_bytes() != target.read_bytes():
+            _copy_file(source, target)
+
+
+# --- the runner's checks of new tests ------------------------------------------------------------
+
+
+def changed_test_files(root: Path, reference: str) -> list[str]:
+    """Return the files under tests/ that differ from a commit: changed, added or removed.
+
+    Args:
+        root: The repository root.
+        reference: The commit to compare with: the base branch for a test session, HEAD for the
+            review-tests session.
+    """
+    diff = _git(root, "diff", "--name-only", reference, "--", "tests")
+    new = _git(root, "ls-files", "--others", "--exclude-standard", "--", "tests")
+    return sorted({*_output_lines(diff.stdout), *_output_lines(new.stdout)})
+
+
+def _is_test_file(name: str) -> bool:
+    """Tell whether a path is a Python test file that a normal run collects (not tests/live/)."""
+    parts = Path(name).parts
+    return Path(name).name.startswith("test_") and name.endswith(".py") and LIVE_DIR not in parts
+
+
+def owner_modules(block: Sequence[str]) -> list[str]:
+    """Return the dotted modules that the Owner entry of a block names, such as `src.store`."""
+    text = " ".join(block_entry(block, "Owner"))
+    names = (Path(path.rstrip("/.,;:`")) for path in OWNER_PATH.findall(text))
+    return sorted({".".join(name.with_suffix("").parts) for name in names if name.parts})
+
+
+def owned(module: str, owners: Sequence[str]) -> bool:
+    """Tell whether a module is an Owner module, a module in one, or a package that holds one."""
+    return any(
+        module == owner or module.startswith(f"{owner}.") or owner.startswith(f"{module}.")
+        for owner in owners
+    )
+
+
+def read_failures(report: Path) -> list[Failure]:
+    """Return why each test of a JUnit XML report failed or could not run.
+
+    The type of an error comes from the last `E   <Type>: <message>` line of its text, or from
+    the last `<path>:<line>: <Type>` line, where pytest also names the file that raised it.
+    """
+    failures: list[Failure] = []
+    for case in ElementTree.parse(report).getroot().iter("testcase"):
+        for problem in [*case.iter("failure"), *case.iter("error")]:
+            name = "::".join(filter(None, (case.get("classname"), case.get("name"))))
+            failures.append(_failure(name, problem.get("message", ""), problem.text or ""))
+    return failures
+
+
+def _failure(test: str, message: str, text: str) -> Failure:
+    """Build the Failure of one test from the message and the text of its report."""
+    lines = _split_lines(text)
+    fixture = MISSING_FIXTURE.search(f"{message}\n{text}")
+    if fixture is not None:
+        return Failure(test, "FixtureNotFound", f"fixture '{fixture[1]}' not found")
+    raised = [match for match in map(RAISED_AT.match, lines) if match]
+    errors = [match for match in map(EXCEPTION_LINE.match, lines) if match]
+    kind = errors[-1][1] if errors else (raised[-1][2] if raised else "")
+    detail = errors[-1][2] if errors else message
+    if not kind and message.startswith("assert"):
+        kind = VALID_FAILURE
+    where = raised[-1][1].replace("\\", "/") if raised else ""
+    return Failure(test, kind or "Error", detail.strip(), where)
+
+
+def failure_problem(failure: Failure, owners: Sequence[str]) -> str | None:
+    """Return why a failure of a new test is not valid, or None when it is valid.
+
+    Valid: a wrong value (an AssertionError), an error that the code in src/ raised, or a missing
+    module, name or attribute of a module that the Owner entry names. Anything else is a fault
+    of the test: a syntax error, a missing fixture, a NameError or a TypeError in the test, an
+    import of a missing test helper.
+    """
+    if failure.kind == VALID_FAILURE or failure.raised_in.startswith("src/"):
+        return None
+    missing = MISSING_MODULE.search(failure.message)
+    module = next((name for name in missing.groups() if name), "") if missing else ""
+    if failure.kind in IMPORT_FAILURES and module and owned(module, owners):
+        return None
+    return f"{failure.test}: {failure.kind}: {failure.message}"
+
+
+def _tool_problem(command: Sequence[str], cwd: Path, title: str) -> list[str]:
+    """Run a check tool; return its title and output when it fails, or no line when it passes."""
+    done = _run(command, cwd)
+    return [] if done.returncode == 0 else [f"{title} failed:", *_all_output(done)]
+
+
+def lint_problems(folder: Path) -> list[str]:
+    """Run ruff and mypy on tests/ in the folder without the code (a project with ruff.toml).
+
+    mypy finds no module of the code there, so a test that imports the code is not an error.
+    """
+    if not (folder / "ruff.toml").is_file() or not (folder / "tests").is_dir():
+        return []
+    tool = [sys.executable, "-m"]
+    return [
+        *_tool_problem([*tool, "ruff", "check", "tests"], folder, "ruff check tests"),
+        *_tool_problem([*tool, "ruff", "format", "--check", "tests"], folder, "ruff format"),
+        *_tool_problem([*tool, "mypy", "tests", *MYPY_TEST_OPTIONS], folder, "mypy tests"),
+    ]
+
+
+def new_test_problems(root: Path, new: Sequence[str], owners: Sequence[str]) -> list[str]:
+    """Run the new test files with --junitxml; return each failure whose reason is not valid."""
+    if not new:
+        return []
+    with tempfile.TemporaryDirectory() as scratch:
+        report = Path(scratch) / "new-tests.xml"
+        command = [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider"]
+        done = _run([*command, f"--junitxml={report}", *new], root)
+        if not report.is_file():
+            return ["pytest did not run the new tests:", *_all_output(done)[-TAIL_LINES:]]
+        failures = read_failures(report)
+    problems = (failure_problem(failure, owners) for failure in failures)
+    return [problem for problem in problems if problem is not None]
+
+
+def old_test_problems(root: Path, new: Sequence[str]) -> list[str]:
+    """Run every older test file; return the end of the output when one fails."""
+    tests = root / "tests"
+    every = (path.relative_to(root).as_posix() for path in tests.rglob("test_*.py"))
+    old = sorted(name for name in every if _is_test_file(name) and name not in new)
+    if not old:
+        return []
+    done = _run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", *old], root)
+    if done.returncode in {0, PYTEST_NO_TESTS}:
+        return []
+    return [
+        "An older test fails, and every older test must pass:",
+        *_all_output(done)[-TAIL_LINES:],
+    ]
+
+
+def written_tests_problems(check: TestsCheck) -> list[str]:
+    """Return the problems of the tests that a writer session left, after the copy back.
+
+    The runner judges a test session only by these checks, never by the exit code of the
+    writer: ruff and mypy on tests/ in the folder, then in the project each new test file with
+    the reason of each failure, and each older test file, which must pass.
+    """
+    changed = changed_test_files(check.root, check.reference)
+    if check.needs_tests and not changed:
+        return ["The test session wrote no test: tests/ is the same as before."]
+    new = [name for name in changed if _is_test_file(name) and (check.root / name).is_file()]
+    return [
+        *lint_problems(check.folder),
+        *new_test_problems(check.root, new, check.owners),
+        *old_test_problems(check.root, new),
+    ]
+
+
 # --- arguments, environment and git --------------------------------------------------------------
 
 
@@ -947,18 +1551,69 @@ def parse_args(argv: Sequence[str] | None = None) -> Options:
         default=DEFAULT_TIMEOUT_MINUTES,
         help=f"longest time of one claude session (default: {DEFAULT_TIMEOUT_MINUTES})",
     )
+    add_chat_options(parser)
     args = parser.parse_args(argv)
-    if args.retries < 0:
-        parser.error("--retries must be 0 or more.")
-    if args.timeout_minutes < 1:
-        parser.error("--timeout-minutes must be 1 or more.")
+    check_options(parser, args)
     return Options(
         start=args.start,
         end=args.end,
         retries=args.retries,
         resume=args.resume,
         timeout_minutes=args.timeout_minutes,
+        tests_only=milestone_number(parser, args.tests_only),
+        review_only=milestone_number(parser, args.review_only),
+        review_findings=args.review_findings,
+        test_writer=args.test_writer,
     )
+
+
+def check_options(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+    """Refuse options that do not go together; argparse prints the message and exits with 2."""
+    if args.retries < 0:
+        parser.error("--retries must be 0 or more.")
+    if args.timeout_minutes < 1:
+        parser.error("--timeout-minutes must be 1 or more.")
+    one = args.tests_only or args.review_only
+    if one is not None and (args.start is not None or args.end is not None or args.resume):
+        parser.error("--tests-only and --review-only take no --start, --end or --resume.")
+    if args.review_findings and args.tests_only is None:
+        parser.error("--review-findings needs --tests-only.")
+
+
+def add_chat_options(parser: argparse.ArgumentParser) -> None:
+    """Add the options of one step in chat (docs/workflow.md, Execute), and the test writer."""
+    steps = parser.add_mutually_exclusive_group()
+    steps.add_argument(
+        "--tests-only",
+        metavar="M<n>",
+        help="run only the test session of the milestone, in the current branch",
+    )
+    steps.add_argument(
+        "--review-only",
+        metavar="M<n>",
+        help="run only the review of the milestone, in a worktree of HEAD",
+    )
+    parser.add_argument(
+        "--review-findings",
+        action="store_true",
+        help="with --tests-only: repair the findings about tests of the last --review-only",
+    )
+    parser.add_argument(
+        "--test-writer",
+        default="",
+        choices=["", *TEST_WRITERS],
+        help=f"the AI that writes the tests (default: {WRITER_FILE}, else claude)",
+    )
+
+
+def milestone_number(parser: argparse.ArgumentParser, value: str | None) -> int | None:
+    """Return the number of a milestone given as M<n> or <n>, or None when it was not given."""
+    if value is None:
+        return None
+    match = re.fullmatch(r"[Mm]?(\d+)", value.strip())
+    if match is None:
+        parser.error(f"'{value}' is not a milestone such as M3.")
+    return int(match[1])
 
 
 def in_project_env(prefix: str) -> bool:
@@ -992,15 +1647,19 @@ def add_ignore_entries(gitignore: Path) -> bool:
     return True
 
 
-def _run(args: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+def _run(
+    args: Sequence[str], cwd: Path, environment: dict[str, str] | None = None
+) -> subprocess.CompletedProcess[str]:
     """Run a command in the repository and return its result, or stop the run if it cannot start.
 
     The command gets no input, so it cannot take the answer that the user types for a human test.
+    environment None means the environment of the runner.
     """
     try:
         return subprocess.run(
             list(args),
             cwd=cwd,
+            env=environment,
             stdin=subprocess.DEVNULL,
             capture_output=True,
             text=True,
@@ -1205,6 +1864,77 @@ def check_git(paths: Paths, base: str, allow_dirty: bool) -> None:
         )
 
 
+def environment_folders(prefix: Path) -> list[Path]:
+    """Return the folders of a conda environment that `conda activate` puts first on the PATH."""
+    if sys.platform != "win32":
+        return [prefix / "bin"]
+    library = prefix / "Library"
+    return [
+        prefix,
+        library / "mingw-w64" / "bin",
+        library / "usr" / "bin",
+        library / "bin",
+        prefix / "Scripts",
+        prefix / "bin",
+    ]
+
+
+def session_environment() -> dict[str, str]:
+    """Return the environment of each session: the folders of this conda environment come first.
+
+    So a session, and the shells of a test writer, find the Python, the tools and the packages
+    of the project's environment, also when the terminal that started the runner did not
+    activate it.
+    """
+    folders = [str(folder) for folder in environment_folders(Path(sys.prefix))]
+    path = os.pathsep.join([*folders, os.environ.get("PATH", "")])
+    return {**os.environ, "PATH": path}
+
+
+def check_session_python(environment: dict[str, str]) -> None:
+    """Check that `python` on the PATH of a session is the Python of this environment.
+
+    Raises:
+        RunStoppedError: If `python` is not found, or it runs from another environment.
+    """
+    python = shutil.which("python", path=environment["PATH"])
+    found = ""
+    if python is not None:
+        done = _run([python, "-c", "import sys; print(sys.prefix)"], Path.cwd(), environment)
+        found = done.stdout.strip()
+    if not found or Path(found).resolve() != Path(sys.prefix).resolve():
+        raise _error(
+            f"`python` on the PATH of a session runs from '{found or 'nowhere'}', not from the "
+            f"conda env '{ENV_NAME}' ({sys.prefix}). Activate the environment, then run again."
+        )
+
+
+def check_writer(root: Path, writer: Writer, environment: dict[str, str]) -> None:
+    """Send one short prompt to a test writer that is not Claude, before the first milestone.
+
+    A missing sign-in, a missing program or an unknown model stops the run here, not in the
+    first test session. The answer must hold the word "ok": the exit code alone proves nothing.
+
+    Raises:
+        RunStoppedError: If the writer did not answer with "ok".
+    """
+    if writer.name == WRITER_CLAUDE:
+        return
+    row = Row(0, "start check", "", "", "open")
+    command, stdin = writer_command(writer, row, SESSION_TEST, START_CHECK_PROMPT)
+    with tempfile.TemporaryDirectory() as folder:
+        run = _claude_process(
+            Launch(command, Path(folder), stdin, environment), START_CHECK_SECONDS
+        )
+    if "ok" not in " ".join(run.lines).lower():
+        raise RunStoppedError(
+            f"ERROR: the test writer {writer.name} did not answer the start check. "
+            f"Sign in once ({WRITER_SIGN_IN[writer.name]}), check the model in {WRITER_FILE}, "
+            "or choose another writer with --test-writer:",
+            [" ".join(command[:2]), *run.lines[-TAIL_LINES:]],
+        )
+
+
 def check_consistency(root: Path) -> None:
     """Run `python scripts/spec_coverage.py --consistency`: the IDs of the three documents agree.
 
@@ -1397,13 +2127,24 @@ def _output_lines(text: str) -> list[str]:
     return _split_lines(stripped) if stripped else []
 
 
-def _claude_process(command: Sequence[str], root: Path, prompt: str, timeout: float) -> ClaudeRun:
-    """Run claude with the prompt on standard input; a run over `timeout` seconds is cut off."""
+def found_program(command: Sequence[str], environment: dict[str, str]) -> list[str]:
+    """Return the command with the full path of its program, found on the PATH of the session."""
+    program = shutil.which(command[0], path=environment.get("PATH")) or command[0]
+    return [program, *command[1:]]
+
+
+def _claude_process(launch: Launch, timeout: float) -> ClaudeRun:
+    """Run a session with its prompt on standard input; a run over `timeout` seconds is cut off.
+
+    A writer that takes its prompt as an argument gets an empty standard input.
+    """
+    command = found_program(launch.command, launch.environment or {})
     try:
         done = subprocess.run(
-            list(command),
-            cwd=root,
-            input=prompt,
+            command,
+            cwd=launch.folder,
+            env=launch.environment,
+            input=launch.stdin,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
@@ -1419,11 +2160,11 @@ def _claude_process(command: Sequence[str], root: Path, prompt: str, timeout: fl
         )
         lines = [
             *_output_lines(cut_off or ""),
-            f"[runner] claude was stopped after {timeout / 60:.0f} minutes.",
+            f"[runner] the session was stopped after {timeout / 60:.0f} minutes.",
         ]
         return ClaudeRun(lines, TIMEOUT_EXIT_CODE, timed_out=True)
     except OSError as exc:
-        raise _error(f"claude could not run: {exc}") from exc
+        raise _error(f"`{command[0]}` could not run: {exc}") from exc
     return ClaudeRun(_output_lines(done.stdout), done.returncode)
 
 
@@ -1436,30 +2177,37 @@ def log_file_name(row: Row, kind: str, number: int) -> str:
     return f"{stem}.log" if number == 1 else f"{stem}-{number}.log"
 
 
-def run_claude(paths: Paths, row: Row, attempt: Attempt, job: Job) -> ClaudeRun:
-    """Run one try of one session of a milestone in `claude -p` and save its output to its log.
+def write_log(paths: Paths, name: str, lines: Sequence[str]) -> None:
+    """Write the lines of a session to its log in .claude/logs/."""
+    paths.log_dir.mkdir(parents=True, exist_ok=True)
+    (paths.log_dir / name).write_text("".join(f"{line}\n" for line in lines), encoding="utf-8")
+
+
+def run_claude(session: Session, row: Row, attempt: Attempt, job: Job) -> ClaudeRun:
+    """Run one try of one session of a milestone and save its output to its log.
 
     Args:
-        paths: The repository files.
+        session: The run: its files and the environment of the sessions.
         row: The milestone; its model and effort go to claude.
         attempt: Which try this is, whether it resumes earlier work, its time limit, and why the
             earlier try did not count.
-        job: The session: its kind and its prompt.
+        job: The session: its kind, its prompt, its folder and its writer.
 
     Returns:
         The output lines (standard output and error together), the exit code and the log name.
 
     Raises:
-        RunStoppedError: If the claude program cannot be found or started.
+        RunStoppedError: If the program of the session cannot be found or started.
     """
-    paths.log_dir.mkdir(parents=True, exist_ok=True)
     prompt = job.prompt(attempt.resume, attempt.reason)
-    command = session_command(row, job.kind)
-    run = _claude_process(command, paths.root, prompt, attempt.timeout_seconds)
+    if job.writer is None:
+        command, stdin = session_command(row, job.kind), prompt
+    else:
+        command, stdin = writer_command(job.writer, row, job.kind, prompt)
+    launch = Launch(command, job.folder or session.paths.root, stdin, session.environment or None)
+    run = _claude_process(launch, attempt.timeout_seconds)
     log_name = log_file_name(row, job.kind, attempt.number)
-    (paths.log_dir / log_name).write_text(
-        "".join(f"{line}\n" for line in run.lines), encoding="utf-8"
-    )
+    write_log(session.paths, log_name, run.lines)
     return replace(run, log_name=log_name)
 
 
@@ -1518,49 +2266,27 @@ def judge_build(session: Session, running: Running, run: ClaudeRun) -> Verdict:
     return work_verdict(session, running, SESSION_BUILD)
 
 
-def judge_test_session(session: Session, running: Running, run: ClaudeRun) -> Verdict:
-    """Return blocked (its row says so), failed (cut off or a claude error) or done.
+def judge_review(run: ClaudeRun) -> Verdict:
+    """Return done for a review that ended well; failed, with why, if it did not.
 
-    A test session commits nothing: its tests, or the plan that blocks the milestone, stay in the
-    working tree.
-    """
-    if is_blocked(session.paths, running.row):
-        return blocked_verdict(session)
-    if run.timed_out:
-        return Verdict(OUTCOME_FAILED, "the test session ran over the time limit.")
-    if run.exit_code != 0:
-        return Verdict(OUTCOME_FAILED, f"the test session ended with exit code {run.exit_code}.")
-    return Verdict(OUTCOME_DONE, "")
-
-
-def judge_review(root: Path, head: str, run: ClaudeRun) -> Verdict:
-    """Return done for a review that ended well and changed nothing; failed, with why, if not.
-
-    Args:
-        root: The repository root.
-        head: The commit that HEAD pointed to before the review.
-        run: The run of the review session.
+    The review runs in a worktree of its own, so a change that it makes cannot reach the branch.
     """
     reason = None
     if run.timed_out:
         reason = "the review session ran over the time limit."
     elif run.exit_code != 0:
         reason = f"the review session ended with exit code {run.exit_code}."
-    elif git_head(root) != head:
-        reason = "the review session made a commit. A review changes nothing."
-    elif not git_is_clean(root):
-        reason = "the review session changed files: git status is not clean."
     return Verdict(OUTCOME_DONE, "") if reason is None else Verdict(OUTCOME_FAILED, reason)
 
 
-def judge_repair(session: Session, running: Running, run: ClaudeRun) -> Verdict:
-    """Return done when git is clean and the runner's own checks pass after a repair session.
+def judge_repair(session: Session, running: Running, kind: str, run: ClaudeRun) -> Verdict:
+    """Return done when git is clean and the runner's own checks pass after a repair or rebuild.
 
     The output and the exit code of the run do not count. A repair that commits nothing, because
     it rejected every finding, is done.
     """
     del run
-    return work_verdict(session, running, SESSION_REPAIR)
+    return work_verdict(session, running, kind)
 
 
 def judge_try(session: Session, row: Row, job: Job, run: ClaudeRun) -> Verdict:
@@ -1575,10 +2301,10 @@ def judge_try(session: Session, row: Row, job: Job, run: ClaudeRun) -> Verdict:
     return job.judge(run)
 
 
-def write_tests_job(session: Session, running: Running) -> Job:
-    """Return the test session of the milestone."""
-    prompt = partial(build_test_prompt, running.row)
-    return Job(SESSION_TEST, prompt, partial(judge_test_session, session, running))
+def claude_try(session: Session, row: Row, job: Job, attempt: Attempt) -> tuple[ClaudeRun, Verdict]:
+    """Run one try of a session in the project, and judge it."""
+    run = run_claude(session, row, attempt, job)
+    return run, judge_try(session, row, job, run)
 
 
 def build_job(session: Session, running: Running) -> Job:
@@ -1587,20 +2313,103 @@ def build_job(session: Session, running: Running) -> Job:
     return Job(SESSION_BUILD, prompt, partial(judge_build, session, running))
 
 
-def review_job(session: Session, running: Running, kind: str) -> Job:
-    """Return a review session of the milestone (kind: SESSION_REVIEW or SESSION_REVIEW_LAST).
-
-    The judge compares HEAD with the commit that HEAD points to now, before the review.
-    """
-    root = session.paths.root
-    prompt = partial(review_prompt, running.row, session.base)
-    return Job(kind, prompt, partial(judge_review, root, git_head(root)))
+def rebuild_job(session: Session, running: Running) -> Job:
+    """Return the build session that makes the tests pass after the review-tests session."""
+    prompt = partial(rebuild_prompt, running.row)
+    return Job(SESSION_REBUILD, prompt, partial(judge_repair, session, running, SESSION_REBUILD))
 
 
 def repair_job(session: Session, running: Running, findings: Sequence[str]) -> Job:
-    """Return the repair session of the milestone, for the FINDING lines of its review."""
-    prompt = partial(repair_prompt, running.row, findings)
-    return Job(SESSION_REPAIR, prompt, partial(judge_repair, session, running))
+    """Return the repair session of the milestone, for the FINDING lines about the code."""
+    answer = [f"The user's decision on an earlier review: {' '.join(running.decision)}"]
+    prompt = partial(repair_prompt, running.row, [*(answer if running.decision else []), *findings])
+    return Job(SESSION_REPAIR, prompt, partial(judge_repair, session, running, SESSION_REPAIR))
+
+
+# --- the test session ----------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class WriterTask:
+    """One session of the test writer: its kind, its prompt, and how its tests are checked.
+
+    prompt takes the resume flag and the reason of the earlier try. reference is the commit that
+    the new tests are compared with. blocks tells whether the session may block the milestone.
+    folder is the folder of the writer, once writer_try made it.
+    """
+
+    kind: str
+    prompt: Callable[[bool, str], str]
+    reference: str
+    blocks: bool
+    folder: Path = field(default_factory=Path)
+
+
+def writer_job(kind: str, prompt: Callable[[bool, str], str], folder: Path, writer: Writer) -> Job:
+    """Return a session of the test writer in its folder.
+
+    The runner judges it by its own checks of the tests (writer_try), so the judge of the job
+    only looks at the time limit and the exit code, and nothing reads that verdict.
+    """
+    return Job(kind, prompt, judge_review, folder, writer)
+
+
+def merged_run(first: ClaudeRun, second: ClaudeRun) -> ClaudeRun:
+    """Return one run with the lines of two sessions; the second one gives the exit and the log."""
+    return replace(second, lines=[*first.lines, *second.lines])
+
+
+def writer_try(
+    session: Session, running: Running, task: WriterTask, attempt: Attempt
+) -> tuple[ClaudeRun, Verdict]:
+    """Run one try of a test writer's session in a folder without the code, and judge it.
+
+    The folder exists for this try only. The exit code of the writer never counts.
+    """
+    folder = make_test_folder(session.paths.root, session.writer)
+    try:
+        return writer_rounds(session, running, replace(task, folder=folder), attempt)
+    finally:
+        shutil.rmtree(folder, ignore_errors=True)
+
+
+def writer_rounds(
+    session: Session, running: Running, task: WriterTask, attempt: Attempt
+) -> tuple[ClaudeRun, Verdict]:
+    """Run the writer in its folder, copy tests/ back, check them, and give one round of repair.
+
+    Returns:
+        The run (the lines of both rounds), and the verdict: blocked, done, or failed with the
+        problems that are left.
+    """
+    root, row = session.paths.root, running.row
+    job = writer_job(task.kind, task.prompt, task.folder, session.writer)
+    run = run_claude(session, row, attempt, job)
+    copy_back(task.folder, root)
+    if task.blocks and is_blocked(session.paths, row):
+        return run, blocked_verdict(session)
+    owners = tuple(owner_modules(running.block))
+    check = TestsCheck(root, task.folder, task.reference, owners, task.blocks)
+    problems = written_tests_problems(check)
+    if problems and not run.timed_out:
+        fix = writer_job(
+            SESSION_TEST_FIX, partial(fix_tests_prompt, row, problems), task.folder, session.writer
+        )
+        run = merged_run(run, run_claude(session, row, replace(attempt, resume=False), fix))
+        copy_back(task.folder, root)
+        problems = written_tests_problems(check)
+    return run, writer_verdict(task.kind, run, problems)
+
+
+def writer_verdict(kind: str, run: ClaudeRun, problems: Sequence[str]) -> Verdict:
+    """Return the verdict of a writer's session: the time limit, then the problems that are left."""
+    if run.timed_out:
+        return Verdict(OUTCOME_FAILED, f"the {kind} session ran over the time limit.")
+    if problems:
+        return Verdict(
+            OUTCOME_FAILED, "the runner's checks of the tests failed: " + " ".join(problems)
+        )
+    return Verdict(OUTCOME_DONE, "")
 
 
 # --- the branch of a milestone -------------------------------------------------------------------
@@ -1631,6 +2440,69 @@ def restore_partial_work(root: Path, base: str, row: Row) -> None:
     _git_must(root, "reset", "--mixed", base)
 
 
+def plan_without_milestone(lines: Sequence[str], milestone_id: int) -> list[str]:
+    """Return the plan without the milestone's row and its `### M<n>` block, as a build commit."""
+    kept: list[str] = []
+    inside = False
+    for line in lines:
+        if re.match(r"^#{1,3} ", line):
+            inside = re.match(rf"^### M{milestone_id}\b", line) is not None
+        row = parse_row(line)
+        if not inside and (row is None or row.id != milestone_id):
+            kept.append(line)
+    return kept
+
+
+def rebase_built(root: Path, base: str, row: Row) -> None:
+    """Rebase a built milestone branch on the base branch, after the user approved its block.
+
+    The base branch has the commit `M<n>: blocked` and the approval. They change the row and the
+    block of the milestone, which the build commit deleted, so docs/plan.md conflicts. The
+    runner takes the plan of the base branch without the milestone, as the build commit means.
+
+    Raises:
+        RunStoppedError: If another file conflicts. The rebase is aborted first.
+    """
+    branch = branch_name(row.id)
+    done = _git(root, "rebase", base)
+    while done.returncode != 0:
+        conflicts = _output_lines(_git(root, "diff", "--name-only", "--diff-filter=U").stdout)
+        if conflicts != [PLAN_PATH]:
+            _git(root, "rebase", "--abort")
+            details = [f"Rebase it by hand: git rebase {base} {branch}", *_all_output(done)]
+            raise RunStoppedError(
+                f"ERROR: M{row.id} in {branch} does not apply on {base}.", details
+            )
+        ours = _git(root, "show", f":2:{PLAN_PATH}").stdout
+        plan = plan_without_milestone(_split_lines(ours), row.id)
+        (root / PLAN_PATH).write_text("\n".join(plan), encoding="utf-8", newline="\n")
+        _git_must(root, "add", PLAN_PATH)
+        done = _git(root, "-c", "core.editor=true", "rebase", "--continue")
+
+
+def add_worktree(root: Path) -> Path:
+    """Add a worktree of HEAD outside the project, for one review. The caller removes it."""
+    folder = Path(tempfile.mkdtemp(prefix="sherpa-review-")) / "tree"
+    _git_must(root, "worktree", "add", "--detach", str(folder), "HEAD")
+    return folder
+
+
+def remove_worktree(root: Path, folder: Path, head: str) -> list[str]:
+    """Remove a review worktree and its folder.
+
+    Returns:
+        One warning line when the review changed a file or made a commit there, else no line.
+    """
+    changed = bool(_git(folder, "status", "--porcelain").stdout.strip())
+    moved = git_head(folder) != head
+    _git(root, "worktree", "remove", "--force", str(folder))
+    shutil.rmtree(folder.parent, ignore_errors=True)
+    _git(root, "worktree", "prune")
+    if not changed and not moved:
+        return []
+    return ["[runner] WARNING: the review changed its worktree. The runner deleted the changes."]
+
+
 def leftover_entry(session: Session, row: Row) -> str:
     """Check out the milestone branch that an earlier run left, and return how to continue.
 
@@ -1648,6 +2520,8 @@ def leftover_entry(session: Session, row: Row) -> str:
         restore_partial_work(root, base, row)
         return ENTRY_RESUME
     if not plan_has_row(_read_lines(session.paths.plan), row.id):
+        if row.status == STATUS_APPROVED and commits_ahead(root, branch, base) > 0:
+            rebase_built(root, base, row)
         return ENTRY_BUILT
     if commits_ahead(root, base, branch) > 0:
         return ENTRY_RESUME
@@ -1803,6 +2677,89 @@ def block_milestone(session: Session, row: Row) -> NoReturn:
     raise waiting_for_approval(_read_lines(paths.plan), row)
 
 
+def finding_cells(finding: str) -> list[str]:
+    """Return the cells of a FINDING line: severity, file and line, rule, remedy."""
+    text = re.sub(r"^\W*FINDING:", "", finding.strip())
+    return [cell.strip(" *`") for cell in text.split("|")]
+
+
+def finding_file(finding: str) -> str:
+    """Return the file that a FINDING line names, with forward slashes."""
+    cells = finding_cells(finding)
+    return cells[FILE_CELL].split(":")[0].replace("\\", "/") if len(cells) > FILE_CELL else ""
+
+
+def is_test_finding(finding: str) -> bool:
+    """Tell whether the fix of a finding goes into tests/: then a test session repairs it."""
+    return finding_file(finding).startswith("tests/")
+
+
+def blocks_merge(finding: str) -> bool:
+    """Tell whether a finding of the last review blocks the merge: high, or on a requirement."""
+    cells = finding_cells(finding)
+    severity = cells[0].lower() if cells else ""
+    rule = cells[RULE_CELL] if len(cells) > RULE_CELL else ""
+    return severity == SEVERITY_HIGH or REQUIREMENT_RULE.match(rule) is not None
+
+
+def requirement_note(finding: str) -> str:
+    """Return " (requirement X in docs/spec.md)" when the rule of a finding is a requirement ID."""
+    cells = finding_cells(finding)
+    match = REQUIREMENT_RULE.match(cells[RULE_CELL]) if len(cells) > RULE_CELL else None
+    return f" (requirement {match[0]} in docs/{SPEC_FILE})" if match else ""
+
+
+def review_block_entry(findings: Sequence[str]) -> list[str]:
+    """Return the Blocked entry of a milestone that the last review stopped, in the template."""
+    return [
+        "- **Blocked:** The last review found a fault that blocks the merge "
+        "(docs/workflow.md, Execute, step 9).",
+        *(f"  - {finding}{requirement_note(finding)}" for finding in findings),
+        "  - The code and the tests are kept in the milestone branch. To continue, approve one "
+        "of these:",
+        "    1. Merge it as it is: the finding is wrong, or it can wait.",
+        "    2. Repair it in this way: <your instruction>.",
+    ]
+
+
+def plan_with_block(lines: Sequence[str], milestone_id: int, entry: Sequence[str]) -> list[str]:
+    """Return the plan with the milestone's Status blocked and the entry at the end of its block."""
+    out = [
+        re.sub(r"\|[^|]*\|\s*$", f"| {STATUS_BLOCKED} |", line)
+        if (row := parse_row(line)) is not None and row.id == milestone_id
+        else line
+        for line in lines
+    ]
+    heading = next(i for i, line in enumerate(out) if re.match(rf"^### M{milestone_id}\b", line))
+    end = next((i for i in range(heading + 1, len(out)) if re.match(r"^#{1,3} ", out[i])), len(out))
+    while end > heading + 1 and not out[end - 1].strip():
+        end -= 1
+    return [*out[:end], *entry, *out[end:]]
+
+
+def block_after_review(session: Session, running: Running) -> NoReturn:
+    """Block a milestone that the last review stopped, then stop the run with its question.
+
+    The milestone branch keeps the build and its repairs, committed. On the base branch the
+    runner sets the Status of the row to blocked, adds the Blocked entry with the findings that
+    block the merge, commits `M<n>: blocked` through the hook, and pushes.
+
+    Raises:
+        RunStoppedError: Always. It carries the question, or how to finish a failed commit or push.
+    """
+    paths, root, row = session.paths, session.paths.root, running.row
+    _git_must(root, "checkout", session.base)
+    entry = review_block_entry(running.blocking)
+    plan = plan_with_block(_read_lines(paths.plan), row.id, entry)
+    paths.plan.write_text("\n".join(plan), encoding="utf-8", newline="\n")
+    _git_must(root, "add", PLAN_PATH)
+    for step in (("commit", "-m", f"M{row.id}: blocked"), ("push",)):
+        done = _git(root, *step)
+        if done.returncode != 0:
+            raise blocked_plan_refused(session.base, row, step[0], done)
+    raise waiting_for_approval(_read_lines(paths.plan), row)
+
+
 # --- running a milestone -------------------------------------------------------------------------
 
 
@@ -1879,8 +2836,23 @@ def prepare_milestone(session: Session, row: Row) -> None:
         raise _error(problem)
 
 
+def review_decision(session: Session, row: Row) -> tuple[str, ...]:
+    """Return the Approval entry of a milestone that the user approved after a review blocked it.
+
+    No lines for any other milestone: then the findings of the last review can block it.
+    """
+    if row.status != STATUS_APPROVED:
+        return ()
+    block = milestone_block(base_plan_lines(session.paths.root, session.base), row.id)
+    stopped_by_review = any("FINDING:" in line for line in block_entry(block, "Blocked"))
+    return tuple(block_entry(block, "Approval")) if stopped_by_review else ()
+
+
 def run_attempts(
-    session: Session, running: Running, job: Job, resume: bool = False
+    session: Session,
+    running: Running,
+    try_once: Callable[[Attempt], tuple[ClaudeRun, Verdict]],
+    resume: bool = False,
 ) -> tuple[ClaudeRun, Verdict]:
     """Run one session of the milestone, with the live table, until it is done or blocked.
 
@@ -1888,32 +2860,42 @@ def run_attempts(
     the new try gets the reason of the verdict. The table shows a retry in the Result column of
     the running row.
     """
-    row = running.row
     number, reason = 1, ""
     running.attempt = number
     while True:
         attempt = Attempt(number, resume, session.options.timeout_minutes * 60, reason)
         with LiveTable(session.console, lambda: current_table(session)):
-            run = run_claude(session.paths, row, attempt, job)
-        verdict = judge_try(session, row, job, run)
+            run, verdict = try_once(attempt)
         if verdict.outcome != OUTCOME_FAILED or number > session.options.retries:
             return run, verdict
         number, resume, reason = number + 1, True, verdict.reason
         running.attempt = number
 
 
+def run_claude_session(
+    session: Session, running: Running, job: Job, resume: bool = False
+) -> tuple[ClaudeRun, Verdict]:
+    """Run a claude session of the milestone in the project, with its retries."""
+    return run_attempts(session, running, partial(claude_try, session, running.row, job), resume)
+
+
 def run_test_session(session: Session, running: Running, resume: bool) -> tuple[ClaudeRun, Verdict]:
     """Read the milestone's block, run the test session, then save it with the hashes of tests/.
 
-    The old hashes file is deleted first, so the file exists only after a test session finished.
+    The test writer works in a folder without the code (writer_try). The old hashes file is
+    deleted first, so the file exists only after a test session finished.
     """
     paths, row = session.paths, running.row
-    block = milestone_block(_read_lines(paths.plan), row.id)
+    running.block = milestone_block(_read_lines(paths.plan), row.id)
     paths.tests_file(row.id).unlink(missing_ok=True)
-    run, verdict = run_attempts(session, running, write_tests_job(session, running), resume)
+    prompt = partial(build_test_prompt, row, writer=session.writer.name)
+    task = WriterTask(SESSION_TEST, prompt, session.base, blocks=True)
+    run, verdict = run_attempts(
+        session, running, partial(writer_try, session, running, task), resume
+    )
     running.decisions += len(decision_lines(run.lines))
     if verdict.outcome == OUTCOME_DONE:
-        running.saved = SavedTests(block, snapshot_tests(paths.root))
+        running.saved = SavedTests(running.block, snapshot_tests(paths.root))
         save_tests(paths.tests_file(row.id), running.saved)
     return run, verdict
 
@@ -1940,7 +2922,7 @@ def run_sessions(session: Session, running: Running, entry: str) -> tuple[Claude
 
     Args:
         session: The run.
-        running: The milestone. Its `saved` and `decisions` are filled in.
+        running: The milestone. Its `saved`, `block` and `decisions` are filled in.
         entry: ENTRY_FRESH runs both sessions. ENTRY_RESUME skips the test session when the
             hashes file of the milestone exists. ENTRY_BUILT runs no session: the build commit
             exists, and only the runner's own checks judge it.
@@ -1951,6 +2933,8 @@ def run_sessions(session: Session, running: Running, entry: str) -> tuple[Claude
     paths, row = session.paths, running.row
     resume = entry != ENTRY_FRESH
     running.saved = load_tests(paths.tests_file(row.id)) if resume else None
+    if running.saved is not None:
+        running.block = list(running.saved.block)
     if entry == ENTRY_BUILT:
         return ClaudeRun([], 0), built_verdict(session, running)
     build_resumes = running.saved is not None
@@ -1958,32 +2942,100 @@ def run_sessions(session: Session, running: Running, entry: str) -> tuple[Claude
         run, verdict = run_test_session(session, running, resume)
         if verdict.outcome != OUTCOME_DONE:
             return run, verdict
-    run, verdict = run_attempts(session, running, build_job(session, running), build_resumes)
+    run, verdict = run_claude_session(session, running, build_job(session, running), build_resumes)
     running.decisions += len(decision_lines(run.lines))
+    return run, verdict
+
+
+def review_try(
+    session: Session, running: Running, kind: str, attempt: Attempt
+) -> tuple[ClaudeRun, Verdict]:
+    """Run one try of a review in a worktree of HEAD, outside the project, and judge it.
+
+    The runner deletes the worktree after the review, so a change that the review makes cannot
+    reach the branch. Such a change only adds a warning line to the log.
+    """
+    root = session.paths.root
+    head = git_head(root)
+    folder = add_worktree(root)
+    job = Job(kind, partial(review_prompt, running.row, session.base), judge_review, folder)
+    try:
+        run = run_claude(session, running.row, attempt, job)
+    finally:
+        warning = remove_worktree(root, folder, head)
+    if warning:
+        run = replace(run, lines=[*run.lines, *warning])
+        write_log(session.paths, run.log_name, run.lines)
+    in_chat = session.options.review_only is not None
+    return run, judge_review(run) if in_chat else judge_try(session, running.row, job, run)
+
+
+def run_review(session: Session, running: Running, kind: str) -> tuple[ClaudeRun, Verdict]:
+    """Run a review of the milestone (SESSION_REVIEW or SESSION_REVIEW_LAST), with its retries."""
+    return run_attempts(session, running, partial(review_try, session, running, kind))
+
+
+def repair_tests(
+    session: Session, running: Running, findings: Sequence[str]
+) -> tuple[ClaudeRun, Verdict]:
+    """Send the review findings about the tests to a test session; if it changed a test, rebuild.
+
+    The test session runs in the folder of the test writer and gets only these findings. When it
+    changed tests/, a build session makes the tests pass and commits `M<n>: test repairs`.
+    """
+    root, row = session.paths.root, running.row
+    prompt = partial(review_tests_prompt, row, findings)
+    task = WriterTask(SESSION_REVIEW_TESTS, prompt, "HEAD", blocks=False)
+    run, verdict = run_attempts(session, running, partial(writer_try, session, running, task))
+    running.decisions += len(decision_lines(run.lines))
+    if verdict.outcome != OUTCOME_DONE or not changed_test_files(root, "HEAD"):
+        return run, verdict
+    running.saved = SavedTests(running.block, snapshot_tests(root))
+    save_tests(session.paths.tests_file(row.id), running.saved)
+    return run_claude_session(session, running, rebuild_job(session, running))
+
+
+def repair_findings(
+    session: Session, running: Running, findings: Sequence[str]
+) -> tuple[ClaudeRun, Verdict]:
+    """Route each finding by the file of its fix: tests/ to a test session, the rest to a repair."""
+    test_findings = [finding for finding in findings if is_test_finding(finding)]
+    code_findings = [finding for finding in findings if not is_test_finding(finding)]
+    run, verdict = ClaudeRun([], 0), Verdict(OUTCOME_DONE, "")
+    if test_findings:
+        run, verdict = repair_tests(session, running, test_findings)
+    if verdict.outcome == OUTCOME_DONE and code_findings:
+        job = repair_job(session, running, code_findings)
+        run, verdict = run_claude_session(session, running, job)
     return run, verdict
 
 
 def review_milestone(session: Session, running: Running) -> tuple[ClaudeRun, Verdict]:
     """Review the diff of the milestone branch; with findings, repair them and review once more.
 
-    The findings of the last review stay: `running.findings` counts them, and the milestone goes
-    on. A milestone gets at most two reviews.
+    A finding about tests/ goes to a test session, any other finding to the repair session. After
+    the last review, a finding blocks the milestone when it is high or names a requirement,
+    unless the user approved the milestone after an earlier review blocked it. The other
+    findings stay: `running.findings` counts them. A milestone gets at most two reviews.
 
     Returns:
-        The run of the last session, and its verdict.
+        The run of the last session, and its verdict: done, failed, or blocked.
     """
-    first = review_job(session, running, SESSION_REVIEW)
-    run, verdict = run_attempts(session, running, first)
+    run, verdict = run_review(session, running, SESSION_REVIEW)
     findings = finding_lines(run.lines)
     if verdict.outcome != OUTCOME_DONE or not findings:
         return run, verdict
-    run, verdict = run_attempts(session, running, repair_job(session, running, findings))
+    run, verdict = repair_findings(session, running, findings)
     if verdict.outcome != OUTCOME_DONE:
         return run, verdict
-    last = review_job(session, running, SESSION_REVIEW_LAST)
-    run, verdict = run_attempts(session, running, last)
-    if verdict.outcome == OUTCOME_DONE:
-        running.findings = len(finding_lines(run.lines))
+    run, verdict = run_review(session, running, SESSION_REVIEW_LAST)
+    if verdict.outcome != OUTCOME_DONE:
+        return run, verdict
+    last = finding_lines(run.lines)
+    running.findings = len(last)
+    running.blocking = [finding for finding in last if blocks_merge(finding)]
+    if running.blocking and not running.decision:
+        return run, Verdict(OUTCOME_BLOCKED, "the last review found a fault that blocks the merge.")
     return run, verdict
 
 
@@ -2054,7 +3106,7 @@ def run_milestone(session: Session, row: Row) -> None:
         RunStoppedError: If the milestone is blocked or did not finish, if the merge or the push
             failed, or if the user did not confirm its human test.
     """
-    running = Running(row, Stopwatch())
+    running = Running(row, Stopwatch(), decision=review_decision(session, row))
     session.state.running = running
     try:
         run, verdict = run_stages(session, running)
@@ -2062,10 +3114,22 @@ def run_milestone(session: Session, row: Row) -> None:
         close_milestone(session, running, OUTCOME_FAILED)
         raise
     close_milestone(session, running, verdict.outcome)
+    finish_milestone(session, running, run, verdict)
+
+
+def finish_milestone(session: Session, running: Running, run: ClaudeRun, verdict: Verdict) -> None:
+    """Block, stop, or ask the human test, by the verdict of the milestone.
+
+    Raises:
+        RunStoppedError: If the milestone is blocked or did not finish, or the user did not
+            confirm its human test.
+    """
+    if verdict.outcome == OUTCOME_BLOCKED and running.blocking:
+        block_after_review(session, running)
     if verdict.outcome == OUTCOME_BLOCKED:
-        block_milestone(session, row)
+        block_milestone(session, running.row)
     if verdict.outcome != OUTCOME_DONE:
-        stop_for(row, verdict, run)
+        stop_for(running.row, verdict, run)
     ask_human_test(session, running)
 
 
@@ -2136,8 +3200,12 @@ def open_session(options: Options, console: Console, paths: Paths, state: RunSta
     first, last = resolve_range(rows, options.start, options.end)
     check_range(first, last)
     preflight(paths, base, options.resume)
+    environment = session_environment()
+    check_session_python(environment)
+    writer = load_writer(paths.root, options.test_writer)
+    check_writer(paths.root, writer, environment)
     state.total = sum(1 for row in rows_in_range(rows, first, last) if row.status != "done")
-    return Session(paths, console, state, first, last, options, base)
+    return Session(paths, console, state, first, last, options, base, writer, environment)
 
 
 def run_all(options: Options, console: Console, paths: Paths, state: RunState) -> None:
@@ -2180,20 +3248,165 @@ def run_guarded(options: Options, console: Console, paths: Paths, state: RunStat
     return 0
 
 
+# --- one step in chat ----------------------------------------------------------------------------
+
+
+def chat_base(root: Path) -> str:
+    """Return the base branch of a chat step: the one git records for the branch, else main."""
+    current = git_branch(root)
+    recorded = _git(root, "config", "--get", f"branch.{current}.base").stdout.strip()
+    return recorded or "main"
+
+
+def chat_lines(root: Path, plan: Path, base: str, number: int) -> list[str]:
+    """Return the plan that has the milestone: the working tree, or else the base branch.
+
+    In chat, the build commit deletes the milestone from the plan before the review.
+
+    Raises:
+        RunStoppedError: If neither plan has a row for the milestone.
+    """
+    lines = _read_lines(plan)
+    if plan_row(lines, number) is not None:
+        return lines
+    done = _git(root, "show", f"{base}:{PLAN_PATH}")
+    lines = _split_lines(done.stdout) if done.returncode == 0 else []
+    if plan_row(lines, number) is None:
+        raise _error(f"{PLAN_PATH} has no row M{number}, also not on the branch {base}.")
+    return lines
+
+
+def chat_session(options: Options, console: Console, paths: Paths) -> Session:
+    """Check the environment and return the session of one chat step."""
+    check_tools(paths)
+    environment = session_environment()
+    check_session_python(environment)
+    writer = load_writer(paths.root, options.test_writer)
+    state = RunState(total=1, stopwatch=Stopwatch())
+    base = chat_base(paths.root)
+    return Session(paths, console, state, 0, 0, options, base, writer, environment)
+
+
+def chat_running(session: Session, number: int) -> Running:
+    """Return the milestone of a chat step, with its row and its block."""
+    lines = chat_lines(session.paths.root, session.paths.plan, session.base, number)
+    row = plan_row(lines, number) or Row(number, "", "", "", "open")
+    problem = row_problem(row)
+    if problem is not None:
+        raise _error(problem)
+    return Running(row, Stopwatch(), block=milestone_block(lines, number))
+
+
+def last_review_findings(paths: Paths, number: int) -> list[str]:
+    """Return the findings about tests of the last --review-only of the milestone, from its log."""
+    log = paths.log_dir / f"M{number}-{SESSION_REVIEW}.log"
+    lines = _read_lines(log) if log.is_file() else []
+    return [finding for finding in finding_lines(lines) if is_test_finding(finding)]
+
+
+def chat_task(session: Session, running: Running) -> WriterTask | None:
+    """Return the writer's session of --tests-only, or None when the review left nothing to do.
+
+    With --review-findings it repairs the findings about tests of the last --review-only.
+    """
+    row = running.row
+    if session.options.review_findings:
+        findings = last_review_findings(session.paths, row.id)
+        if not findings:
+            return None
+        prompt = partial(review_tests_prompt, row, findings)
+        return WriterTask(SESSION_REVIEW_TESTS, prompt, "HEAD", blocks=False)
+    check_writer(session.paths.root, session.writer, session.environment)
+    prompt = partial(build_test_prompt, row, writer=session.writer.name)
+    return WriterTask(SESSION_TEST, prompt, "HEAD", blocks=True)
+
+
+def tests_only(session: Session, number: int) -> int:
+    """Run the test session of one milestone for a chat step, and print its result.
+
+    The session runs in the folder of the test writer, with the runner's checks and one round of
+    repair, as in an unattended run. Nothing is committed.
+
+    Returns:
+        0 when the tests are written and pass the runner's checks, 1 otherwise.
+    """
+    console, running = session.console, chat_running(session, number)
+    task = chat_task(session, running)
+    if task is None:
+        console.say(f"The last review of M{number} has no finding about tests.", "green")
+        return 0
+    run, verdict = run_attempts(session, running, partial(writer_try, session, running, task))
+    return tests_result(console, number, run, verdict)
+
+
+def tests_result(console: Console, number: int, run: ClaudeRun, verdict: Verdict) -> int:
+    """Print the end of the report and the verdict of --tests-only. Return the exit code."""
+    for line in run.lines[-TAIL_LINES:]:
+        console.say(line)
+    if verdict.outcome == OUTCOME_BLOCKED:
+        console.say(f"M{number} is blocked: read its Blocked entry in {PLAN_PATH}.", "yellow")
+        return 1
+    if verdict.outcome != OUTCOME_DONE:
+        console.say(f"M{number}: {verdict.reason}", "red")
+        return 1
+    console.say(f"The tests of M{number} are written and pass the runner's checks.", "green")
+    return 0
+
+
+def review_only(session: Session, number: int) -> int:
+    """Run the review of one milestone for a chat step, in a worktree of HEAD, and print it.
+
+    Returns:
+        0 when the review ran (with or without findings), 1 when it did not.
+    """
+    console, running = session.console, chat_running(session, number)
+    run, verdict = run_review(session, running, SESSION_REVIEW)
+    if verdict.outcome != OUTCOME_DONE:
+        console.say(f"The review of M{number} did not run: {verdict.reason}", "red")
+        return 1
+    findings = finding_lines(run.lines)
+    for finding in findings or ["NO FINDINGS"]:
+        console.say(finding)
+    if any(is_test_finding(finding) for finding in findings):
+        command = f"python scripts/milestones-runner.py --tests-only M{number} --review-findings"
+        console.say(f"Findings about tests go to a test session: {command}", "yellow")
+    return 0
+
+
+def run_chat_step(
+    options: Options, console: Console, paths: Paths, step: Callable[[Session], int]
+) -> int:
+    """Run --tests-only or --review-only; print a stop instead of a traceback. Return the code."""
+    try:
+        return step(chat_session(options, console, paths))
+    except RunStoppedError as stop:
+        console.say(stop.message, stop.color)
+        for line in stop.details:
+            console.say(line)
+        return 1
+
+
 def main(argv: Sequence[str] | None = None) -> int:
-    """Clear the screen, then run the milestones with the live table of the run.
+    """Run one chat step, or clear the screen and run the milestones with the live table.
 
     Args:
         argv: The command-line arguments; None means sys.argv.
 
     Returns:
-        0 when the range is done, 1 when a milestone, a human test or the live checks stopped the
-        run, 130 after Ctrl+C.
+        0 when the range (or the chat step) is done, 1 when a milestone, a human test or the live
+        checks stopped the run, 130 after Ctrl+C.
     """
     options = parse_args(argv)
     console = start_console()
-    console.clear_screen()
     paths = Paths(Path(__file__).resolve().parent.parent)
+    if options.tests_only is not None:
+        return run_chat_step(
+            options, console, paths, partial(tests_only, number=options.tests_only)
+        )
+    if options.review_only is not None:
+        step = partial(review_only, number=options.review_only)
+        return run_chat_step(options, console, paths, step)
+    console.clear_screen()
     state = RunState(total=0, stopwatch=Stopwatch())
     return run_guarded(options, console, paths, state)
 

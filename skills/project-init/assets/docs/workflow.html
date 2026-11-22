@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="The sherpa spec-driven development workflow: who does each step, what it produces, and what enforces it.">
 <!-- The SHA-256 of docs/workflow.md when this page was last made to agree with it. -->
-<meta name="workflow-md-sha256" content="fbad16b7b062c557dbcea84bf553fbe792983e11f9fdb320d64cf992e1dbe72e">
+<meta name="workflow-md-sha256" content="60b30a6c0c1fd0f73605cc1dbdad71085073de270636ea0162fab9aebd686db0">
 <title>Sherpa SDD Workflow</title>
 <style>
   /* Layout: a slim /sherpa bar, then two rows of four cards that snake. Top row left to right (setup
@@ -401,7 +401,7 @@
             'New or changed behavior: `/write-spec`',
             'A change of architecture, data, interfaces or libraries, with no change of behavior: `/write-design`',
             'Milestones, or a fix of behavior that the spec already states: `/write-plan`',
-            'To build: the runner command (`python scripts/milestones-runner.py`), or one milestone in chat',
+            'To build: the runner command (`python scripts/milestones-runner.py`), or one milestone in chat, with `--tests-only` and `--review-only` of the runner',
             'A release: the command `python scripts/release.py M&lt;n&gt;`'
           ])],
         ['Order',
@@ -431,7 +431,7 @@
       actors: [['script', 'project-init builds it'], ['human', 'reviews the Project section']],
       sections: [
         ['What happens',
-          p('The `project-init` skill asks for a name, purpose, modules and visibility. Then it runs `init_project.py`, which does these steps:'),
+          p('The `project-init` skill asks for a name, purpose, modules, visibility and the AI that writes the tests. Then it runs `init_project.py`, which does these steps:'),
           ol([
             'Checks the folder, git, gh and conda.',
             'Runs `git init`.',
@@ -451,7 +451,7 @@
             '`.githooks/pre-commit`',
             '`scripts/`: the checks, the runner, the live checks and the release script',
             '`docs/`: the workflow and this page, spec, design, plan, unapproved ideas, releases',
-            'Tool configs'
+            'Tool configs, and `config/test-writer.json`: the test writer with its model and effort'
           ])],
         ['Enforced by',
           p('`settings.json` denies these actions:'),
@@ -461,14 +461,16 @@
             'Hard reset',
             '`git clean`',
             '`git restore`',
-            'Changes to `core.hooksPath`'
+            'Changes to `core.hooksPath`',
+            'Files written with `Set-Content`, `Out-File` or `Add-Content`, which can write in another encoding than UTF-8'
           ]),
           p('These actions ask for permission first:'),
           ul([
             'Edits to `CLAUDE.md`, `spec.md`, `workflow.md`, the settings, the hooks, the check scripts and the tool configs',
             'Installs',
             'Recursive deletes'
-          ])]
+          ]),
+          p('A milestone in chat needs no prompt: `git switch -c milestone/*`, `git switch main`, `git merge --ff-only milestone/*`, `git branch -d milestone/*`, and `--tests-only` and `--review-only` of the runner are allowed.')]
       ]
     },
     spec: {
@@ -580,17 +582,24 @@
     tests: {
       eyebrow: 'Per milestone · test session',
       title: 'Tests first',
-      actors: [['script', 'runner makes the branch and starts the session'], ['ai', 'writes and runs the tests']],
+      actors: [['script', 'runner makes the folder and checks the tests'], ['ai', 'the test writer writes the tests']],
       sections: [
         ['What happens',
           ol([
             'The runner makes the branch `milestone/M&lt;n&gt;` from the base branch.',
-            'The runner starts a fresh `claude -p` session for the next open row, with the model and effort of that row.',
-            'The session runs `/write-tests`.',
-            'The session writes the tests under Tests first: at least one for each requirement and one for each acceptance example. The most likely cases come first, then the edge cases.',
-            'The session runs the tests. Each test must fail because the behavior is missing.',
-            'The session does not commit.'
+            'The runner makes a temporary folder outside the project. It holds the docs, the rules, the tool configs and `tests/`, but no `src/` and no `.git`.',
+            'The test writer of `config/test-writer.json` runs there: Claude (the default, with the model and effort of the row), Antigravity, Codex or GitHub Copilot. Claude runs `/write-tests`; the others read the same rules in one `AGENTS.md`.',
+            'The writer writes the tests under Tests first: at least one for each requirement and one for each acceptance example. The most likely cases come first, then the edge cases, the limits and the defaults.',
+            'The runner copies `tests/` back and runs its own checks.',
+            'Nothing is committed.'
           ])],
+        ['The checks of the runner',
+          ul([
+            'ruff and mypy pass on `tests/`.',
+            'Each new test fails for a valid reason: a wrong value, or a missing module that the Owner of the milestone names. A syntax error, a missing fixture, a `NameError` or `TypeError` in the test, or a missing test helper is not valid.',
+            'Each older test passes.'
+          ]),
+          p('A problem goes back to the writer, with its error type and message and no line of the code, for one round of repair. The exit code of the writer does not count: Antigravity and Codex can end with 0 after a failure.')],
         ['Output',
           ul([
             '`tests/unit/`, `tests/e2e/` and `tests/e2e/ui/`',
@@ -600,14 +609,15 @@
           ])],
         ['Enforced by',
           ul([
-            'The session cannot read the code: Read, Grep and Glob are disallowed for `src/`. Thus the tests catch code that drifts from the spec.',
+            'The folder has no code. Thus the tests come from the spec and the design, and catch code that drifts from them. The folder stops a normal read; it is not a security boundary.',
             'A test uses a real local part where one exists, and a fake only for an external service.',
             'After the session, the runner stores a hash of every file under `tests/`.'
           ])],
         ['Before the first milestone',
           p('The runner checks these conditions:'),
           ul([
-            'The conda environment is active.',
+            'The conda environment is active, and `python` on the PATH of a session is its Python. Each session gets the folders of the environment first on its PATH.',
+            'A test writer other than Claude answers one short prompt.',
             'The settings file is there.',
             'The commit hook is on.',
             'Git is clean.',
@@ -616,7 +626,7 @@
           ]),
           p('Sessions run with `bypassPermissions`. Their guard rails are the deny and ask rules of `settings.json`.')],
         ['In chat',
-          p('When `/sherpa` builds one milestone in chat, a subagent is the test session.')]
+          p('When `/sherpa` builds one milestone in chat, `python scripts/milestones-runner.py --tests-only M&lt;n&gt;` is the test session, with the same folder, checks and round of repair.')]
       ]
     },
     code: {
@@ -697,19 +707,20 @@
     review: {
       eyebrow: 'Per milestone · review session',
       title: 'Review',
-      actors: [['script', 'runner starts each session'], ['ai', 'reviews, then repairs']],
+      actors: [['script', 'runner starts each session in its own place'], ['ai', 'reviews, then repairs']],
       sections: [
         ['What happens',
           ol([
-            'A fresh, read-only session reviews the diff of the branch. It runs the built-in `/code-review` first, if Claude Code has it, then `/code-review-sherpa`.',
-            'It writes one `FINDING:` line for each finding: severity, file and line, rule or smell, remedy.',
-            'With findings, a repair session repairs them and commits as `M&lt;n&gt;: review repairs`.',
+            'A fresh session reviews the diff of the branch in a temporary git worktree. It runs the built-in `/code-review` first, if Claude Code has it, then `/code-review-sherpa`.',
+            'It writes one `FINDING:` line for each finding: severity, the file where the fix goes and its line, rule or smell, remedy.',
+            'A finding about `tests/` goes to a test session in the folder without the code. If that session changes a test, a build session makes the tests pass and commits as `M&lt;n&gt;: test repairs`.',
+            'Any other finding goes to a repair session, which commits as `M&lt;n&gt;: review repairs`.',
             'Then a last review runs.'
           ]),
           ul([
             'A milestone gets at most two reviews.',
-            'A finding that the last review still reports stays in the log. It does not stop the milestone.',
-            'The human reads those findings after the run.'
+            'A finding of the last review blocks the milestone when its severity is `high`, or its rule is a requirement ID. The finding is the question of the block.',
+            'The other findings stay in the log, and the human reads them after the run.'
           ])],
         ['Standards',
           ol([
@@ -732,12 +743,13 @@
           p('The review never proposes "Replace Conditional with Polymorphism".')],
         ['Enforced by',
           ul([
-            'The review session cannot edit: Edit and Write are disallowed. A review that changed a file counts as not finished.',
+            'The review session cannot edit: Edit and Write are disallowed. It runs in a worktree that the runner deletes, so a change cannot reach the branch; the log gets a warning.',
+            'A fault against a requirement that no test catches is a missing test: the review names a test file for it.',
             'The repair session cannot change `tests/`, and the pre-commit hook runs each check again.',
             'After a repair, the runner compares the hashes of `tests/` and runs the spec coverage again.'
           ])],
         ['In chat',
-          p('When `/sherpa` builds one milestone in chat, a subagent is the review session.')]
+          p('When `/sherpa` builds one milestone in chat, `python scripts/milestones-runner.py --review-only M&lt;n&gt;` is the review session, in a worktree. Its findings about tests go to `--tests-only M&lt;n&gt; --review-findings`.')]
       ]
     },
     merge: {
@@ -749,7 +761,7 @@
           p('The runner, not a session, does these steps:'),
           ol([
             'Makes sure that the row left the plan, git is clean, and `tests/` and `spec.md` did not change.',
-            'Moves the base branch to the milestone branch with `git merge --ff-only`.',
+            'Switches to the base branch and moves it to the milestone branch with `git merge --ff-only`.',
             'Pushes the base branch.',
             'Deletes the milestone branch.',
             'Starts the next open row.'
@@ -781,8 +793,10 @@
             'Real user data',
             'A secret in a committed file',
             'A dependency that no `Decided` decision names',
-            'A change to a test'
+            'A change to a test',
+            'A finding of the last review that is `high` or names a requirement'
           ]),
+          p('After the review, the runner itself blocks the milestone: it adds the Blocked entry with the findings to the plan on the base branch. Once approved, the next run reviews the branch again, and the findings no longer block it.'),
           p('The session sets the status of the milestone to blocked, adds a Blocked entry, and commits nothing. Then the runner does these steps:'),
           ol([
             'Commits the other changes on the milestone branch as `M&lt;n&gt;: partial work`.',

@@ -215,3 +215,11 @@ def test_refusal_changes_nothing(
     assert message in result.stderr
     assert sandbox.snapshot() == before
     assert [call for call in sandbox.gh_calls() if call[:2] == ["repo", "create"]] == []
+
+
+def test_the_chosen_test_writer_reaches_the_project(sandbox: Sandbox) -> None:
+    result = sandbox.init("--with", "python", "--no-github", "--test-writer", "antigravity")
+    assert result.returncode == 0, result.stderr
+    config = (sandbox.folder / "config" / "test-writer.json").read_text(encoding="utf-8")
+    assert '"writer": "antigravity"' in config
+    assert "config/test-writer.json" in sandbox.git("show", "--name-only", "--format=", "HEAD")

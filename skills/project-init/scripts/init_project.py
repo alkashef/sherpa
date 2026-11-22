@@ -14,7 +14,8 @@ Usage:
     python init_project.py --no-github            # local repository only
     python init_project.py --remote-url URL       # push to a repository that exists
 Options: --name (default: the folder name), --folder (default: the current folder), --public (the
-default is private), --no-conda (no conda environment).
+default is private), --no-conda (no conda environment), --test-writer (the AI that writes the
+tests: claude, antigravity, codex or copilot; the default is claude).
 """
 
 import argparse
@@ -211,6 +212,7 @@ def build_command(folder: Path, args: argparse.Namespace) -> list[str]:
         "--stack": args.stack,
         "--test-command": args.test_command,
         "--run-command": args.run_command,
+        "--test-writer": args.test_writer,
     }
     for option, value in options.items():
         if value:
@@ -331,6 +333,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--stack", default="", help="overrides the stack line")
     parser.add_argument("--test-command", default="", help="overrides the test command")
     parser.add_argument("--run-command", default="", help="overrides the run command")
+    parser.add_argument(
+        "--test-writer", default="", help="the AI that writes the tests (default: claude)"
+    )
     add_remote_options(parser)
     parser.add_argument("--no-conda", action="store_true", help="no conda environment")
     args = parser.parse_args()

@@ -64,6 +64,7 @@ known-first-party = ["src"]
 "tests/**" = ["D", "ANN", "S101", "S603", "PLR2004", "PLR0913"]
 "scripts/**" = ["T20"]                                    # scripts print their output
 "scripts/check.py" = ["S603"]                             # runs the check tools, without a shell
-"scripts/milestones-runner.py" = ["S603"]                 # runs git and claude, without a shell
+"scripts/milestones-runner.py" = ["S603", "S314"]         # runs git and claude, without a shell,
+                                                          # and reads the JUnit XML of pytest
 "scripts/live_checks.py" = ["S603"]                       # runs pytest and node, without a shell
 "scripts/release.py" = ["S603"]                           # runs git, without a shell

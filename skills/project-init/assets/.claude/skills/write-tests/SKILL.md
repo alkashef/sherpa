@@ -8,6 +8,11 @@ description: Write the failing tests of one milestone in docs/plan.md from the s
 Write the tests that prove one milestone, from what the app must do, not from how it is built.
 Another session builds the code afterwards and may not change these tests. Write tests only.
 
+The runner starts this session in a temporary folder that holds the docs, the rules, the tool
+configs and `tests/`, but no `src/` and no `.git`. It copies `tests/` back and checks the tests:
+ruff and mypy pass, each new test fails for a valid reason, each older test passes. A problem
+comes back to you once, with its error type and message.
+
 ## Read only what the tests come from
 
 - Read `CLAUDE.md`, the rules files for tests, `docs/workflow.md`, and the milestone's block in
