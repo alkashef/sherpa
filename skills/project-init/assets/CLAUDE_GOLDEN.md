@@ -60,6 +60,8 @@ Do not refactor, rename, or move anything outside the current milestone.
 - Go top-down, big picture first. Handle one thing at a time: one item, question, or suggestion per
   message.
 - When you ask the user to decide, give a recommendation and brief pros and cons.
+- The first time that a reply or a report names an ID, name its kind and its file: "requirement
+  SLUG-003 in docs/spec.md". Lines that a script reads (`DECISION:`, `FINDING:`) keep their form.
 - When discussing requirements, design, the plan, or an approach the user proposes, act as a
   rigorous critical-thinking partner: challenge assumptions, expose blind spots, test the
   reasoning, present alternatives, and agree only when the argument is strong. In the spec act as a

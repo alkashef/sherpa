@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="The sherpa spec-driven development workflow: who does each step, what it produces, and what enforces it.">
 <!-- The SHA-256 of docs/workflow.md when this page was last made to agree with it. -->
-<meta name="workflow-md-sha256" content="f8e9c0d6d720ebcffa3ecc9bf3dbf8920e853d01f261010fece928089e287a6d">
+<meta name="workflow-md-sha256" content="003b60fe86e60982c4e2c54560da2c04a7849db0afdf5ae56d79aeea63cd7b67">
 <title>Sherpa SDD Workflow</title>
 <style>
   /* Layout: a slim /sherpa bar, then two rows of four cards that snake. Top row left to right (setup
@@ -769,6 +769,7 @@
             'Deletes the milestone branch.',
             'Starts the next open row.'
           ]),
+          p('A table of the run, redrawn each second, shows the finished milestones, the one that runs now, and the planned ones in dark grey. A Total row gives the total time, and the last row a progress bar of the milestones done.'),
           p('Thus the base branch holds only commits that passed each check.')],
         ['Human test',
           p('Some milestones have a Human test entry in the plan. For such a milestone, the runner does these steps after the merge:'),

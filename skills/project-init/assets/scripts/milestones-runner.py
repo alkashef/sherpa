@@ -84,9 +84,12 @@ done, the runner runs `python scripts/live_checks.py` and prints its last line; 
 checks end the run with exit code 1.
 
 The runner clears the screen and shows a table that it redraws every second: a row for each
-milestone of the run (the one that runs now last), and a footer with the total time, the percent
-and the count of the milestones done. The Decisions column counts the DECISION lines of the
-reports, and the Findings column counts the FINDING lines of the last review. It logs each
+milestone of the run that finished, then the one that runs now, then each planned milestone of the
+range in very dark grey (`-` in Duration, Decisions and Findings, and `planned` in Result). Under
+them, a Total row gives the total time under Duration, and a last row gives a progress bar over
+the width of the table, the percent and the count of the milestones done. The Decisions column
+counts the DECISION lines of the reports, and the Findings column counts the FINDING lines of the
+last review. It logs each
 session to .claude/logs/ (M<n>-test.log, M<n>-test-fix.log, M<n>.log, M<n>-review.log,
 M<n>-review-tests.log, M<n>-rebuild.log, M<n>-repair.log and M<n>-review-last.log, with -<try>
 for a retry), and appends a timing to .claude/logs/timings.csv.
@@ -288,6 +291,10 @@ TABLE_HEADER: Final = (
     "Result",
 )
 TITLE_COLUMN: Final = 1  # the column that is cut when the table is wider than the terminal
+DURATION_COLUMN: Final = 4  # the Total row puts the total time here, and `Total` to its left
+OUTCOME_PLANNED: Final = "planned"  # in the table: a milestone of the range that has not started
+BAR_DONE: Final = "█"
+BAR_OPEN: Final = "░"
 MIN_TITLE_WIDTH: Final = 10
 STATUS_BLOCKED: Final = "blocked"  # in the Status column: the milestone waits for an approval
 
@@ -542,13 +549,15 @@ class Running:
 class RunState:
     """What this run has done so far: the milestones to run, the total timer and the results.
 
-    running is the milestone that runs now, or None between two milestones.
+    running is the milestone that runs now, or None between two milestones. planned holds the
+    rows of the range that were open when the run started.
     """
 
     total: int
     stopwatch: Stopwatch
     results: list[Result] = field(default_factory=list)
     running: Running | None = None
+    planned: list[Row] = field(default_factory=list)
 
     def done_count(self) -> int:
         """Return how many milestones of this run finished with the outcome done."""
@@ -574,10 +583,13 @@ class Console:
     ask: Callable[[], str | None] = field(default=read_answer)
 
     def paint(self, text: str, color: str) -> str:
-        """Return the text in "green", "yellow" or "red"; unchanged when colors are off."""
+        """Return the text in "green", "yellow", "red" or "grey"; unchanged when colors are off.
+
+        Grey is the very dark grey of the 256-color palette (238), for a planned milestone.
+        """
         if not self.use_color:
             return text
-        code = {"green": "32", "yellow": "33", "red": "31"}[color]
+        code = {"green": "32", "yellow": "33", "red": "31", "grey": "38;5;238"}[color]
         return f"\x1b[{code}m{text}\x1b[0m"
 
     def say(self, text: str = "", color: str | None = None) -> None:
@@ -775,6 +787,16 @@ def block_entry(block: Sequence[str], label: str) -> list[str]:
     return lines if any(line.strip() for line in lines) else []
 
 
+def milestone(number: int) -> str:
+    """Return how a message names a milestone the first time: its kind, ID and file (D1)."""
+    return f"milestone M{number} in {PLAN_PATH}"
+
+
+def milestone_at_start(number: int) -> str:
+    """Return how a message that starts with a milestone names it (D1)."""
+    return f"Milestone M{number} in {PLAN_PATH}"
+
+
 def rows_in_range(rows: Sequence[Row], first: int, last: int) -> list[Row]:
     """Return the rows numbered first to last, in table order (not numeric order)."""
     return [row for row in rows if first <= row.id <= last]
@@ -804,14 +826,16 @@ def range_problem(first: int, last: int) -> str | None:
 def row_problem(row: Row) -> str | None:
     """Return why the model or effort of the row cannot be used, or None."""
     if not row.model or not row.effort:
-        return f"M{row.id} has no Model or no Effort in the table."
+        return f"The row of {milestone(row.id)} has no Model or no Effort."
     if row.model not in VALID_MODELS and not MODEL_ID.fullmatch(row.model):
         return (
-            f"M{row.id}: Model '{row.model}' is not one of {', '.join(VALID_MODELS)} "
+            f"The Model '{row.model}' of {milestone(row.id)} is not one of "
+            f"{', '.join(VALID_MODELS)} "
             "or a full model ID such as claude-sonnet-5-5."
         )
     if row.effort not in VALID_EFFORTS:
-        return f"M{row.id}: Effort '{row.effort}' is not one of {', '.join(VALID_EFFORTS)}."
+        efforts = ", ".join(VALID_EFFORTS)
+        return f"The Effort '{row.effort}' of {milestone(row.id)} is not one of {efforts}."
     return None
 
 
@@ -2047,20 +2071,48 @@ def row_line(cells: Sequence[str], widths: Sequence[int]) -> str:
     return "│ " + " │ ".join(padded) + " │"
 
 
-def footer_line(state: RunState, inner_width: int) -> str:
-    """Return the last line of the table: the total time on the left, "71%  5/7" on the right."""
+def planned_cells(row: Row) -> tuple[str, ...]:
+    """Return the cells of the table row of a milestone that has not started."""
+    return (f"M{row.id}", row.title, row.model, row.effort, "-", "-", "-", OUTCOME_PLANNED)
+
+
+def planned_rows(state: RunState) -> list[Row]:
+    """Return the rows of the range that neither finished nor run now, in table order."""
+    started = {result.id for result in state.results}
+    if state.running is not None:
+        started.add(state.running.row.id)
+    return [row for row in state.planned if row.id not in started]
+
+
+def total_cells(state: RunState) -> tuple[str, ...]:
+    """Return the cells of the Total row: the total time under Duration, `Total` to its left."""
+    cells = [""] * len(TABLE_HEADER)
+    cells[DURATION_COLUMN - 1] = "Total"
+    cells[DURATION_COLUMN] = format_duration(state.stopwatch.elapsed())
+    return tuple(cells)
+
+
+def progress_line(state: RunState, inner_width: int) -> str:
+    """Return the last line of the table: a bar over its width, then "71%  5/7".
+
+    The bar counts only the milestones that finished with the outcome done.
+    """
     done = state.done_count()
-    left = f"Total {format_duration(state.stopwatch.elapsed())}"
     right = f"{percent(done, state.total)}%  {done}/{state.total}"
-    gap = max(inner_width - 2 - len(left) - len(right), 1)
-    return "│ " + left + " " * gap + right + " │"
+    width = max(inner_width - 3 - len(right), 1)
+    filled = round(width * done / state.total) if state.total > 0 else 0
+    return "│ " + BAR_DONE * filled + BAR_OPEN * (width - filled) + " " + right + " │"
 
 
 def table_lines(state: RunState, console: Console, max_width: int) -> list[str]:
-    """Return the table of this run: a row for each finished milestone, the running one last.
+    """Return the table of this run: the finished milestones, the running one, the planned ones.
+
+    The planned rows are very dark grey. Under them come a Total row with the total time, and a
+    row with a progress bar.
 
     Args:
-        state: The results so far, the milestone that runs now, the total timer and the total.
+        state: The results so far, the milestone that runs now, the planned rows, the total timer
+            and the total.
         console: Paints each row in the color of its outcome.
         max_width: The most characters of a line; a longer Title is cut.
 
@@ -2070,15 +2122,19 @@ def table_lines(state: RunState, console: Console, max_width: int) -> list[str]:
     records = [(result_cells(result), outcome_color(result.outcome)) for result in state.results]
     if state.running is not None:
         records.append((running_cells(state.running), outcome_color(OUTCOME_RUNNING)))
-    widths = column_widths([TABLE_HEADER, *(cells for cells, _ in records)], max_width)
+    records += [(planned_cells(row), "grey") for row in planned_rows(state)]
+    total = total_cells(state)
+    widths = column_widths([TABLE_HEADER, total, *(cells for cells, _ in records)], max_width)
     inner_width = sum(width + 2 for width in widths) + len(widths) - 1
     return [
         border_line(widths, "┌", "┬", "┐"),
         row_line(TABLE_HEADER, widths),
         border_line(widths, "├", "┼", "┤"),
         *(console.paint(row_line(cells, widths), color) for cells, color in records),
+        border_line(widths, "├", "┼", "┤"),
+        row_line(total, widths),
         border_line(widths, "├", "┴", "┤"),
-        footer_line(state, inner_width),
+        progress_line(state, inner_width),
         "└" + "─" * inner_width + "┘",
     ]
 
@@ -2435,7 +2491,7 @@ def restore_partial_work(root: Path, base: str, row: Row) -> None:
             *_all_output(done),
         ]
         raise RunStoppedError(
-            f"ERROR: the partial work of M{row.id} in {branch} does not apply on {base}.", details
+            f"ERROR: the partial work of {milestone(row.id)} does not apply on {base}.", details
         )
     _git_must(root, "reset", "--mixed", base)
 
@@ -2471,7 +2527,8 @@ def rebase_built(root: Path, base: str, row: Row) -> None:
             _git(root, "rebase", "--abort")
             details = [f"Rebase it by hand: git rebase {base} {branch}", *_all_output(done)]
             raise RunStoppedError(
-                f"ERROR: M{row.id} in {branch} does not apply on {base}.", details
+                f"ERROR: the branch {branch} of {milestone(row.id)} does not apply on {base}.",
+                details,
             )
         ours = _git(root, "show", f":2:{PLAN_PATH}").stdout
         plan = plan_without_milestone(_split_lines(ours), row.id)
@@ -2565,7 +2622,7 @@ def merge_refused(base: str, row: Row, done: subprocess.CompletedProcess[str]) -
         *_all_output(done),
     ]
     return RunStoppedError(
-        f"ERROR: M{row.id} is not merged: git merge --ff-only {branch} failed.", details
+        f"ERROR: {milestone(row.id)} is not merged: git merge --ff-only {branch} failed.", details
     )
 
 
@@ -2588,7 +2645,7 @@ def push_refused(
         *(note if steps else []),
         *_all_output(done),
     ]
-    return RunStoppedError(f"ERROR: M{row.id} is merged, but git push failed.", details)
+    return RunStoppedError(f"ERROR: {milestone(row.id)} is merged, but git push failed.", details)
 
 
 def merge_milestone(session: Session, running: Running) -> None:
@@ -2613,8 +2670,8 @@ def merge_milestone(session: Session, running: Running) -> None:
 def waiting_for_approval(plan_lines: Sequence[str], row: Row) -> RunStoppedError:
     """Build the stop for a blocked milestone: what to do, then its block with the question."""
     message = (
-        f"M{row.id} waits for your approval. In docs/plan.md, add an Approval entry to its "
-        "block, set its Status to `approved`, commit, and run again:"
+        f"{milestone_at_start(row.id)} waits for your approval. Add an Approval entry to "
+        "its block, set its Status to `approved`, commit, and run again:"
     )
     return RunStoppedError(message, milestone_block(plan_lines, row.id), "yellow")
 
@@ -2645,7 +2702,7 @@ def blocked_plan_refused(
         *_all_output(done),
     ]
     return RunStoppedError(
-        f"ERROR: M{row.id} is blocked, but `git {step}` failed on {base}.", details
+        f"ERROR: {milestone(row.id)} is blocked, but `git {step}` failed on {base}.", details
     )
 
 
@@ -2776,7 +2833,7 @@ def stop_for(row: Row, verdict: Verdict, run: ClaudeRun) -> NoReturn:
         f"Its work stays in the branch {branch_name(row.id)}. To continue from it, run again "
         "with --resume."
     )
-    raise RunStoppedError(f"M{row.id} stopped: {verdict.reason}", [*tail, hint])
+    raise RunStoppedError(f"{milestone_at_start(row.id)} stopped: {verdict.reason}", [*tail, hint])
 
 
 def append_timing(path: Path, result: Result) -> None:
@@ -3086,7 +3143,9 @@ def ask_human_test(session: Session, running: Running) -> None:
     steps = human_test_steps(running)
     if not steps:
         return
-    console.say(f"M{row.id} is merged and pushed. Do its human test now:", "yellow")
+    console.say(
+        f"{milestone_at_start(row.id)} is merged and pushed. Do its human test now:", "yellow"
+    )
     for line in steps:
         console.say(line)
     console.say("Type yes when the test passed, then press Enter:")
@@ -3096,7 +3155,8 @@ def ask_human_test(session: Session, running: Running) -> None:
             "Give a fault to /sherpa: it becomes a fix milestone.",
             "Run the runner again to continue with the next milestone.",
         ]
-        raise RunStoppedError(f"The human test of M{row.id} is not confirmed.", details, "yellow")
+        message = f"The human test of {milestone(row.id)} is not confirmed."
+        raise RunStoppedError(message, details, "yellow")
 
 
 def run_milestone(session: Session, row: Row) -> None:
@@ -3200,12 +3260,19 @@ def open_session(options: Options, console: Console, paths: Paths, state: RunSta
     first, last = resolve_range(rows, options.start, options.end)
     check_range(first, last)
     preflight(paths, base, options.resume)
+    writer, environment = check_sessions(paths.root, options)
+    state.planned = [row for row in rows_in_range(rows, first, last) if row.status != "done"]
+    state.total = len(state.planned)
+    return Session(paths, console, state, first, last, options, base, writer, environment)
+
+
+def check_sessions(root: Path, options: Options) -> tuple[Writer, dict[str, str]]:
+    """Return the test writer and the environment of the sessions, after their start checks."""
     environment = session_environment()
     check_session_python(environment)
-    writer = load_writer(paths.root, options.test_writer)
-    check_writer(paths.root, writer, environment)
-    state.total = sum(1 for row in rows_in_range(rows, first, last) if row.status != "done")
-    return Session(paths, console, state, first, last, options, base, writer, environment)
+    writer = load_writer(root, options.test_writer)
+    check_writer(root, writer, environment)
+    return writer, environment
 
 
 def run_all(options: Options, console: Console, paths: Paths, state: RunState) -> None:
@@ -3226,7 +3293,8 @@ def run_all(options: Options, console: Console, paths: Paths, state: RunState) -
     while True:
         row = next_open_row(_range_rows(session))
         if row is None:
-            console.say(f"Range M{session.first} to M{session.last} is done.", "green")
+            done = f"Milestones M{session.first} to M{session.last} in {PLAN_PATH} are done."
+            console.say(done, "green")
             run_live_checks(session)
             return
         prepare_milestone(session, row)
@@ -3333,7 +3401,7 @@ def tests_only(session: Session, number: int) -> int:
     console, running = session.console, chat_running(session, number)
     task = chat_task(session, running)
     if task is None:
-        console.say(f"The last review of M{number} has no finding about tests.", "green")
+        console.say(f"The last review of {milestone(number)} has no finding about tests.", "green")
         return 0
     run, verdict = run_attempts(session, running, partial(writer_try, session, running, task))
     return tests_result(console, number, run, verdict)
@@ -3344,12 +3412,12 @@ def tests_result(console: Console, number: int, run: ClaudeRun, verdict: Verdict
     for line in run.lines[-TAIL_LINES:]:
         console.say(line)
     if verdict.outcome == OUTCOME_BLOCKED:
-        console.say(f"M{number} is blocked: read its Blocked entry in {PLAN_PATH}.", "yellow")
+        console.say(f"{milestone_at_start(number)} is blocked: read its Blocked entry.", "yellow")
         return 1
     if verdict.outcome != OUTCOME_DONE:
-        console.say(f"M{number}: {verdict.reason}", "red")
+        console.say(f"{milestone_at_start(number)}: {verdict.reason}", "red")
         return 1
-    console.say(f"The tests of M{number} are written and pass the runner's checks.", "green")
+    console.say(f"The tests of {milestone(number)} are written and pass the checks.", "green")
     return 0
 
 
@@ -3362,7 +3430,7 @@ def review_only(session: Session, number: int) -> int:
     console, running = session.console, chat_running(session, number)
     run, verdict = run_review(session, running, SESSION_REVIEW)
     if verdict.outcome != OUTCOME_DONE:
-        console.say(f"The review of M{number} did not run: {verdict.reason}", "red")
+        console.say(f"The review of {milestone(number)} did not run: {verdict.reason}", "red")
         return 1
     findings = finding_lines(run.lines)
     for finding in findings or ["NO FINDINGS"]:

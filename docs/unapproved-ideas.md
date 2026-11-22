@@ -60,6 +60,8 @@ The approved changes are built. Their first text is in the git history of this f
 | 28 | The README, "Change what new projects get", names the four places that a new language needs | Rank 19 (USER-07), November 22, 2026 |
 | 29 | `build_instance.py --list-modules` prints the numbered module table (`No. | Module | Section | Details`) that `/project-init` and `/write-design` show; `--add` adds a module to a project that exists and keeps every file. `/write-design` matches the modules and their globs to the approved design | USER-19, approved on November 21, 2026 |
 | 30 | Living docs: the docs that a person reads use STE, flavored mode. `assets/scripts/ste_lint.py`, a typed port of the MIT `ste-lint.py` with its license notice: `check.py` fails a doc of 100 words or more over 2.5 marks for each 100 words, and a sentence of 12 words or more in two docs. The suite lints the docs of a full build; `workflow.md` lost its semicolons (2.60 to 2.06) | USER-20, approved on November 21, 2026 |
+| 31 | Communication and reporting: the first time that a reply names an ID, it names its kind and its file. The runner names "milestone M<n> in docs/plan.md" in its messages, and "requirement X in docs/spec.md" in the question of a review block | D1, approved on November 22, 2026 |
+| 32 | The table of the runner: planned rows in very dark grey (256-color 238) with `-` and `planned`, a Total row under Duration, and a last row with a progress bar, the percent and `n/m` | USER-21, approved on November 21, 2026 |
 
 One real run followed on November 21, 2026 (README, "Checked in real Claude Code sessions"). It
 proved the condition of the user's decision on rank 3: a `claude -p` session runs the built-in
@@ -74,27 +76,7 @@ after the walk-through of section G ends. Several of them change the same files 
 `/write-tests`, `assets/docs/workflow.md` and `workflow.html`), so one pass changes each file and
 the diagram one time.
 
-1. **D1, approved on November 22, 2026:** no bare ID in text for a person.
-    - One line in `assets/CLAUDE_GOLDEN.md`, Communication and reporting: the first time that a
-      reply or a report names an ID, it names the kind and the file, for example "requirement
-      SLUG-003 in docs/spec.md".
-    - The runner does the same in its own messages, for example in the question of a blocked
-      milestone.
-    - The lines that a script reads keep their form: `DECISION:`, `FINDING:`, the cells of the
-      plan table, and the commit subject `M<n>: <title>`. Their free text can name the kind.
-    - The built `CLAUDE.md` used 193 of its 200 lines on November 22, 2026. This line and the
-      STE line need room, so the audit (rank 17) frees some.
-2. **USER-21, approved on November 21, 2026:** the table of the milestone runner.
-   - After the running milestone, a row for each planned milestone of the range, in very dark
-     grey (256-color code 238): `-` in Duration, Decisions and Findings, `planned` in Result.
-     With colors off, the row is plain text.
-   - The total time moves to its own row, under the Duration column, with `Total` to its left.
-   - A last row holds a progress bar over the width of the table, then the percent and `n/m`.
-     The bar counts finished milestones only.
-   - The planned rows count for the width of the Title column.
-   - Update the runner docstring, `assets/docs/workflow.md`, the panel of `workflow.html`, and
-     the tests of the table.
-3. **USER-22, USER-23 and USER-24, approved on November 21, 2026:** a dashboard for the
+1. **USER-22, USER-23 and USER-24, approved on November 21, 2026:** a dashboard for the
    developer.
    - `assets/scripts/dashboard.py`, standard library only. It serves an HTML page on 127.0.0.1
      and opens the browser. The Refresh button makes the script read the files again. No AI, no
@@ -115,14 +97,14 @@ the diagram one time.
    - Limit: the review findings exist only in the runner logs of one machine.
    - Update `assets/docs/workflow.md`, `workflow.html`, the README and the table "Directory
      structure" of `CLAUDE_GOLDEN.md`.
-4. **Rank 14 (REPORT-10), approved in part on November 22, 2026:** a clean install at each
+2. **Rank 14 (REPORT-10), approved in part on November 22, 2026:** a clean install at each
     push.
    - A GitHub Actions job in each new project (`assets/.github/workflows/check.yml`): at each
      push, a clean machine installs the project from `requirements.txt` (and `npm ci` for
      JavaScript), then runs `python scripts/check.py`. The `ui` tests need their browsers there.
    - `release.py` saves the output of `pip freeze` (and `npm ls --all` for JavaScript) in the
      release archive, so that a release can be installed again with the same versions.
-5. **Rank 17 (USER-06), approved on November 22, 2026:** one audit of `CLAUDE_GOLDEN.md` for rules
+3. **Rank 17 (USER-06), approved on November 22, 2026:** one audit of `CLAUDE_GOLDEN.md` for rules
     that are too rigid.
    - Do it after the build adds its new rules, so that the audit sees all of them.
    - One row for each rule (about 155): keep it with its reason, move it into a tool, move it
@@ -131,7 +113,7 @@ the diagram one time.
    - A rule that a real run later proves necessary comes back.
    - Examples to question: "Do not write your own ... context managers", "One class per file",
      and "a design pattern that no `Decided` decision names".
-6. **The second trial of the test writers (USER-17, approved on November 21 and 22, 2026):** the
+4. **The second trial of the test writers (USER-17, approved on November 21 and 22, 2026):** the
     build of USER-17 is done (Built, stage 15). Run the trial of the three writers again, with
     RUN-06 and RUN-07 in place, by the rule of the second trial: each writer runs 3 times on each
     of 2 projects (the slug tool, and a new project that stores data), scored by
@@ -139,11 +121,11 @@ the diagram one time.
     Of the qualified writers, the highest median of seeded bugs caught wins, and on a tie the
     faster one. If no writer qualifies, Claude stays the default, and each failed gate becomes a
     new idea. Then the user decides the default writer.
-7. **After the build, in a real session:** run the changes above, and also what is not
+5. **After the build, in a real session:** run the changes above, and also what is not
    run in a real session yet: `/sherpa`, and a milestone that a build session blocks with
    partial work in its branch. The second real run ran a human test, a block in the test
    session, and the approval.
-8. **`docs/v4/`, approved by the user on November 22, 2026:** after the real run, make
+6. **`docs/v4/`, approved by the user on November 22, 2026:** after the real run, make
     `docs/v4/` with the report, the presentation and the demo of the new workflow. `docs/v3/`
     stays as the record of the earlier version. sherpa's `CLAUDE.md` then names `v4/` as current.
 

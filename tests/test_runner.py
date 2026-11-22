@@ -371,7 +371,7 @@ def test_gitignore_entries_start_on_a_new_line(built: Path, tmp_path: Path) -> N
 def test_runner_finishes_every_open_milestone(planned: Sandbox) -> None:
     code, output = run_runner(planned)
     assert code == 0, output
-    assert "Range M1 to M2 is done." in output
+    assert "Milestones M1 to M2 in docs/plan.md are done." in output
     assert subjects(planned, "-2") == ["M2: Second", "M1: First"]
     calls = logged_calls(planned.folder.parent / "claude.log")
     models = [(call[call.index("--model") + 1], call[call.index("--effort") + 1]) for call in calls]
@@ -439,7 +439,7 @@ def test_blocked_milestone_is_committed_and_stops_the_run(planned: Sandbox) -> N
     planned.env["FAKE_CLAUDE_STATE"] = "blocked"
     code, output = run_runner(planned)
     assert code == 1
-    assert "M1 waits for your approval." in output
+    assert "Milestone M1 in docs/plan.md waits for your approval." in output
     assert "### M1 — First" in output
     assert "which database?" in output
     # The session committed nothing: the runner committed the plan on the base branch, and pushed.
@@ -460,7 +460,7 @@ def test_runner_waits_at_a_blocked_row(planned: Sandbox) -> None:
     run_runner(planned)
     code, output = run_runner(planned)
     assert code == 1
-    assert "M1 waits for your approval." in output
+    assert "Milestone M1 in docs/plan.md waits for your approval." in output
     assert "which database?" in output
     assert kinds(planned) == ["test M1"]
 
@@ -483,7 +483,7 @@ def test_a_blocked_milestone_keeps_its_work_in_its_branch(planned: Sandbox) -> N
     planned.env["FAKE_CLAUDE_STATE"] = "blocked-build"
     code, output = run_runner(planned)
     assert code == 1
-    assert "M1 waits for your approval." in output
+    assert "Milestone M1 in docs/plan.md waits for your approval." in output
     assert kinds(planned) == ["test M1", "build M1"]
     # The base branch got the blocked plan alone, and it is pushed.
     assert planned.git("rev-parse", "--abbrev-ref", "HEAD") == "main"
@@ -507,7 +507,7 @@ def test_a_refused_commit_of_the_blocked_plan_says_how_to_finish(planned: Sandbo
     code, output = run_runner(planned)
     assert code == 1
     for line in [
-        "ERROR: M1 is blocked, but `git commit` failed on main.",
+        "ERROR: milestone M1 in docs/plan.md is blocked, but `git commit` failed on main.",
         "The work of M1 is safe in the branch milestone/M1.",
         "docs/plan.md with the blocked row is staged and not committed on main.",
         'Then run: git commit -m "M1: blocked", and then: git push',
@@ -546,7 +546,8 @@ def test_runner_stops_when_a_milestone_does_not_finish(planned: Sandbox) -> None
     assert code == 1
     # The writer ends with 0 and writes nothing: only the runner's own checks judge it.
     assert (
-        "M1 stopped: the runner's checks of the tests failed: The test session wrote no" in output
+        "M1 in docs/plan.md stopped: the runner's checks of the tests failed: The test session"
+        in output
     )
     assert "run again with --resume" in output
     # The test session and its round of repair, then one retry of both.
@@ -575,7 +576,7 @@ def test_resume_continues_with_the_build_session(planned: Sandbox) -> None:
     planned.env["FAKE_CLAUDE_STATE"] = "retry"
     code, output = run_runner(planned, "--retries", "0", "--end", "1")
     assert code == 1
-    assert "M1 stopped" in output
+    assert "Milestone M1 in docs/plan.md stopped" in output
     # The test session left its test in the tree, so a plain run refuses to start.
     assert (planned.folder / "tests" / "unit" / "test_m1.py").read_text("utf-8") == M1_TEST
     code, output = run_runner(planned, "--end", "1")
@@ -594,7 +595,9 @@ def test_the_next_milestone_comes_from_the_plan_of_the_base_branch(planned: Sand
     planned.env["FAKE_CLAUDE_STATE"] = "review-error"
     code, output = run_runner(planned, "--retries", "0")
     assert code == 1
-    assert "M1 stopped: the review session ended with exit code 1." in output
+    assert (
+        "Milestone M1 in docs/plan.md stopped: the review session ended with exit code 1." in output
+    )
     # The run stopped in the branch of M1, where the build commit deleted the row of M1.
     assert planned.git("rev-parse", "--abbrev-ref", "HEAD") == "milestone/M1"
     assert "**M1**" not in (planned.folder / "docs" / "plan.md").read_text("utf-8")
@@ -624,7 +627,8 @@ def test_a_base_branch_that_moved_stops_the_merge_and_says_what_to_do(planned: S
     planned.env["FAKE_CLAUDE_STATE"] = ""
     code, output = run_runner(planned, "--end", "1")
     assert code == 1
-    assert "ERROR: M1 is not merged: git merge --ff-only milestone/M1 failed." in output
+    merge = "git merge --ff-only milestone/M1 failed."
+    assert f"ERROR: milestone M1 in docs/plan.md is not merged: {merge}" in output
     assert "Run: git rebase main milestone/M1" in output
     # The user does what the message says, and the next run merges the milestone.
     planned.git("rebase", "main", "milestone/M1")
@@ -642,7 +646,9 @@ def test_partial_work_that_does_not_apply_stops_the_run(planned: Sandbox) -> Non
     commit_file(planned, "src/m1.py", '"""Another start."""\n', "Start m1 by hand")
     code, output = run_runner(planned, "--end", "1")
     assert code == 1
-    assert "ERROR: the partial work of M1 in milestone/M1 does not apply on main." in output
+    assert (
+        "ERROR: the partial work of milestone M1 in docs/plan.md does not apply on main." in output
+    )
     assert "git rebase main milestone/M1" in output
     # The rebase is aborted: the branch still holds the partial work, and no session ran.
     assert planned.git("status", "--porcelain") == ""
@@ -654,7 +660,9 @@ def test_a_session_that_leaves_the_milestone_branch_does_not_count(planned: Sand
     planned.env["FAKE_CLAUDE_STATE"] = "wanders"
     code, output = run_runner(planned, "--retries", "0", "--end", "1")
     assert code == 1
-    assert "M1 stopped: the session left the branch milestone/M1." in output
+    assert (
+        "Milestone M1 in docs/plan.md stopped: the session left the branch milestone/M1." in output
+    )
     assert kinds(planned) == ["test M1", "build M1"]
 
 
@@ -762,7 +770,7 @@ def test_a_failed_push_keeps_the_branch_and_says_what_to_do(planned: Sandbox) ->
     planned.env["FAKE_CLAUDE_STATE"] = "no-remote"
     code, output = run_runner(planned)
     assert code == 1
-    assert "ERROR: M1 is merged, but git push failed." in output
+    assert "ERROR: milestone M1 in docs/plan.md is merged, but git push failed." in output
     assert "git branch -d milestone/M1" in output
     assert planned.git("rev-parse", "--abbrev-ref", "HEAD") == "main"
     assert subjects(planned, "-1") == ["M1: First"]
@@ -781,9 +789,9 @@ def test_a_confirmed_human_test_lets_the_run_go_on(planned: Sandbox) -> None:
     commit_plan(planned, human_plan(), "Give M1 a human test")
     code, output = run_runner(planned, typed="  YES \n")
     assert code == 0, output
-    assert "M1 is merged and pushed. Do its human test now:" in output
+    assert "Milestone M1 in docs/plan.md is merged and pushed. Do its human test now:" in output
     assert "Start the app and open the first page.\n  The page shows 1.\n" in output
-    assert "Range M1 to M2 is done." in output
+    assert "Milestones M1 to M2 in docs/plan.md are done." in output
     assert kinds(planned) == M1_SESSIONS + M2_SESSIONS
 
 
@@ -792,7 +800,7 @@ def test_a_human_test_that_is_not_confirmed_stops_the_run(planned: Sandbox, type
     commit_plan(planned, human_plan(), "Give M1 a human test")
     code, output = run_runner(planned, typed=typed)
     assert code == 1
-    assert "The human test of M1 is not confirmed." in output
+    assert "The human test of milestone M1 in docs/plan.md is not confirmed." in output
     assert "/sherpa: it becomes a fix milestone" in output
     assert "Run the runner again to continue with the next milestone." in output
     # The question comes after the merge and the push, and the next milestone did not start.
@@ -845,7 +853,10 @@ def test_the_live_checks_run_when_the_range_is_done(planned: Sandbox) -> None:
     add_live_check(planned, "1", NO_MILESTONES + LIVE_APPROVAL)
     code, output = run_runner(planned)
     assert code == 0, output
-    assert output.strip().splitlines()[-2:] == ["Range M0 to M0 is done.", "Live checks: passed."]
+    assert output.strip().splitlines()[-2:] == [
+        "Milestones M0 to M0 in docs/plan.md are done.",
+        "Live checks: passed.",
+    ]
 
 
 def test_live_checks_without_an_approval_are_not_run(planned: Sandbox) -> None:
@@ -859,7 +870,7 @@ def test_failed_live_checks_end_the_run_with_an_error(planned: Sandbox) -> None:
     add_live_check(planned, "2", NO_MILESTONES + LIVE_APPROVAL)
     code, output = run_runner(planned)
     assert code == 1
-    assert "Range M0 to M0 is done." in output
+    assert "Milestones M0 to M0 in docs/plan.md are done." in output
     assert "Live checks: failed." in output
     assert "test_live_service" in output
 
@@ -883,8 +894,34 @@ def test_the_table_shows_each_milestone_and_the_total(built: Path) -> None:
     cells = [cell.strip() for cell in lines[3].strip("│").split("│")]
     assert cells == ["M1", "First", "sonnet", "low", "01:05", "2", "3", "done"]
     assert "running" in lines[4]
-    assert "50%  1/2" in lines[-2]
+    total = [cell.strip() for cell in lines[6].strip("│").split("│")]
+    assert total == ["", "", "", "Total", "00:00", "", "", ""]
+    assert lines[-2].rstrip("│ ").endswith("50%  1/2")
     assert len({len(line) for line in lines}) == 1
+
+
+def test_the_planned_milestones_are_grey_rows_and_the_bar_counts_the_done_ones(
+    built: Path,
+) -> None:
+    runner = load_runner(built)
+    rows = [runner.Row(n, f"Step {n}", "sonnet", "low", "open") for n in (1, 2, 3, 4)]
+    state = runner.RunState(total=4, stopwatch=runner.Stopwatch(lambda: 0.0), planned=rows)
+    state.results.append(runner.Result(1, "Step 1", "sonnet", "low", "", 5.0, "done", 0))
+    state.running = runner.Running(rows[1], state.stopwatch)
+    plain = runner.table_lines(state, runner.Console(use_color=False), 120)
+    planned = [line for line in plain if "planned" in line]
+    assert [line.split("│")[1].strip() for line in planned] == ["M3", "M4"]
+    assert [cell.strip() for cell in planned[0].strip("│").split("│")][4:] == [
+        "-",
+        "-",
+        "-",
+        "planned",
+    ]
+    bar = plain[-2]
+    assert bar.endswith(" 25%  1/4 │")
+    assert bar.count("█") * 3 == pytest.approx(bar.count("░"), abs=2)
+    colored = runner.table_lines(state, runner.Console(use_color=True), 120)
+    assert sum("\x1b[38;5;238m" in line for line in colored) == 2
 
 
 def test_a_long_title_is_cut_to_fit_the_terminal(built: Path) -> None:
@@ -1027,7 +1064,9 @@ def test_a_test_that_stays_wrong_stops_the_milestone(planned: Sandbox) -> None:
     planned.env["FAKE_CLAUDE_STATE"] = "bad-test-stays"
     code, output = run_runner(planned, "--end", "1", "--retries", "0")
     assert code == 1
-    assert "M1 stopped: the runner's checks of the tests failed:" in output
+    assert (
+        "Milestone M1 in docs/plan.md stopped: the runner's checks of the tests failed:" in output
+    )
     assert "No module named 'tests.unit.helpers_m1'" in output
     assert kinds(planned) == ["test M1", "test-fix M1"]
 
@@ -1088,7 +1127,7 @@ def test_a_high_finding_of_the_last_review_blocks_the_merge(planned: Sandbox) ->
     planned.env["FAKE_CLAUDE_STATE"] = "blocking"
     code, output = run_runner(planned, "--end", "1")
     assert code == 1
-    assert "M1 waits for your approval." in output
+    assert "Milestone M1 in docs/plan.md waits for your approval." in output
     assert "FINDING: high | src/m1.py:7 | Error Handling" in output
     assert kinds(planned) == [*M1_SESSIONS, "repair M1", "review M1"]
     # The base branch got the blocked plan; the branch keeps the build and its repair.
@@ -1273,7 +1312,7 @@ def test_tests_only_writes_the_tests_of_one_milestone_in_chat(planned: Sandbox) 
     planned.git("switch", "-c", "milestone/M1")
     code, output = run_runner(planned, "--tests-only", "M1")
     assert code == 0, output
-    assert "The tests of M1 are written and pass the runner's checks." in output
+    assert "The tests of milestone M1 in docs/plan.md are written and pass the checks." in output
     assert (planned.folder / "tests" / "unit" / "test_m1.py").read_text("utf-8") == M1_TEST
     assert subjects(planned, "-1") == ["Plan M1 and M2"]
     assert kinds(planned) == ["test M1"]

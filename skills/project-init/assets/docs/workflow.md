@@ -79,8 +79,10 @@ branch kept.
 
 When the milestones of the run are done, the runner runs `python scripts/live_checks.py` and
 prints its result: passed, failed or not run. The runner shows a table of the run, redrawn each
-second. Its Decisions column counts the `DECISION:` lines of a milestone and its Findings column
-counts the `FINDING:` lines of its last review, and you read the lines themselves in its logs.
+second: the finished milestones, the one that runs now, and the planned ones in dark grey. Its
+Decisions column counts the `DECISION:` lines of a milestone and its Findings column counts the
+`FINDING:` lines of its last review, and you read the lines themselves in its logs. A Total row
+gives the total time, and the last row a progress bar of the milestones done.
 Logs and timings go to `.claude/logs/`. It needs a clean git tree (except with `--resume`) and a
 branch that pushes to a remote.
 
