@@ -59,7 +59,8 @@ comes back to you once, with its error type and message.
    - When a requirement states a rule for all inputs (every slug holds only lowercase letters,
      a total never goes below zero), also write one property test with Hypothesis: `@given`
      with a strategy for the inputs, and `@settings(max_examples=50)`. It carries the
-     requirement ID in its name, as the other tests do.
+     requirement ID in its name, as the other tests do. Hypothesis, like pytest, is a test tool
+     of the project: it needs no decision.
 4. Use invented data. No test outside `tests/live/` calls a live external service (an LLM, a
    network API), and no test reads the user's data. A test keeps its files in a temporary folder. Fix the clock and any random value, so
    the test gives the same result on every run.

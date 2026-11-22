@@ -182,7 +182,8 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 <!-- A10. Applies when: the project uses third-party libraries. Environment commands are in the language sections. -->
 
 - Prefer the standard library. Ask before adding any dependency, and say why the standard library is
-  not enough. One that `docs/design.md` names in a `Decided` decision is approved. Install only into
+  not enough. One that `docs/design.md` names in a `Decided` decision is approved, and so are the
+  check and test tools of the project (pytest, pytest-cov, hypothesis, Playwright). Install only into
   the project's isolated environment, never into the global interpreter or a base environment.
 - The dependency file (`requirements.txt`; `package.json` for JavaScript) is the only list. Add a
   library in the same change that first imports it, never import an unlisted library, and remove it
