@@ -68,3 +68,4 @@ known-first-party = ["src"]
                                                           # and reads the JUnit XML of pytest
 "scripts/live_checks.py" = ["S603"]                       # runs pytest and node, without a shell
 "scripts/release.py" = ["S603"]                           # runs git, without a shell
+"scripts/dashboard.py" = ["S603"]                         # runs git and spec_coverage.py, without a shell

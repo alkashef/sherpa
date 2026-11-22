@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="The sherpa spec-driven development workflow: who does each step, what it produces, and what enforces it.">
 <!-- The SHA-256 of docs/workflow.md when this page was last made to agree with it. -->
-<meta name="workflow-md-sha256" content="003b60fe86e60982c4e2c54560da2c04a7849db0afdf5ae56d79aeea63cd7b67">
+<meta name="workflow-md-sha256" content="95415768bb681e4d69a2c8f7acd0cd887bb1f228624c932792bc5493a6967737">
 <title>Sherpa SDD Workflow</title>
 <style>
   /* Layout: a slim /sherpa bar, then two rows of four cards that snake. Top row left to right (setup
@@ -771,6 +771,15 @@
           ]),
           p('A table of the run, redrawn each second, shows the finished milestones, the one that runs now, and the planned ones in dark grey. A Total row gives the total time, and the last row a progress bar of the milestones done.'),
           p('Thus the base branch holds only commits that passed each check.')],
+        ['Dashboard',
+          p('`python scripts/dashboard.py` shows the state on one page in the browser. It reads the files and git, and writes nothing:'),
+          ul([
+            'Needs you: a draft spec, Proposed decisions, open questions, blocked milestones, untested requirements, the DECISION and FINDING lines of the logs',
+            'Plan and releases',
+            'Trace: each requirement to its design, milestone, tests and code',
+            'Code map: the files of `src/`, the imports against the module boundaries, the classes'
+          ]),
+          p('It never shows a bare ID: it names the kind and the file, such as "requirement PAY-001 in spec.md". The Refresh button reads the files again.')],
         ['Human test',
           p('Some milestones have a Human test entry in the plan. For such a milestone, the runner does these steps after the merge:'),
           ol([

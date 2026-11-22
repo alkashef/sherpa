@@ -199,6 +199,7 @@ def template_files() -> dict[str, list[str]]:
             "docs/workflow.md",
             "scripts/check.py",
             "scripts/cleanup.py",
+            "scripts/dashboard.py",
             "scripts/live_checks.py",
             "scripts/release.py",
             "scripts/spec_coverage.py",
@@ -271,7 +272,8 @@ def always_folders() -> dict[str, str]:
         "config/": "`.env` (never committed), `.env.example`, and `test-writer.json` (the AI "
         "that writes the tests).",
         "scripts/": "`check.py`, `spec_coverage.py` and `ste_lint.py` (the checks), "
-        "`milestones-runner.py`, `live_checks.py`, `release.py`, `cleanup.py`, setup scripts.",
+        "`milestones-runner.py`, `dashboard.py`, `live_checks.py`, `release.py`, `cleanup.py`, "
+        "setup scripts.",
         ".claude/": "Claude Code settings, including the hook that checks each edit.",
         ".githooks/": "`pre-commit`: refuses a commit unless the checks pass.",
         ".vscode/": "Shared editor settings.",

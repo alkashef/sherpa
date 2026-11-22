@@ -12,7 +12,7 @@ The same in every project. Project-specific rules are in `CLAUDE.md`.
 | `docs/unapproved-ideas.md` | What may come later: ideas that nobody approved | The user, and the AI when the user asks it to note an idea |
 | `docs/releases.md` | What was released: one row for each release | `scripts/release.py`, when the user starts it |
 
-Each fact lives in one file. Finished work is recorded by git history, not by the docs.
+Each fact lives in one file. Finished work is recorded by git history, not by the docs. `python scripts/dashboard.py` shows these facts on one page in the browser: what needs you, the plan and the releases, the trace of each requirement to its design, milestone, tests and code, and a map of the code. It reads the files and git, writes nothing, and reads them again on Refresh.
 
 A requirement has an ID (`AREA-NNN`, or `NFR-NNN` for a non-functional one), an acceptance example has an `EX-NNN`, and a design decision has a `DEC-NNN`. Never renumber or reuse an ID. `/write-spec` gives a requirement its ID when it adds it.
 
