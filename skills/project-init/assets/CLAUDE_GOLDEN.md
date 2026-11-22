@@ -136,6 +136,7 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 | `models/`, `prompts/` | Downloaded model weights (never committed; path from config) and LLM prompt files. |
 | `scripts/` | Setup, download, and maintenance scripts: `cleanup.py`, `check.py` (the checks the hooks run), `spec_coverage.py` (which requirement has a test), `ste_lint.py` (plain docs), `milestones-runner.py` (runs the plan unattended), `dashboard.py` (the state on one page), `download_models.py`, `download_assets.py`. |
 | `.vscode/`, `.claude/` | Shared editor settings and Claude Code settings. |
+| `.github/` | GitHub Actions: a clean install and the checks at each push, and mutation tests on demand. |
 | Root | `CLAUDE.md`, `README.md`, `requirements.txt`, `.gitignore`, `main.py` (Python entry point), `Dockerfile`, `compose.yaml`, `.dockerignore` (Docker), and the tool configs: `ruff.toml`, `mypy.ini`, `pytest.ini`, `.coveragerc` (Python), `package.json`, `tsconfig.json`, `eslint.config.js` (JavaScript). |
 
 - All source code lives under `src/`, except the entry point `main.py`. Create a folder only when

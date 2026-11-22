@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="The sherpa spec-driven development workflow: who does each step, what it produces, and what enforces it.">
 <!-- The SHA-256 of docs/workflow.md when this page was last made to agree with it. -->
-<meta name="workflow-md-sha256" content="95415768bb681e4d69a2c8f7acd0cd887bb1f228624c932792bc5493a6967737">
+<meta name="workflow-md-sha256" content="4da813af30c3ac4edad498e5dcf6f52457ec15c20b25561eaf580894859e5a55">
 <title>Sherpa SDD Workflow</title>
 <style>
   /* Layout: a slim /sherpa bar, then two rows of four cards that snake. Top row left to right (setup
@@ -696,6 +696,7 @@
         ['Enforced by',
           ul([
             'The pre-commit hook runs the same full check on every commit. It refuses the commit if a check fails.',
+            'At each push, the GitHub Actions workflow "Checks" installs the project on a clean machine from its dependency files, and runs the same checks.',
             'After the build session, the runner compares the hashes of `tests/` and runs the spec coverage itself.'
           ])],
         ['Offline',

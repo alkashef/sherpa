@@ -63,6 +63,7 @@ The approved changes are built. Their first text is in the git history of this f
 | 31 | Communication and reporting: the first time that a reply names an ID, it names its kind and its file. The runner names "milestone M<n> in docs/plan.md" in its messages, and "requirement X in docs/spec.md" in the question of a review block | D1, approved on November 22, 2026 |
 | 32 | The table of the runner: planned rows in very dark grey (256-color 238) with `-` and `planned`, a Total row under Duration, and a last row with a progress bar, the percent and `n/m` | USER-21, approved on November 21, 2026 |
 | 33 | `assets/scripts/dashboard.py`, standard library only: one HTML page on 127.0.0.1 (or `--out`) with Needs you, Plan and releases, Trace (also to a milestone that a commit finished) and Code map (file boxes by lines, imports against the module boundaries, the class list). The Refresh button reads the files again, it writes nothing, and it never shows a bare ID | USER-22, USER-23 and USER-24, approved on November 21, 2026 |
+| 34 | `assets/.github/workflows/check.yml` in each project: at each push a clean Linux machine installs from `requirements.txt` (and `npm ci`, with the Playwright browsers for `ui` tests) and runs `python scripts/check.py`. `release.py` adds `versions/pip-freeze.txt` (and `versions/npm-ls.txt`) to the release archive | Rank 14 (REPORT-10), approved in part on November 22, 2026 |
 
 One real run followed on November 21, 2026 (README, "Checked in real Claude Code sessions"). It
 proved the condition of the user's decision on rank 3: a `claude -p` session runs the built-in
@@ -77,14 +78,7 @@ after the walk-through of section G ends. Several of them change the same files 
 `/write-tests`, `assets/docs/workflow.md` and `workflow.html`), so one pass changes each file and
 the diagram one time.
 
-1. **Rank 14 (REPORT-10), approved in part on November 22, 2026:** a clean install at each
-    push.
-   - A GitHub Actions job in each new project (`assets/.github/workflows/check.yml`): at each
-     push, a clean machine installs the project from `requirements.txt` (and `npm ci` for
-     JavaScript), then runs `python scripts/check.py`. The `ui` tests need their browsers there.
-   - `release.py` saves the output of `pip freeze` (and `npm ls --all` for JavaScript) in the
-     release archive, so that a release can be installed again with the same versions.
-2. **Rank 17 (USER-06), approved on November 22, 2026:** one audit of `CLAUDE_GOLDEN.md` for rules
+1. **Rank 17 (USER-06), approved on November 22, 2026:** one audit of `CLAUDE_GOLDEN.md` for rules
     that are too rigid.
    - Do it after the build adds its new rules, so that the audit sees all of them.
    - One row for each rule (about 155): keep it with its reason, move it into a tool, move it
@@ -93,7 +87,7 @@ the diagram one time.
    - A rule that a real run later proves necessary comes back.
    - Examples to question: "Do not write your own ... context managers", "One class per file",
      and "a design pattern that no `Decided` decision names".
-3. **The second trial of the test writers (USER-17, approved on November 21 and 22, 2026):** the
+2. **The second trial of the test writers (USER-17, approved on November 21 and 22, 2026):** the
     build of USER-17 is done (Built, stage 15). Run the trial of the three writers again, with
     RUN-06 and RUN-07 in place, by the rule of the second trial: each writer runs 3 times on each
     of 2 projects (the slug tool, and a new project that stores data), scored by
@@ -101,11 +95,11 @@ the diagram one time.
     Of the qualified writers, the highest median of seeded bugs caught wins, and on a tie the
     faster one. If no writer qualifies, Claude stays the default, and each failed gate becomes a
     new idea. Then the user decides the default writer.
-4. **After the build, in a real session:** run the changes above, and also what is not
+3. **After the build, in a real session:** run the changes above, and also what is not
    run in a real session yet: `/sherpa`, and a milestone that a build session blocks with
    partial work in its branch. The second real run ran a human test, a block in the test
    session, and the approval.
-5. **`docs/v4/`, approved by the user on November 22, 2026:** after the real run, make
+4. **`docs/v4/`, approved by the user on November 22, 2026:** after the real run, make
     `docs/v4/` with the report, the presentation and the demo of the new workflow. `docs/v3/`
     stays as the record of the earlier version. sherpa's `CLAUDE.md` then names `v4/` as current.
 

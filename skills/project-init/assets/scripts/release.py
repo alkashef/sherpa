@@ -6,7 +6,10 @@ It stops when git is not clean, or when HEAD reaches no commit whose message sta
 (a commit `M<n>: blocked` does not count). The newest such commit is the cut commit. Then:
 
 1. It builds dist/<project>-<version>.zip with `git archive` from the cut commit. So the release
-   holds the exact files that passed the checks. <project> is the name of the root folder.
+   holds the exact files that passed the checks. <project> is the name of the root folder. It
+   adds the installed versions to the archive: versions/pip-freeze.txt (`pip freeze`) and, with a
+   package.json, versions/npm-ls.txt (`npm ls --all`). So the release can be installed again
+   with the same versions.
 2. It adds the annotated tag v<version> to the cut commit.
 3. It adds a row to docs/releases.md: version, date, last milestone, milestones with titles.
 4. It commits docs/releases.md with the message `Release <version>`.
@@ -32,6 +35,7 @@ import re
 import shutil
 import subprocess
 import sys
+import zipfile
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
@@ -43,6 +47,7 @@ ROOT = Path(__file__).resolve().parent.parent
 RELEASES_PATH = Path("docs") / "releases.md"
 RELEASES = RELEASES_PATH.as_posix()
 DIST_DIR = "dist"
+VERSIONS_DIR = "versions"  # in the archive: the installed versions, for a reinstall
 REMOTE = "origin"
 SHORT_ID_LENGTH = 7
 
@@ -257,11 +262,39 @@ def archive_path(release: Release) -> Path:
     return Path(DIST_DIR) / f"{release.project}-{release.version}.zip"
 
 
+def tool_output(command: list[str], root: Path) -> str:
+    """Return the standard output of a tool, or why it could not run."""
+    if shutil.which(command[0]) is None:
+        return f"{command[0]} is not installed.\n"
+    done = subprocess.run(
+        command,
+        cwd=root,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    return done.stdout
+
+
+def installed_versions(root: Path) -> dict[str, str]:
+    """Return the installed versions: pip freeze, and npm ls --all with a package.json."""
+    files = {"pip-freeze.txt": tool_output([sys.executable, "-m", "pip", "freeze"], root)}
+    if (root / "package.json").is_file():
+        npm = shutil.which("npm") or "npm"
+        files["npm-ls.txt"] = tool_output([npm, "ls", "--all"], root)
+    return files
+
+
 def build_archive(root: Path, release: Release) -> None:
-    """Build the archive from the files of the cut commit, with `git archive`."""
+    """Build the archive from the files of the cut commit, then add the installed versions."""
     path = archive_path(release)
     (root / path.parent).mkdir(exist_ok=True)
     git_output(root, "archive", "--format=zip", f"--output={path.as_posix()}", release.cut)
+    with zipfile.ZipFile(root / path, "a") as archive:
+        for name, text in installed_versions(root).items():
+            archive.writestr(f"{VERSIONS_DIR}/{name}", text)
 
 
 def add_tag(root: Path, release: Release) -> None:

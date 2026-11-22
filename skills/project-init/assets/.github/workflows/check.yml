@@ -1,0 +1,49 @@
+# A clean install at each push. A clean Linux machine installs the project from its dependency
+# files only, then runs the same checks as the pre-commit hook. So a dependency that is installed
+# on your machine and missing from requirements.txt (or package.json) fails here.
+name: Checks
+
+on:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the Python dependencies
+        if: hashFiles('requirements.txt') != ''
+        run: pip install -r requirements.txt
+
+      - name: Set up Node.js
+        if: hashFiles('package.json') != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install the JavaScript dependencies
+        if: hashFiles('package.json') != ''
+        run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Install the browsers of the ui tests
+        if: hashFiles('tests/e2e/ui/**') != ''
+        run: |
+          if [ -f package.json ] && grep -q '"@playwright/test"' package.json; then
+            npx playwright install --with-deps chromium
+          fi
+          if [ -f requirements.txt ] && grep -qi '^playwright' requirements.txt; then
+            python -m playwright install --with-deps chromium
+          fi
+
+      - name: Run the checks
+        run: python scripts/check.py

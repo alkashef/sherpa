@@ -191,6 +191,7 @@ def template_files() -> dict[str, list[str]]:
             *skill_files(),
             ".gitattributes",
             ".githooks/pre-commit",
+            ".github/workflows/check.yml",
             ".gitignore",
             "config/.env.example",
             "docs/releases.md",
@@ -276,6 +277,8 @@ def always_folders() -> dict[str, str]:
         "setup scripts.",
         ".claude/": "Claude Code settings, including the hook that checks each edit.",
         ".githooks/": "`pre-commit`: refuses a commit unless the checks pass.",
+        ".github/": "GitHub Actions: a clean install and the checks at each push, and mutation "
+        "tests on demand.",
         ".vscode/": "Shared editor settings.",
     }
 

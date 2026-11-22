@@ -442,3 +442,14 @@ def test_the_docs_of_a_new_project_are_plain_english(tmp_path: Path) -> None:
     options = ["--fail-over", "2.5", "--min-words", "100", "--repeated", "12"]
     done = run([sys.executable, str(script), *options, *names], project)
     assert done.returncode == 0, done.stdout
+
+
+def test_each_push_installs_the_project_on_a_clean_machine() -> None:
+    # Rank 14: a dependency that is only on the developer's machine fails at the next push.
+    workflow = (bi.assets_dir() / ".github" / "workflows" / "check.yml").read_text("utf-8")
+    assert "on:\n  push:" in workflow
+    assert "pip install -r requirements.txt" in workflow
+    assert "npm ci" in workflow
+    assert "playwright install" in workflow
+    assert workflow.rstrip().endswith("run: python scripts/check.py")
+    assert ".github/workflows/check.yml" in bi.template_files()["always"]

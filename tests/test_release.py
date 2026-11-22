@@ -102,6 +102,7 @@ def test_a_release_builds_the_archive_tags_the_cut_commit_and_pushes(project: Sa
         "docs/releases.md",
         "src/pay.txt",
         "src/refund.txt",
+        "versions/pip-freeze.txt",
     }
     assert project.git("cat-file", "-t", TAG) == "tag"
     assert commit_of(project, TAG) == cut
@@ -112,6 +113,14 @@ def test_a_release_builds_the_archive_tags_the_cut_commit_and_pushes(project: Sa
     assert project.git("status", "--porcelain") == ""
     assert project.remote_head() == project.git("rev-parse", "HEAD")
     assert remote_commit_of(project, TAG) == cut
+
+
+def test_the_archive_holds_the_installed_versions(project: Sandbox) -> None:
+    commit(project, "M1: Pay", "pay.txt")
+    code, lines = release(project, "M1")
+    assert code == 0, lines
+    with zipfile.ZipFile(project.folder / "dist" / f"demo-{VERSION}.zip") as archive:
+        assert "pytest==" in archive.read("versions/pip-freeze.txt").decode("utf-8")
 
 
 def test_it_prints_each_step_and_the_path_of_the_archive(project: Sandbox) -> None:
