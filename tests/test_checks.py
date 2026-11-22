@@ -81,15 +81,16 @@ def test_checks_pass_on_a_new_project(project: Sandbox) -> None:
     assert code == 0, output
     # One line for each check of the stack, with its result. A skipped line gives the reason.
     lines = output.splitlines()
-    assert lines[:5] == [
+    assert lines[:6] == [
         "skipped  UTF-8 text (no staged file)",
+        "passed   plain docs",
         "passed   ruff check",
         "passed   ruff format",
         "skipped  mypy (no Python in src/)",
         "skipped  one class per file (no Python in src/)",
     ]
-    assert lines[5].startswith("skipped  module boundaries (")
-    assert lines[6:] == ["skipped  pytest (no test_*.py in tests/)", "All checks passed."]
+    assert lines[6].startswith("skipped  module boundaries (")
+    assert lines[7:] == ["skipped  pytest (no test_*.py in tests/)", "All checks passed."]
 
 
 def test_a_staged_file_that_is_not_utf8_fails(project: Sandbox) -> None:
@@ -445,3 +446,27 @@ def test_pre_commit_hook_refuses_a_failing_commit(project: Sandbox) -> None:
     project.git("add", "-A")
     accepted = run([git_path(), "commit", "-m", "good"], project.folder, env)
     assert accepted.returncode == 0, accepted.stderr
+
+
+HARD_TEXT = (  # semicolons, passive voice and long sentences: far over 2.5 for 100 words
+    "The data is processed by the service; the results are stored by the database layer "
+    "after they have been validated by the component that was configured by the operator. "
+) * 8
+
+
+def test_docs_that_are_hard_to_read_fail(project: Sandbox) -> None:
+    (project.folder / "docs" / "notes.md").write_text(HARD_TEXT, encoding="utf-8")
+    code, output = check(project.folder)
+    assert code == 2
+    assert "failed   plain docs" in output
+    assert "docs/notes.md:" in output
+    assert "(over)" in output
+
+
+def test_a_sentence_in_two_docs_fails(project: Sandbox) -> None:
+    sentence = "The runner keeps the work of a blocked milestone in its own branch for later.\n"
+    (project.folder / "docs" / "a.md").write_text(sentence, encoding="utf-8")
+    (project.folder / "docs" / "b.md").write_text(sentence, encoding="utf-8")
+    code, output = check(project.folder)
+    assert code == 2
+    assert "is in docs/a.md and docs/b.md. Keep it in one." in output

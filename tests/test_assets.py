@@ -3,9 +3,11 @@
 import hashlib
 import json
 import re
+import sys
 from pathlib import Path
 
 import build_instance as bi
+from helpers import build, run
 
 
 def golden_ids() -> set[str]:
@@ -428,3 +430,15 @@ def test_the_skills_show_the_module_table_of_the_builder() -> None:
     project_init = (bi.assets_dir().parent / "SKILL.md").read_text(encoding="utf-8")
     assert "--list-modules" in project_init
     assert "| `python` |" not in project_init
+
+
+def test_the_docs_of_a_new_project_are_plain_english(tmp_path: Path) -> None:
+    # USER-20: the same lint that check.py runs in a project, on the templates of every module.
+    project = tmp_path / "full"
+    result = build(project, "--with", *sorted(bi.optional_flags()), "--purpose", "Tests all")
+    assert result.returncode == 0, result.stderr
+    names = ["README.md", "CLAUDE.md", *sorted(f"docs/{p.name}" for p in project.glob("docs/*.md"))]
+    script = bi.assets_dir() / "scripts" / "ste_lint.py"
+    options = ["--fail-over", "2.5", "--min-words", "100", "--repeated", "12"]
+    done = run([sys.executable, str(script), *options, *names], project)
+    assert done.returncode == 0, done.stdout

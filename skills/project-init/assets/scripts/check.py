@@ -31,6 +31,10 @@ alone cannot change a test result.
 
 One class per file: a Python file under `src/` defines at most one class at the top level.
 
+Plain docs: `scripts/ste_lint.py` lints README.md, CLAUDE.md and docs/*.md for Simplified Technical
+English. A file of 100 words or more fails over 2.5 marks for each 100 words, and a sentence of 12
+words or more fails when two of these files hold it.
+
 UTF-8 text: each staged text file must be valid UTF-8 and must not hold the replacement character
 U+FFFD, the mark of a text that was read in a wrong encoding. A shell can write a file in another
 encoding (Windows PowerShell 5.1 writes in the ANSI code page). A file with a NUL byte in its first
@@ -78,6 +82,8 @@ NO_PYTHON = "no Python in src/"
 NO_WEB = "no JavaScript, CSS or HTML in src/ or tests/"
 ONE_CLASS = "one class per file"
 UTF8 = "UTF-8 text"
+PLAIN_DOCS = "plain docs"
+STE_OPTIONS = ("--fail-over", "2.5", "--min-words", "100", "--repeated", "12")
 REPLACEMENT_CHARACTER = chr(0xFFFD)  # what a decoder puts in place of a byte it cannot read
 BINARY_PROBE = 8000  # git counts a file as binary when a NUL byte is in its first 8000 bytes
 BOUNDARIES = "module boundaries"
@@ -167,6 +173,21 @@ def encoding_result() -> Result:
     if not staged:
         return Result(UTF8, SKIP, "no staged file")
     return problems_result(UTF8, encoding_problems(staged))
+
+
+def docs_result() -> Result:
+    """Return the result of the lint of the docs that a person reads (scripts/ste_lint.py)."""
+    script = ROOT / "scripts" / "ste_lint.py"
+    names = [name for name in ("README.md", "CLAUDE.md") if (ROOT / name).is_file()]
+    names += sorted(relative(path) for path in (ROOT / "docs").glob("*.md"))
+    if not script.is_file() or not names:
+        return Result(PLAIN_DOCS, SKIP, "no scripts/ste_lint.py, or no doc to lint")
+    code, output = run([sys.executable, str(script), *STE_OPTIONS, *names])
+    return (
+        failure(PLAIN_DOCS, "python scripts/ste_lint.py", output)
+        if code
+        else Result(PLAIN_DOCS, PASS)
+    )
 
 
 def only_docs_staged() -> bool:
@@ -478,7 +499,7 @@ def check_all() -> int:
     """Run every check, print the line of each one, then each failure. Return 0 or FAILED."""
     results = python_results() + web_results()
     if results:
-        results.insert(0, encoding_result())
+        results = [encoding_result(), docs_result(), *results]
     for result in results:
         print(inventory_line(result))
     failures = [result.detail for result in results if result.state == FAIL]

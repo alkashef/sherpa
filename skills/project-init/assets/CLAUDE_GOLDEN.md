@@ -132,7 +132,7 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 | `data/` | Input and runtime data. |
 | `content/`, `site/` | Static site: Markdown source (authors edit only this) and generated output (committed, never edited by hand). |
 | `models/`, `prompts/` | Downloaded model weights (never committed; path from config) and LLM prompt files. |
-| `scripts/` | Setup, download, and maintenance scripts: `cleanup.py`, `check.py` (the checks the hooks run), `spec_coverage.py` (which requirement has a test), `milestones-runner.py` (runs the plan unattended), `download_models.py`, `download_assets.py`. |
+| `scripts/` | Setup, download, and maintenance scripts: `cleanup.py`, `check.py` (the checks the hooks run), `spec_coverage.py` (which requirement has a test), `ste_lint.py` (plain docs), `milestones-runner.py` (runs the plan unattended), `download_models.py`, `download_assets.py`. |
 | `.vscode/`, `.claude/` | Shared editor settings and Claude Code settings. |
 | Root | `CLAUDE.md`, `README.md`, `requirements.txt`, `.gitignore`, `main.py` (Python entry point), `Dockerfile`, `compose.yaml`, `.dockerignore` (Docker), and the tool configs: `ruff.toml`, `mypy.ini`, `pytest.ini`, `.coveragerc` (Python), `package.json`, `tsconfig.json`, `eslint.config.js` (JavaScript). |
 
@@ -306,6 +306,8 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
   | A library added or removed | `requirements.txt`, in the same change as the import |
   | New generated files, caches, secrets | `.gitignore` |
 
+- Docs that a person reads use ASD-STE100 Simplified Technical English (flavored): top-down, short
+  sections, tables and lists before prose, one fact in one place. `scripts/check.py` lints them.
 - `README.md` always has: What it does, Stack (with versions), File structure (top-level folders,
   one line each), Setup, How to run, How to test. Setup explains how to install dependencies,
   configure `config/.env`, and set up and check every external dependency (the LLM server, models,
