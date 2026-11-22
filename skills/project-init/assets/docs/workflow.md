@@ -18,7 +18,7 @@ A requirement has an ID (`AREA-NNN`, or `NFR-NNN` for a non-functional one), an 
 
 ## The loop
 
-`/sdd` is the way in: it reads the state of these files and what the user asks, names the step below that comes next, and starts that step's skill. It runs one step, then stops.
+`/sherpa` is the way in: it reads the state of these files and what the user asks, names the step below that comes next, and starts that step's skill. It runs one step, then stops.
 
 1. **Spec.** For a new project or a change, the user runs `/write-spec`. The AI interviews the user, one question at a time, and writes the requirements into `spec.md` as a draft (`Status: Draft`). For a spec that is already approved, it proposes each change first. The user approves the spec; then `Status` is `Approved`. Each requirement is one EARS statement that a test can check without the design. The acceptance examples (`EX-NNN`) list the cases of each user scenario: first the most likely cases, in full, then the edge cases. For each external system, the spec says what the program does when that system fails. The requirements and these examples are the tests designed from the spec.
 2. **Design.** Once the spec is approved, the user runs `/write-design`. The AI updates `design.md` and asks only what it cannot decide. If the design needs a different requirement, it proposes the spec change; the user approves it. The design shows the components and their interfaces in one diagram, lists the module boundaries (the checks enforce them), gives each requirement a test level (`unit`, `e2e`, `ui` or `live`) and names every interface a test needs. The user approves the design: then no decision is `Proposed` and no design question is open.

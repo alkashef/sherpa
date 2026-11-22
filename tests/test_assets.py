@@ -95,7 +95,7 @@ def test_project_skills_are_the_six_slash_commands() -> None:
     names = [p.name for p in project_skills()]
     assert names == [
         "code-review-sherpa",
-        "sdd",
+        "sherpa",
         "write-design",
         "write-plan",
         "write-spec",
@@ -161,13 +161,13 @@ def workflow_text() -> str:
     return (bi.assets_dir() / "docs" / "workflow.md").read_text(encoding="utf-8")
 
 
-def test_sdd_is_the_way_in_and_routes_to_every_other_skill() -> None:
-    assert "`/sdd` is the way in" in workflow_text()
+def test_sherpa_is_the_way_in_and_routes_to_every_other_skill() -> None:
+    assert "`/sherpa` is the way in" in workflow_text()
     skills = ("/write-spec", "/write-design", "/write-plan", "/write-tests", "/code-review-sherpa")
     for skill in skills:
-        assert skill in skill_text("sdd"), skill
-    assert "scripts/milestones-runner.py" in skill_text("sdd")
-    assert "scripts/release.py" in skill_text("sdd")
+        assert skill in skill_text("sherpa"), skill
+    assert "scripts/milestones-runner.py" in skill_text("sherpa")
+    assert "scripts/release.py" in skill_text("sherpa")
 
 
 def workflow_page() -> str:
@@ -279,11 +279,11 @@ def test_the_workflow_page_holds_the_philosophy() -> None:
 
 
 def test_the_design_records_who_decided() -> None:
-    # /sdd and /write-plan read the design as approved when no decision is Proposed.
+    # /sherpa and /write-plan read the design as approved when no decision is Proposed.
     design = (bi.assets_dir() / "docs" / "design.md").read_text(encoding="utf-8")
     assert "| ID | Status | Decision | Why |" in design
     assert "## 6. Open design questions" in design
-    for text in (workflow_text(), skill_text("sdd"), skill_text("write-plan")):
+    for text in (workflow_text(), skill_text("sherpa"), skill_text("write-plan")):
         assert "`Proposed`" in text
     for status in ("`Decided`", "`Proposed`", "`Superseded`"):
         assert status in skill_text("write-design"), status
@@ -293,9 +293,9 @@ def test_unapproved_ideas_are_never_built_from() -> None:
     ideas = (bi.assets_dir() / "docs" / "unapproved-ideas.md").read_text(encoding="utf-8")
     assert "never\ndesign, plan, test or build from this file" in ideas
     assert "Never design, plan, test or build from it." in workflow_text()
-    for skill in ("sdd", "write-spec", "write-design", "write-plan"):
+    for skill in ("sherpa", "write-spec", "write-design", "write-plan"):
         assert "docs/unapproved-ideas.md" in skill_text(skill), skill
-    # The file is for the user and for /sdd; the sessions of a milestone never read it.
+    # The file is for the user and for /sherpa; the sessions of a milestone never read it.
     runner = (bi.assets_dir() / "scripts" / "milestones-runner.py").read_text(encoding="utf-8")
     assert "unapproved-ideas" not in runner
     assert "unapproved-ideas" not in skill_text("write-tests")

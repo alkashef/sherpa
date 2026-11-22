@@ -40,6 +40,7 @@ The approved changes are built. Their first text is in the git history of this f
 | 8 | `assets/docs/workflow.md`, the page with the philosophy, the README, the builder, the tests | All |
 | 9 | `assets/scripts/check.py`: the module boundaries of JavaScript files. `assets/scripts/milestones-runner.py`: a refused `M<n>: blocked` commit or push says how to finish the step | Open work of the first build |
 | 10 | `assets/ruff.toml`: `known-first-party = ["src"]`, so that the order of the imports of a test does not depend on whether the code file exists. A bug that the second real run found | RUN-05, approved on November 21, 2026 |
+| 11 | The project skill `/sdd` is now `/sherpa`: its folder, its name, and each reference in the skills, the docs, the page, the runner, the builder and the tests. `docs/v1/` to `docs/v3/` keep `/sdd` | Asked by the user on November 22, 2026 |
 
 One real run followed on November 21, 2026 (README, "Checked in real Claude Code sessions"). It
 proved the condition of the user's decision on rank 3: a `claude -p` session runs the built-in
@@ -54,24 +55,15 @@ after the walk-through of section G ends. Several of them change the same files 
 `/write-tests`, `assets/docs/workflow.md` and `workflow.html`), so one pass changes each file and
 the diagram one time.
 
-1. **Rename `/sdd` to `/sherpa`, asked by the user on November 22, 2026.** Do it first, so that
-    the later changes use the new name.
-    - Rename `assets/.claude/skills/sdd/` to `assets/.claude/skills/sherpa/`, with `name: sherpa`.
-      Its description keeps the words "spec-driven development", so that it still triggers.
-    - Change each reference (46 in 12 files on November 22, 2026): the README, `SKILL.md` of
-      `project-init`, the builder, `write-plan`, `workflow.md`, `workflow.html`, the template
-      `unapproved-ideas.md`, the runner, and the tests.
-    - `docs/v1/` to `docs/v3/` keep `/sdd`, because they record earlier versions. A project made
-      before the rename keeps its `/sdd`.
-2. **RUN-06, approved on November 21, 2026:** the coverage gate counts the processes that a
+1. **RUN-06, approved on November 21, 2026:** the coverage gate counts the processes that a
    test starts. Add `assets/.coveragerc` with `[run]` and `patch = subprocess` (Coverage.py 7.10
    or later), and copy it into each new project. In the trial, a correct implementation had 41%
    coverage with the tests of Codex and of Claude, and 90% with this setting.
-3. **RUN-07, approved on November 21, 2026:** `/write-tests`, step 3, asks for the limits and
+2. **RUN-07, approved on November 21, 2026:** `/write-tests`, step 3, asks for the limits and
    the defaults. For each limit that a requirement names, test the limit and one value on each
    side. For each default, test a call that leaves out the value. For each invalid input, test one
    value of each kind (out of range, wrong type).
-4. **USER-13 and USER-14, approved on November 21, 2026:** the glossary and the data model.
+3. **USER-13 and USER-14, approved on November 21, 2026:** the glossary and the data model.
    - `assets/docs/spec.md`, section 2: a table `Term | Meaning | Avoid`. `/write-spec` fills it.
      Names in the code use the Term, never an Avoid word (`assets/CLAUDE_GOLDEN.md`, Naming).
    - `assets/docs/design.md`, section 3: one Mermaid `erDiagram` with the entities, their typed
@@ -79,7 +71,7 @@ the diagram one time.
      to it for the stored records, and does not copy them.
    - Make the spec and design templates of `/write-spec` and `/write-design` agree with
      `assets/docs/spec.md` and `assets/docs/design.md`. The copies drifted apart.
-5. **USER-17, approved on November 21, 2026:** the tests come from a folder without the code.
+4. **USER-17, approved on November 21, 2026:** the tests come from a folder without the code.
    - For each test session, `assets/scripts/milestones-runner.py` makes a temporary folder
      outside the project. It holds `docs/spec.md`, `docs/design.md`, `docs/plan.md`, the test
      rules, the tool configs and `tests/`, but no `src/` and no `.git`.
@@ -132,7 +124,7 @@ the diagram one time.
        runs. Of the qualified writers, the highest median of seeded bugs caught wins, and on a
        tie the faster one. If no writer qualifies, Claude stays the default, and each failed
        gate becomes a new idea.
-6. **Rank 15 (REPORT-05), approved in part on November 22, 2026:** the runner checks why a new
+5. **Rank 15 (REPORT-05), approved in part on November 22, 2026:** the runner checks why a new
    test fails.
    - In the copy-back step of USER-17, the runner runs the new tests with `--junitxml` and reads
      the kind of each failure.
@@ -141,7 +133,7 @@ the diagram one time.
      `NameError` or `TypeError` in the test, or an import of a missing test helper.
    - A failure that is not valid goes back to the writer in its round of repair, with its type
      and message.
-7. **RUN-01, approved on November 22, 2026:** a review finding about a test gets repaired.
+6. **RUN-01, approved on November 22, 2026:** a review finding about a test gets repaired.
    - The route follows the file where the fix goes: a finding about `tests/` goes to a test
      session, any other finding to the repair session. The review names that file, so a missing
      test names a test file.
@@ -150,7 +142,7 @@ the diagram one time.
    - If it changed a test, a build session runs again, then the last review. One round only.
    - A session that adds a public function also adds it to Interfaces in `docs/design.md`, as a
      decision, so that a test writer can test it from the design. The repair prompt says so.
-8. **RUN-02, approved on November 22, 2026:** a fault against a requirement stops the merge.
+7. **RUN-02, approved on November 22, 2026:** a fault against a requirement stops the merge.
    - The review prompt says: a fault against a requirement that no test catches is a missing
      test, so the review names a test file for it. RUN-01 then sends it to the test session. If
      the new test passes, the fault was a false alarm.
@@ -159,26 +151,26 @@ the diagram one time.
      reads this from the `FINDING:` line.
    - Every other finding stays in the report and on the dashboard.
    - This replaces the decision of November 20, 2026 that each finding merges.
-9. **RUN-03, approved on November 22, 2026:** the sessions get the PATH of the environment.
+8. **RUN-03, approved on November 22, 2026:** the sessions get the PATH of the environment.
    - The runner puts the folders of its own conda environment first on the PATH of each
      session, the folders that `conda activate` adds. On Windows: the root,
      `Library\mingw-w64\bin`, `Library\usr\bin`, `Library\bin`, `Scripts` and `bin`.
      Elsewhere: `bin`. The shells of the test writers get the same PATH.
    - A start check runs `python -c "import sys; print(sys.prefix)"` with that PATH. If the
      answer is not the environment of the project, the runner does not start.
-10. **RUN-04, approved on November 22, 2026:** guards against files written through the shell.
+9. **RUN-04, approved on November 22, 2026:** guards against files written through the shell.
    - `check.py` fails when a text file in the commit is not valid UTF-8, or holds the
      replacement character U+FFFD. PowerShell 5.1 writes in the ANSI code page.
    - Deny rules in `assets/.claude/settings.json`: `PowerShell(Set-Content *)`,
      `PowerShell(Out-File *)` and `PowerShell(Add-Content *)`. They stop mistakes, not a session
      that rewords the command.
    - The prompts of the runner say to write files with the Edit and Write tools.
-11. **IMPL-01, approved on November 22, 2026:** each review runs in a temporary git worktree.
+10. **IMPL-01, approved on November 22, 2026:** each review runs in a temporary git worktree.
    - The worktree holds the commit of the milestone, outside the project folder. The runner
      deletes it after the review, so a change that the review makes cannot touch the branch.
    - If the worktree had changes, the runner writes one warning line in the log.
    - This replaces the rule that a review which changed a file counts as failed.
-12. **IMPL-02, approved on November 22, 2026:** no permission prompts for a milestone in chat.
+11. **IMPL-02, approved on November 22, 2026:** no permission prompts for a milestone in chat.
    - Allow in `assets/.claude/settings.json`, each with its PowerShell twin:
      `git switch -c milestone/*`, `git switch main`, `git merge --ff-only milestone/*` and
      `git branch -d milestone/*`.
@@ -186,7 +178,7 @@ the diagram one time.
      rules do not cover that form.
    - Steps 4.1 and 10 of `assets/docs/workflow.md`, and `/sherpa`, name these exact commands.
    - A project with a base branch other than `main` still gets one prompt for the switch.
-13. **C2, approved on November 22, 2026:** chat mode uses the guards of the runner.
+12. **C2, approved on November 22, 2026:** chat mode uses the guards of the runner.
     - `python scripts/milestones-runner.py --tests-only M<n>`: the folder of USER-17, the chosen
       writer, the copy back, the check of the failure reason (rank 15), and one round of repair.
       Step 2 of `/sherpa` calls it, in place of the test subagent.
@@ -195,7 +187,7 @@ the diagram one time.
       `--tests-only` (RUN-01). Step 4 of `/sherpa` calls it, in place of the review subagent.
     - Both commands go on the allow list of `assets/.claude/settings.json`.
     - The build stays in the chat session.
-14. **USER-18, approved on November 21, 2026:** the project skill `/find-bugs`.
+13. **USER-18, approved on November 21, 2026:** the project skill `/find-bugs`.
    - The user starts it, before a release. It changes no code. Its scope is the code changed
      since the last release tag, or all of the code before the first release.
    - First the tools: the lines that no test runs (the coverage report), and a dependency audit
@@ -211,14 +203,14 @@ the diagram one time.
    - Update `assets/docs/workflow.md`, `assets/docs/workflow.html` and the README.
    - Chat mode (`/sherpa`) uses this folder too, through `--tests-only` (open work below, C2).
    - Update `assets/docs/workflow.md`, `assets/docs/workflow.html` and the README.
-15. **C3, approved on November 22, 2026:** property tests, and mutation tests on demand.
+14. **C3, approved on November 22, 2026:** property tests, and mutation tests on demand.
     - `/write-tests` writes a property test (Hypothesis) when a requirement states a rule for all
       inputs, with at most 50 examples for each test. `hypothesis` joins the `python` module.
     - A manual GitHub Actions workflow (Linux) runs `mutmut` (Python) or Stryker (JavaScript) on
       the files changed since the last release. `mutmut` 3 needs `fork`, so it does not run on
       Windows. `/find-bugs` reads the list of surviving mutants, and writes a fix milestone for
       each real gap in the tests.
-16. **USER-19, approved on November 21, 2026:** the modules follow the design.
+15. **USER-19, approved on November 21, 2026:** the modules follow the design.
    - When the design is approved, `/write-design` compares the design (languages, components,
      folders) with the modules of the project and the globs of their rules files. It proposes
      the missing modules and the globs for the real folders, and the user approves.
@@ -230,7 +222,7 @@ the diagram one time.
      says in one or two sentences what the rules of the module cover. It replaces the globs.
    - One owner for the table: `build_instance.py` holds each module with its details and prints
      the table (`--list-modules`). The two skills show that output and do not copy the table.
-17. **Rank 16 (REPORT-15), approved on November 22, 2026:** each module names what its tests
+16. **Rank 16 (REPORT-15), approved on November 22, 2026:** each module names what its tests
    prove. Each module section of `assets/CLAUDE_GOLDEN.md` gets one line "Tests prove":
    - `cli`: each exit code, stdout and stderr. A second run with the same input gives the same
      result.
@@ -244,12 +236,12 @@ the diagram one time.
    - `llm`: a bad answer from the fake model gives the documented error.
    - `/write-design` uses the line in the test design. The `AGENTS.md` of the test folder carries
      the rules files of the project.
-18. **Rank 18 (USER-05), approved on November 22, 2026:** where the folder layout comes from. One
+17. **Rank 18 (USER-05), approved on November 22, 2026:** where the folder layout comes from. One
     paragraph in `assets/.claude/skills/write-design/references/design-guide.md`: take the folder
     layout from the documented structure of the chosen framework, when it has one. When the
     project has a frontend and a backend, give each its own folder. Inside a folder, group the
     files by feature when there is more than one feature.
-19. **USER-20, approved on November 21, 2026:** the style of the documents.
+18. **USER-20, approved on November 21, 2026:** the style of the documents.
    - `assets/CLAUDE_GOLDEN.md`, Living docs, one rule: each doc that a person reads uses STE,
      flavored mode. Top-down, short sections, tables and lists before prose, one fact in one
      place.
@@ -260,7 +252,7 @@ the diagram one time.
    - sherpa's suite runs the same lint on the templates. First fix
      `assets/docs/workflow.md` (2.77 on November 21, 2026).
    - EARS keeps "shall": flavored mode allows it.
-20. **D1, approved on November 22, 2026:** no bare ID in text for a person.
+19. **D1, approved on November 22, 2026:** no bare ID in text for a person.
     - One line in `assets/CLAUDE_GOLDEN.md`, Communication and reporting: the first time that a
       reply or a report names an ID, it names the kind and the file, for example "requirement
       SLUG-003 in docs/spec.md".
@@ -270,7 +262,7 @@ the diagram one time.
       plan table, and the commit subject `M<n>: <title>`. Their free text can name the kind.
     - The built `CLAUDE.md` used 193 of its 200 lines on November 22, 2026. This line and the
       STE line need room, so the audit (rank 17) frees some.
-21. **USER-21, approved on November 21, 2026:** the table of the milestone runner.
+20. **USER-21, approved on November 21, 2026:** the table of the milestone runner.
    - After the running milestone, a row for each planned milestone of the range, in very dark
      grey (256-color code 238): `-` in Duration, Decisions and Findings, `planned` in Result.
      With colors off, the row is plain text.
@@ -280,7 +272,7 @@ the diagram one time.
    - The planned rows count for the width of the Title column.
    - Update the runner docstring, `assets/docs/workflow.md`, the panel of `workflow.html`, and
      the tests of the table.
-22. **USER-22, USER-23 and USER-24, approved on November 21, 2026:** a dashboard for the
+21. **USER-22, USER-23 and USER-24, approved on November 21, 2026:** a dashboard for the
    developer.
    - `assets/scripts/dashboard.py`, standard library only. It serves an HTML page on 127.0.0.1
      and opens the browser. The Refresh button makes the script read the files again. No AI, no
@@ -301,18 +293,18 @@ the diagram one time.
    - Limit: the review findings exist only in the runner logs of one machine.
    - Update `assets/docs/workflow.md`, `workflow.html`, the README and the table "Directory
      structure" of `CLAUDE_GOLDEN.md`.
-23. **Rank 14 (REPORT-10), approved in part on November 22, 2026:** a clean install at each
+22. **Rank 14 (REPORT-10), approved in part on November 22, 2026:** a clean install at each
     push.
    - A GitHub Actions job in each new project (`assets/.github/workflows/check.yml`): at each
      push, a clean machine installs the project from `requirements.txt` (and `npm ci` for
      JavaScript), then runs `python scripts/check.py`. The `ui` tests need their browsers there.
    - `release.py` saves the output of `pip freeze` (and `npm ls --all` for JavaScript) in the
      release archive, so that a release can be installed again with the same versions.
-24. **Rank 19 (USER-07), November 22, 2026:** the README section for contributors names the four
+23. **Rank 19 (USER-07), November 22, 2026:** the README section for contributors names the four
     places that a new language needs: a module section in `CLAUDE_GOLDEN.md` and an entry in the
     builder, its commands in `check.py`, its test-name pattern in `spec_coverage.py`, and its
     config files in `assets/`.
-25. **Rank 17 (USER-06), approved on November 22, 2026:** one audit of `CLAUDE_GOLDEN.md` for rules
+24. **Rank 17 (USER-06), approved on November 22, 2026:** one audit of `CLAUDE_GOLDEN.md` for rules
     that are too rigid.
    - Do it after the build adds its new rules, so that the audit sees all of them.
    - One row for each rule (about 155): keep it with its reason, move it into a tool, move it
@@ -321,11 +313,11 @@ the diagram one time.
    - A rule that a real run later proves necessary comes back.
    - Examples to question: "Do not write your own ... context managers", "One class per file",
      and "a design pattern that no `Decided` decision names".
-26. **After the build, in a real session:** run the changes above, and also what is not
+25. **After the build, in a real session:** run the changes above, and also what is not
    run in a real session yet: `/sherpa`, and a milestone that a build session blocks with
    partial work in its branch. The second real run ran a human test, a block in the test
    session, and the approval.
-27. **`docs/v4/`, approved by the user on November 22, 2026:** after the real run, make
+26. **`docs/v4/`, approved by the user on November 22, 2026:** after the real run, make
     `docs/v4/` with the report, the presentation and the demo of the new workflow. `docs/v3/`
     stays as the record of the earlier version. sherpa's `CLAUDE.md` then names `v4/` as current.
 

@@ -103,5 +103,5 @@ user asks to pin a version.
 Check that every row has a block, every block has a row, every number is unique, and every ID in
 Refs exists in the spec or the design. Run `python scripts/spec_coverage.py --consistency` and
 correct what it lists. Report the milestones and any requirement left uncovered.
-Tell the user the next step: run `python scripts/milestones-runner.py`, or run `/sdd` to work the
+Tell the user the next step: run `python scripts/milestones-runner.py`, or run `/sherpa` to work the
 first milestone in chat. Stop there.

@@ -770,7 +770,7 @@ def test_a_human_test_that_is_not_confirmed_stops_the_run(planned: Sandbox, type
     code, output = run_runner(planned, typed=typed)
     assert code == 1
     assert "The human test of M1 is not confirmed." in output
-    assert "/sdd: it becomes a fix milestone" in output
+    assert "/sherpa: it becomes a fix milestone" in output
     assert "Run the runner again to continue with the next milestone." in output
     # The question comes after the merge and the push, and the next milestone did not start.
     assert subjects(planned, "-1") == ["M1: First"]

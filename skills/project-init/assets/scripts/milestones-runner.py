@@ -2041,7 +2041,7 @@ def ask_human_test(session: Session, running: Running) -> None:
     answer = console.ask()
     if answer is None or answer.strip().lower() != ANSWER_YES:
         details = [
-            "Give a fault to /sdd: it becomes a fix milestone.",
+            "Give a fault to /sherpa: it becomes a fix milestone.",
             "Run the runner again to continue with the next milestone.",
         ]
         raise RunStoppedError(f"The human test of M{row.id} is not confirmed.", details, "yellow")

@@ -1,9 +1,9 @@
 ---
-name: sdd
-description: The way into spec-driven development in this repo. Reads the state of docs/spec.md, docs/design.md, docs/plan.md and docs/unapproved-ideas.md and what the user asks, names the step of docs/workflow.md that comes next, and starts that one skill (/write-spec, /write-design, /write-plan, or a milestone with /write-tests). Use when the user asks for a new feature, a change, a fix of any size, the next step, to build or run milestones, to note or take up an idea, or where the project stands, even if they do not name a skill. Runs one step, then stops.
+name: sherpa
+description: The way into spec-driven development (SDD) in this repo. Reads the state of docs/spec.md, docs/design.md, docs/plan.md and docs/unapproved-ideas.md and what the user asks, names the step of docs/workflow.md that comes next, and starts that one skill (/write-spec, /write-design, /write-plan, or a milestone with /write-tests). Use when the user asks for a new feature, a change, a fix of any size, the next step, to build or run milestones, to note or take up an idea, or where the project stands, even if they do not name a skill. Runs one step, then stops.
 ---
 
-# SDD
+# Sherpa
 
 Route the request to one step of the loop in `docs/workflow.md`, start that step's skill, and stop.
 Hold no rule of your own: `docs/workflow.md` and `CLAUDE.md` own the rules. Never pass an approval
@@ -94,4 +94,4 @@ For a status request, give only those lines, the number of unapproved ideas, and
 ## 5. Stop
 
 Run one skill, then stop. When it ends, tell the user the next step in one line, for example
-"Next: approve the design, then run `/sdd` again." Never start the next step yourself.
+"Next: approve the design, then run `/sherpa` again." Never start the next step yourself.

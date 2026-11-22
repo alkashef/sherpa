@@ -1,6 +1,6 @@
 ---
 name: project-init
-description: Set up the current folder as a new project from the golden templates and push it to GitHub. Run it in a new, empty project folder that is open in VS Code. Builds CLAUDE.md, the path-scoped rules, docs/ (workflow, spec, design, plan, unapproved ideas), the /sdd, /write-spec, /write-design, /write-plan, /write-tests and /code-review-sherpa skills, README, tool configs and starting folders, then commits, creates the GitHub repository, pushes, and creates a conda environment with the project's name. Use whenever the user wants to start, init, bootstrap or scaffold a new project or repo, or says "new project", even if they do not mention GitHub or the docs. Not for adding files to an existing project.
+description: Set up the current folder as a new project from the golden templates and push it to GitHub. Run it in a new, empty project folder that is open in VS Code. Builds CLAUDE.md, the path-scoped rules, docs/ (workflow, spec, design, plan, unapproved ideas), the /sherpa, /write-spec, /write-design, /write-plan, /write-tests and /code-review-sherpa skills, README, tool configs and starting folders, then commits, creates the GitHub repository, pushes, and creates a conda environment with the project's name. Use whenever the user wants to start, init, bootstrap or scaffold a new project or repo, or says "new project", even if they do not mention GitHub or the docs. Not for adding files to an existing project.
 ---
 
 # Project init
@@ -90,11 +90,11 @@ To change what new projects get, edit `assets/`, not this file.
      Stylelint and Prettier) on the file and sends what is left back to Claude, and the git
      pre-commit hook refuses a commit unless every check and test passes. Until `npm install` has run, it
      refuses commits that have web files to check, and says so.
-   - In the new session, type `/sdd`. It reads the state of the docs, names the next step of
+   - In the new session, type `/sherpa`. It reads the state of the docs, names the next step of
      `docs/workflow.md`, and starts that step's skill: first `/write-spec`, which interviews the
      user about the project, starting from the purpose given here, and writes `docs/spec.md`.
      When the user approves the spec, `/write-design` writes `docs/design.md`, and when the user
-     approves the design, `/write-plan` writes the milestones in `docs/plan.md`. `/sdd` runs one
+     approves the design, `/write-plan` writes the milestones in `docs/plan.md`. `/sherpa` runs one
      step, then stops: run it again for the next one.
      `python scripts/milestones-runner.py` runs the planned milestones unattended. Each milestone
      runs in its own branch, in fresh `claude -p` sessions: one writes its tests with
@@ -108,7 +108,7 @@ To change what new projects get, edit `assets/`, not this file.
      who does it, what it produces, and what enforces it. The rules themselves are in
      `docs/workflow.md`.
    - An idea for later goes into `docs/unapproved-ideas.md`. Nothing is built from that file: an
-     idea becomes work only through `/sdd`, with the user's approval.
+     idea becomes work only through `/sherpa`, with the user's approval.
    - Review the **Project** section of the new `CLAUDE.md` and the layout table in `docs/design.md`.
 
 Do not edit the generated files or make more commits in this skill. Setting up the project is done

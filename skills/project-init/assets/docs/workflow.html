@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="The sherpa spec-driven development workflow: who does each step, what it produces, and what enforces it.">
 <!-- The SHA-256 of docs/workflow.md when this page was last made to agree with it. -->
-<meta name="workflow-md-sha256" content="a0ca919e721d28537e3ca06255856c06da74bb62c049c1d0392ea812f71f6b49">
+<meta name="workflow-md-sha256" content="fbad16b7b062c557dbcea84bf553fbe792983e11f9fdb320d64cf992e1dbe72e">
 <title>Sherpa SDD Workflow</title>
 <style>
-  /* Layout: a slim /sdd bar, then two rows of four cards that snake. Top row left to right (setup
+  /* Layout: a slim /sherpa bar, then two rows of four cards that snake. Top row left to right (setup
      and approvals), bottom row right to left (the milestone loop: a test, a build and a review
      session), then the runner's Merge card under Review. A card opens a docked right panel. The
      text follows docs/workflow.md, which owns the rules. */
@@ -71,7 +71,7 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) 84px minmax(0, 1fr) 84px minmax(0, 1fr) 84px minmax(0, 1fr);
     grid-template-areas:
-      ".      .  sdd   sdd sdd  sdd sdd"
+      ".      .  sherpa   sherpa sherpa  sherpa sherpa"
       ".      .  r1    .   r2   .   r3"
       "con    a1 spec  a2  des  a3  plan"
       ".      .  .     .   .    .   d1"
@@ -109,7 +109,7 @@
   .node.duo b { padding-right: 4.4rem; }
   .who { position: absolute; top: 14px; right: 14px; display: flex; gap: 6px; }
 
-  /* The /sdd bar: the way into every step to its right and below. */
+  /* The /sherpa bar: the way into every step to its right and below. */
   .node.bar { min-height: 0; flex-direction: row; flex-wrap: wrap; align-items: baseline; justify-content: flex-start; gap: 4px 14px; padding: 12px 56px 12px 16px; }
   .node.bar b { padding-right: 0; font-family: var(--font-mono); font-size: clamp(1rem, 1.4vw, 1.2rem); }
   .node.bar .desc { color: var(--muted); font-size: .9rem; }
@@ -216,7 +216,7 @@
     .node:not(.bar) .who { position: absolute; }
     .flow {
       grid-template-columns: minmax(0, 1fr);
-      grid-template-areas: "con" "a1" "sdd" "r1" "spec" "a2" "des" "a3" "plan" "d1" "test" "a4" "code" "a5" "check" "a6" "review" "d2" "merge";
+      grid-template-areas: "con" "a1" "sherpa" "r1" "spec" "a2" "des" "a3" "plan" "d1" "test" "a4" "code" "a5" "check" "a6" "review" "d2" "merge";
       grid-template-rows: none;
       row-gap: 8px;
     }
@@ -242,10 +242,10 @@
   </div>
 
   <div class="layout" id="layout">
-    <div class="flow" role="group" aria-label="Constitution, then /sdd routes to Spec, Design or Plan. Then per milestone, in its own branch: a test session writes the tests first, a build session does Code, then Check and commit, a review session reviews the change, and the runner merges and pushes. Repeated for the next milestone.">
+    <div class="flow" role="group" aria-label="Constitution, then /sherpa routes to Spec, Design or Plan. Then per milestone, in its own branch: a test session writes the tests first, a build session does Code, then Check and commit, a review session reviews the change, and the runner merges and pushes. Repeated for the next milestone.">
 
-      <button type="button" class="node bar" data-step="sdd" aria-pressed="false" aria-controls="panel" style="grid-area: sdd">
-        <b>/sdd</b>
+      <button type="button" class="node bar" data-step="sherpa" aria-pressed="false" aria-controls="panel" style="grid-area: sherpa">
+        <b>/sherpa</b>
         <span class="desc">The way in. It reads the docs, names the next step, starts that step's skill, then stops.</span>
         <span class="who"><svg class="icon" viewBox="0 0 24 24" role="img" aria-label="AI"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V5M2 13v3M22 13v3M9.5 17.5h5"/><circle class="dot" cx="12" cy="3.6" r="1.2"/><circle class="dot" cx="9" cy="13" r="1.3"/><circle class="dot" cx="15" cy="13" r="1.3"/></svg></span>
       </button>
@@ -376,13 +376,13 @@
   function ul(items) { return list('ul', items); }
 
   var STEPS = {
-    sdd: {
+    sherpa: {
       eyebrow: 'Every request · the way in',
-      title: '/sdd',
+      title: '/sherpa',
       actors: [['ai', 'reads the state and routes'], ['human', 'asks, and passes each gate']],
       sections: [
         ['What happens',
-          p('`/sdd` reads the state from the files, not from memory:'),
+          p('`/sherpa` reads the state from the files, not from memory:'),
           ul([
             'The Status of `spec.md`',
             'The decisions and open questions of `design.md`',
@@ -390,7 +390,7 @@
             'The ideas in `unapproved-ideas.md`',
             'Git, and a branch `milestone/M&lt;n&gt;` that an earlier run left'
           ]),
-          p('Then `/sdd` does these steps:'),
+          p('Then `/sherpa` does these steps:'),
           ol([
             'Names the step that comes next.',
             'Starts the skill of that step.',
@@ -415,7 +415,7 @@
           ]),
           ul([
             'A request that skips a step goes to that step.',
-            '`/sdd` never passes an approval gate for the user.'
+            '`/sherpa` never passes an approval gate for the user.'
           ])],
         ['Ideas',
           ul([
@@ -447,7 +447,7 @@
             '`CLAUDE.md`: the rules that are always loaded',
             '`.claude/rules/`: the path-scoped rules',
             '`.claude/settings.json`',
-            'The skills `/sdd`, `/write-spec`, `/write-design`, `/write-plan`, `/write-tests` and `/code-review-sherpa`',
+            'The skills `/sherpa`, `/write-spec`, `/write-design`, `/write-plan`, `/write-tests` and `/code-review-sherpa`',
             '`.githooks/pre-commit`',
             '`scripts/`: the checks, the runner, the live checks and the release script',
             '`docs/`: the workflow and this page, spec, design, plan, unapproved ideas, releases',
@@ -614,7 +614,7 @@
           ]),
           p('Sessions run with `bypassPermissions`. Their guard rails are the deny and ask rules of `settings.json`.')],
         ['In chat',
-          p('When `/sdd` builds one milestone in chat, a subagent is the test session.')]
+          p('When `/sherpa` builds one milestone in chat, a subagent is the test session.')]
       ]
     },
     code: {
@@ -735,7 +735,7 @@
             'After a repair, the runner compares the hashes of `tests/` and runs the spec coverage again.'
           ])],
         ['In chat',
-          p('When `/sdd` builds one milestone in chat, a subagent is the review session.')]
+          p('When `/sherpa` builds one milestone in chat, a subagent is the review session.')]
       ]
     },
     merge: {
@@ -761,7 +761,7 @@
           ]),
           ul([
             'The answer `yes` continues the run.',
-            'Any other answer stops the run. A fault goes to `/sdd` as a fix milestone.'
+            'Any other answer stops the run. A fault goes to `/sherpa` as a fix milestone.'
           ])],
         ['Not finished',
           p('When a session does not finish, the runner does these steps:'),

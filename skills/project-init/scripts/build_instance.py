@@ -80,7 +80,7 @@ def optional_flags() -> dict[str, str]:
 
 
 def skill_files() -> list[str]:
-    """Return the files of the project skills (`/sdd`, `/write-spec` and the rest) under assets/."""
+    """Return the files of the project skills (`/sherpa`, `/write-spec` and others) in assets/."""
     skills = assets_dir() / ".claude" / "skills"
     return sorted(p.relative_to(assets_dir()).as_posix() for p in skills.rglob("*") if p.is_file())
 
