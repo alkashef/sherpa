@@ -127,6 +127,7 @@ import sys
 import tempfile
 import threading
 import time
+import uuid
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field, replace
 from functools import partial
@@ -856,8 +857,9 @@ BUILD_RULES: Final = (
     "(b) in docs/plan.md, when the gate passes, delete the block of M<n> and its row in",
     'the table "Milestones at a glance", and edit nothing else in the plan;',
     "(c) do that edit before the commit so the commit includes it;",
-    "(d) commit only the files this milestone changed, with the message `M<n>: <title>`; do not",
-    "push and do not merge: the runner does that;",
+    "(d) commit only the files this milestone changed, the tests of the test session too, in",
+    "one commit with the message `M<n>: <title>`; do not push and do not merge: the runner",
+    "does that;",
     "(e) if the pre-commit hook refuses the commit, fix the cause; never bypass the hook;",
     "(f) stop the milestone only if it needs a new or changed requirement in",
     "docs/spec.md, an action that CLAUDE.md 'Git and destructive actions' forbids, a new",
@@ -1269,6 +1271,18 @@ def load_writer(root: Path, override: str) -> Writer:
     return writer
 
 
+def new_folder(prefix: str) -> Path:
+    """Make a new folder in the temporary folder of the system, with the usual permissions.
+
+    `tempfile.mkdtemp` makes a folder that only the current user can open (also on Windows,
+    since Python 3.12). The sandbox of a test writer can run as another user: in the second
+    trial of the writers, Codex could not read such a folder.
+    """
+    folder = Path(tempfile.gettempdir()) / f"{prefix}{uuid.uuid4().hex[:12]}"
+    folder.mkdir()
+    return folder
+
+
 def _copy_file(source: Path, target: Path) -> None:
     """Copy one file, and make its folder first."""
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -1355,7 +1369,7 @@ def make_test_folder(root: Path, writer: Writer) -> Path:
     Returns:
         The path of the new folder.
     """
-    folder = Path(tempfile.mkdtemp(prefix="sherpa-tests-"))
+    folder = new_folder("sherpa-tests-")
     for name in FOLDER_FILES:
         if (root / name).is_file():
             _copy_file(root / name, folder / name)
@@ -2539,7 +2553,7 @@ def rebase_built(root: Path, base: str, row: Row) -> None:
 
 def add_worktree(root: Path) -> Path:
     """Add a worktree of HEAD outside the project, for one review. The caller removes it."""
-    folder = Path(tempfile.mkdtemp(prefix="sherpa-review-")) / "tree"
+    folder = new_folder("sherpa-review-") / "tree"
     _git_must(root, "worktree", "add", "--detach", str(folder), "HEAD")
     return folder
 
