@@ -1334,3 +1334,46 @@ def test_review_only_reviews_in_a_worktree_and_routes_test_findings(planned: San
     assert "test_m1_value_is_an_int" in (
         planned.folder / "tests" / "unit" / "test_m1.py"
     ).read_text("utf-8")
+
+
+def test_a_session_after_the_review_that_finds_a_wrong_test_blocks_the_milestone(
+    planned: Sandbox,
+) -> None:
+    planned.env["FAKE_CLAUDE_STATE"] = "wrong-test"
+    code, output = run_runner(planned, "--end", "1")
+    assert code == 1
+    assert "A session after the review found a test that looks wrong" in output
+    assert "BLOCKED: tests/unit/test_m1.py | the type check looks wrong | Keep the test?" in output
+    assert kinds(planned) == [*M1_SESSIONS, "review-tests M1", "rebuild M1"]
+    # The rebuild left its work uncommitted: the runner kept it as partial work in the branch.
+    assert subjects(planned, "-2", "milestone/M1") == ["M1: partial work", "M1: First"]
+    assert subjects(planned, "-1") == ["M1: blocked"]
+
+
+def test_an_approved_wrong_test_goes_to_a_test_session_then_the_build(planned: Sandbox) -> None:
+    planned.env["FAKE_CLAUDE_STATE"] = "wrong-test"
+    run_runner(planned, "--end", "1")
+    approve_review_block(planned, "Keep the test.")
+    code, output = run_runner(planned, "--end", "1")
+    assert code == 0, output
+    # The decision went to a test session first, then the build went on from the partial work.
+    assert kinds(planned)[5:] == ["review-tests M1", "build M1", "review M1"]
+    assert (
+        "The user's decision on the test that looked wrong: Keep the test."
+        in (sessions(planned)[5]["prompt"])
+    )
+    assert subjects(planned, "-2") == ["M1: First", "Approve M1"]
+    assert "**M1**" not in (planned.folder / "docs" / "plan.md").read_text("utf-8")
+    assert branches(planned) == ["main"]
+
+
+def test_a_repair_or_rebuild_session_reports_a_wrong_test_as_a_blocked_line(built: Path) -> None:
+    runner = load_runner(built)
+    row = runner.Row(3, "Login", "sonnet", "low", "open")
+    line = "`BLOCKED: <the test> | <why it looks wrong> | <the question for the user>`"
+    assert line in runner.repair_prompt(row, [])
+    assert line in runner.rebuild_prompt(row)
+    assert runner.blocked_lines(["Done.", "- **BLOCKED: a | b | c**", "BLOCKED: d | e | f"]) == [
+        "- **BLOCKED: a | b | c**",
+        "BLOCKED: d | e | f",
+    ]

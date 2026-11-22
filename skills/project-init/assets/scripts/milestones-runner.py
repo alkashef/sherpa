@@ -531,7 +531,8 @@ class Running:
     findings counts the findings that its last review kept. block is the milestone's block as
     the plan had it before the test session. decision is the Approval entry of the user, when an
     earlier review blocked the milestone. blocking holds the findings of the last review that
-    block the merge.
+    block the merge. retest is True when the user approved a block about a test that looked
+    wrong: a test session gets the decision before the build goes on.
     """
 
     row: Row
@@ -544,6 +545,7 @@ class Running:
     block: list[str] = field(default_factory=list)
     decision: tuple[str, ...] = ()
     blocking: list[str] = field(default_factory=list)
+    retest: bool = False
 
 
 @dataclass
@@ -965,6 +967,11 @@ REVIEW_TESTS_RULES: Final = (
     "(e) end with one line for each finding: `REPAIRED: <finding>`, or",
     "`REJECTED: <finding> | <why>` for a finding that is wrong.",
 )
+WRONG_TEST_RULE: Final = (
+    "(<x>) a test in tests/ that looks wrong is a blocker: do not change it, do not edit "
+    "docs/plan.md, commit nothing, and end the report with one line "
+    "`BLOCKED: <the test> | <why it looks wrong> | <the question for the user>`."
+)
 REBUILD_INTRO: Final = (
     "The tests of milestone M<n> (<title>) changed after the review: a test session repaired",
     "the review findings about the tests. Make the tests pass, and change no file in tests/.",
@@ -983,7 +990,8 @@ REBUILD_RULES: Final = (
     "around it;",
     "(d) a public function that you add goes into Interfaces of docs/design.md as a decision:",
     "a DEC-NNN with the Status Proposed and 'auto-decided in M<n>, review' in its Why;",
-    "(e) write and change files with the Edit and Write tools, not through the shell.",
+    "(e) write and change files with the Edit and Write tools, not through the shell;",
+    WRONG_TEST_RULE.replace("<x>", "f"),
 )
 REVIEW_INTRO: Final = (
     "Review milestone M<n> (<title>): the diff `git diff <base>...HEAD` of this branch.",
@@ -1021,7 +1029,8 @@ REPAIR_RULES: Final = (
     "(i) a public function that you add goes into Interfaces of docs/design.md as a decision",
     "(a DEC-NNN with the Status Proposed and 'auto-decided in M<n>, review' in its Why), so",
     "that a test writer can test it from the design;",
-    "(j) write and change files with the Edit and Write tools, not through the shell.",
+    "(j) write and change files with the Edit and Write tools, not through the shell;",
+    WRONG_TEST_RULE.replace("<x>", "k"),
 )
 
 
@@ -2353,13 +2362,22 @@ def judge_review(run: ClaudeRun) -> Verdict:
 
 
 def judge_repair(session: Session, running: Running, kind: str, run: ClaudeRun) -> Verdict:
-    """Return done when git is clean and the runner's own checks pass after a repair or rebuild.
+    """Return the verdict of a repair or rebuild session: blocked, done or failed.
 
-    The output and the exit code of the run do not count. A repair that commits nothing, because
-    it rejected every finding, is done.
+    Blocked: its report has a `BLOCKED:` line (a test that looks wrong); the line is the question
+    of the block. Done: git is clean and the runner's own checks pass. The exit code does not
+    count. A repair that commits nothing, because it rejected every finding, is done.
     """
-    del run
+    blocked = blocked_lines(run.lines)
+    if blocked:
+        running.blocking = blocked
+        return Verdict(OUTCOME_BLOCKED, f"the {kind} session found a test that looks wrong.")
     return work_verdict(session, running, kind)
+
+
+def blocked_lines(lines: Sequence[str]) -> list[str]:
+    """Return the lines of a report that block the milestone (`BLOCKED: ...`)."""
+    return [line.strip() for line in lines if re.match(r"^\W*BLOCKED:", line.strip())]
 
 
 def judge_try(session: Session, row: Row, job: Job, run: ClaudeRun) -> Verdict:
@@ -2499,13 +2517,12 @@ def restore_partial_work(root: Path, base: str, row: Row) -> None:
         RunStoppedError: If the rebase stops with a conflict. The rebase is aborted first.
     """
     branch = branch_name(row.id)
-    done = _git(root, "rebase", base)
-    if done.returncode != 0:
-        _git(root, "rebase", "--abort")
+    problem = rebase_on(root, base, row)
+    if problem is not None:
         details = [
             f"Rebase it by hand: git rebase {base} {branch}",
             "Keep the message of its last commit, then run the runner again.",
-            *_all_output(done),
+            *problem,
         ]
         raise RunStoppedError(
             f"ERROR: the partial work of {milestone(row.id)} does not apply on {base}.", details
@@ -2537,21 +2554,38 @@ def rebase_built(root: Path, base: str, row: Row) -> None:
         RunStoppedError: If another file conflicts. The rebase is aborted first.
     """
     branch = branch_name(row.id)
+    problem = rebase_on(root, base, row)
+    if problem is not None:
+        details = [f"Rebase it by hand: git rebase {base} {branch}", *problem]
+        raise RunStoppedError(
+            f"ERROR: the branch {branch} of {milestone(row.id)} does not apply on {base}.",
+            details,
+        )
+
+
+def rebase_on(root: Path, base: str, row: Row) -> list[str] | None:
+    """Rebase the milestone branch on the base branch; a conflict of docs/plan.md is resolved.
+
+    The plan conflicts when the base branch changed the row and the block of the milestone (a
+    block and its approval) and the build commit deleted them. The runner then takes the plan
+    of the base branch without the milestone, as the build commit means.
+
+    Returns:
+        None when the rebase finished, or the output of git when another file conflicts. The
+        rebase is aborted first.
+    """
     done = _git(root, "rebase", base)
     while done.returncode != 0:
         conflicts = _output_lines(_git(root, "diff", "--name-only", "--diff-filter=U").stdout)
         if conflicts != [PLAN_PATH]:
             _git(root, "rebase", "--abort")
-            details = [f"Rebase it by hand: git rebase {base} {branch}", *_all_output(done)]
-            raise RunStoppedError(
-                f"ERROR: the branch {branch} of {milestone(row.id)} does not apply on {base}.",
-                details,
-            )
+            return _all_output(done)
         ours = _git(root, "show", f":2:{PLAN_PATH}").stdout
         plan = plan_without_milestone(_split_lines(ours), row.id)
         (root / PLAN_PATH).write_text("\n".join(plan), encoding="utf-8", newline="\n")
         _git_must(root, "add", PLAN_PATH)
         done = _git(root, "-c", "core.editor=true", "rebase", "--continue")
+    return None
 
 
 def add_worktree(root: Path) -> Path:
@@ -2784,14 +2818,25 @@ def requirement_note(finding: str) -> str:
 
 
 def review_block_entry(findings: Sequence[str]) -> list[str]:
-    """Return the Blocked entry of a milestone that the last review stopped, in the template."""
+    """Return the Blocked entry of a milestone that the review stage stopped, in the template.
+
+    The lines are FINDING lines of the last review, or the BLOCKED line of a repair or rebuild
+    session that found a test that looks wrong.
+    """
+    from_review = all("FINDING:" in finding for finding in findings)
+    reason = (
+        "The last review found a fault that blocks the merge (docs/workflow.md, Execute, step 9)."
+        if from_review
+        else "A session after the review found a test that looks wrong (docs/workflow.md, step 5)."
+    )
     return [
-        "- **Blocked:** The last review found a fault that blocks the merge "
-        "(docs/workflow.md, Execute, step 9).",
+        f"- **Blocked:** {reason}",
         *(f"  - {finding}{requirement_note(finding)}" for finding in findings),
         "  - The code and the tests are kept in the milestone branch. To continue, approve one "
         "of these:",
-        "    1. Merge it as it is: the finding is wrong, or it can wait.",
+        "    1. Merge it as it is: the finding is wrong, or it can wait."
+        if from_review
+        else "    1. Keep the test as it is: the code must pass it.",
         "    2. Repair it in this way: <your instruction>.",
     ]
 
@@ -2814,14 +2859,20 @@ def plan_with_block(lines: Sequence[str], milestone_id: int, entry: Sequence[str
 def block_after_review(session: Session, running: Running) -> NoReturn:
     """Block a milestone that the last review stopped, then stop the run with its question.
 
-    The milestone branch keeps the build and its repairs, committed. On the base branch the
-    runner sets the Status of the row to blocked, adds the Blocked entry with the findings that
-    block the merge, commits `M<n>: blocked` through the hook, and pushes.
+    The milestone branch keeps the build and its repairs, committed. Work that a session left
+    uncommitted goes into a commit `M<n>: partial work` (with --no-verify), and docs/plan.md goes
+    back to its committed state. On the base branch the runner sets the Status of the row to
+    blocked, adds the Blocked entry with the lines that block the merge, commits `M<n>: blocked`
+    through the hook, and pushes.
 
     Raises:
         RunStoppedError: Always. It carries the question, or how to finish a failed commit or push.
     """
     paths, root, row = session.paths, session.paths.root, running.row
+    _git_must(root, "checkout", "HEAD", "--", PLAN_PATH)
+    if not git_is_clean(root):
+        _git_must(root, "add", "-A")
+        _git_must(root, "commit", "--no-verify", "-m", f"M{row.id}: {PARTIAL_WORK}")
     _git_must(root, "checkout", session.base)
     entry = review_block_entry(running.blocking)
     plan = plan_with_block(_read_lines(paths.plan), row.id, entry)
@@ -2918,8 +2969,17 @@ def review_decision(session: Session, row: Row) -> tuple[str, ...]:
     if row.status != STATUS_APPROVED:
         return ()
     block = milestone_block(base_plan_lines(session.paths.root, session.base), row.id)
-    stopped_by_review = any("FINDING:" in line for line in block_entry(block, "Blocked"))
+    blocked = block_entry(block, "Blocked")
+    stopped_by_review = any("FINDING:" in line or "BLOCKED:" in line for line in blocked)
     return tuple(block_entry(block, "Approval")) if stopped_by_review else ()
+
+
+def retests(session: Session, row: Row, decision: Sequence[str]) -> bool:
+    """Tell whether an approved block came from a session that found a test that looks wrong."""
+    if not decision:
+        return False
+    block = milestone_block(base_plan_lines(session.paths.root, session.base), row.id)
+    return any("BLOCKED:" in line for line in block_entry(block, "Blocked"))
 
 
 def run_attempts(
@@ -3012,12 +3072,40 @@ def run_sessions(session: Session, running: Running, entry: str) -> tuple[Claude
     if entry == ENTRY_BUILT:
         return ClaudeRun([], 0), built_verdict(session, running)
     build_resumes = running.saved is not None
-    if running.saved is None:
-        run, verdict = run_test_session(session, running, resume)
-        if verdict.outcome != OUTCOME_DONE:
-            return run, verdict
+    run, verdict = tests_before_build(session, running, resume)
+    if verdict.outcome != OUTCOME_DONE:
+        return run, verdict
     run, verdict = run_claude_session(session, running, build_job(session, running), build_resumes)
     running.decisions += len(decision_lines(run.lines))
+    return run, verdict
+
+
+def tests_before_build(
+    session: Session, running: Running, resume: bool
+) -> tuple[ClaudeRun, Verdict]:
+    """Run the test session when its tests are not saved yet, or the retest of an approval."""
+    if running.saved is None:
+        return run_test_session(session, running, resume)
+    if running.retest:
+        return retest(session, running)
+    return ClaudeRun([], 0), Verdict(OUTCOME_DONE, "")
+
+
+def retest(session: Session, running: Running) -> tuple[ClaudeRun, Verdict]:
+    """Give the user's decision on a test that looked wrong to a test session, before the build.
+
+    The milestone was blocked after its review because a session found a test that looks wrong,
+    and the user approved a way on. Only a test session may change tests/, so it gets the
+    decision, then the runner saves the new hashes of tests/.
+    """
+    root, row = session.paths.root, running.row
+    decision = [f"The user's decision on the test that looked wrong: {' '.join(running.decision)}"]
+    prompt = partial(review_tests_prompt, row, decision)
+    task = WriterTask(SESSION_REVIEW_TESTS, prompt, session.base, blocks=False)
+    run, verdict = run_attempts(session, running, partial(writer_try, session, running, task))
+    if verdict.outcome == OUTCOME_DONE:
+        running.saved = SavedTests(running.block, snapshot_tests(root))
+        save_tests(session.paths.tests_file(row.id), running.saved)
     return run, verdict
 
 
@@ -3183,7 +3271,8 @@ def run_milestone(session: Session, row: Row) -> None:
         RunStoppedError: If the milestone is blocked or did not finish, if the merge or the push
             failed, or if the user did not confirm its human test.
     """
-    running = Running(row, Stopwatch(), decision=review_decision(session, row))
+    decision = review_decision(session, row)
+    running = Running(row, Stopwatch(), decision=decision, retest=retests(session, row, decision))
     session.state.running = running
     try:
         run, verdict = run_stages(session, running)

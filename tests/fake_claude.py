@@ -25,6 +25,9 @@ test session works in the folder of the test writer, which has no git.
                      `M<n>: test repairs`; a later review reports no finding
     "blocking"       each review reports one high finding about the code; the repair session
                      changes the code and commits `M<n>: review repairs`
+    "wrong-test"     as "review-tests", but the first rebuild session finds the new test wrong:
+                     it changes the code, commits nothing, and reports a `BLOCKED:` line; a later
+                     review-tests session (the retest) adds nothing new
     "retry"          the first build session of a milestone does nothing; a later one finishes it
     "tamper"         the build session also changes the test that the test session wrote
     "spec"           the build session also changes docs/spec.md
@@ -212,7 +215,9 @@ def write_bad_test(number: int) -> None:
 
 
 def add_second_test(number: int) -> None:
-    """Add a second test of src/m<n>.py to the test file of the milestone."""
+    """Add a second test of src/m<n>.py to the test file of the milestone, once."""
+    if "value_is_an_int" in test_path(number).read_text("utf-8"):
+        return
     with test_path(number).open("a", encoding="utf-8") as test:
         test.write(f"\n\ndef test_m{number}_value_is_an_int() -> None:\n")
         test.write("    assert isinstance(value(), int)\n")
@@ -260,7 +265,17 @@ def act_review_tests(call: Call) -> int:
 
 
 def act_rebuild(call: Call) -> int:
-    """Do the build session after the review-tests session: commit the changed tests."""
+    """Do the build session after the review-tests session: commit the changed tests.
+
+    In the state "wrong-test", the first rebuild finds the new test wrong and blocks.
+    """
+    if call.state == "wrong-test" and call.earlier == 0:
+        write_code(call.number, note=", half rebuilt")
+        sys.stdout.write(
+            f"BLOCKED: tests/unit/test_m{call.number}.py | the type check looks wrong | "
+            "Keep the test?\n"
+        )
+        return 0
     return commit(f"M{call.number}: test repairs")
 
 
@@ -297,7 +312,7 @@ def reported_findings(call: Call) -> list[str]:
     findings = [line.replace("<n>", str(call.number)) for line in FINDINGS]
     if call.state == "rejected":
         return findings
-    if call.state == "review-tests":
+    if call.state in ("review-tests", "wrong-test"):
         return [TEST_FINDING.replace("<n>", str(call.number))] if call.earlier == 0 else []
     if call.state == "blocking":
         return [HIGH_FINDING.replace("<n>", str(call.number))]
