@@ -1,102 +1,125 @@
-"""Evaluate the tests that one AI wrote: checks, failure before code, reference run, seeded bugs.
+"""Score the tests that one writer wrote for milestone M1 of a trial kit.
 
-Usage: python evaluate.py <trial folder> <test folder name>
+Usage: python evaluate.py <kit folder> <project folder> [--json FILE]
+
+The project folder is a project that sherpa built, with the docs of the kit, and the tests that
+the runner copied back (`milestones-runner.py --tests-only M1`). The kit folder holds `docs/`,
+`reference/` (a correct implementation) and `mutants.json` (the seeded bugs).
+
+The gates, each passed or failed:
+- ruff check and ruff format on tests/
+- spec_coverage.py M1: each requirement and example of the block has a test
+- before the code: the tests fail, and only for a valid reason
+- on correct code: the tests pass
+- mypy on tests/, with the code present
+- coverage: 80% branch coverage of the correct code, also of the processes that a test starts
+- the spec and the plan are unchanged
+
+Then each seeded bug is applied to a copy of the correct code: a bug is caught when a test fails.
 """
 
+import argparse
+import json
 import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 PY = sys.executable
-
-MUTANTS = {
-    "no NFKD": ("src/slug.py", 'unicodedata.normalize("NFKD", title)', "title"),
-    "NFKC in place of NFKD": ("src/slug.py", '"NFKD"', '"NFKC"'),
-    "cut at N characters": (
-        "src/slug.py",
-        "        if len(candidate) > max_length:\n            break\n        slug = candidate\n"
-        "    return slug or words[0][:max_length]",
-        "        slug = candidate\n    return slug[:max_length].rstrip('-')",
-    ),
-    "cut one word short (>=)": ("src/slug.py", "len(candidate) > max_length", "len(candidate) >= max_length"),
-    "function default 50": ("src/slug.py", "max_length: int = 60", "max_length: int = 50"),
-    "CLI default 50": ("src/cli.py", "max_length = 60", "max_length = 50"),
-    "--max accepts 201": ("src/cli.py", "<= 200", "<= 201"),
-    "--max accepts 0": ("src/cli.py", "not 1 <=", "not 0 <="),
-    "--max accepts 1.5": (
-        "src/cli.py",
-        "if not value.isdigit() or not 1 <= int(value) <= 200:",
-        "if not value.replace('.', '', 1).isdigit() or not 1 <= int(float(value)) <= 200:",
-    ),
-    "empty-slug exit code 1": (
-        "src/cli.py",
-        '        print(f"error: {error}", file=sys.stderr)\n        return 2',
-        '        print(f"error: {error}", file=sys.stderr)\n        return 1',
-    ),
-    "empty-slug error on stdout": ("src/cli.py", 'print(f"error: {error}", file=sys.stderr)', 'print(f"error: {error}")'),
-    "error wording": ("src/slug.py", '"the title has no letters or digits"', '"title has no letters or digits"'),
-    "no newline after slug": ("src/cli.py", "print(make_slug(args[0], max_length))", "sys.stdout.write(make_slug(args[0], max_length))"),
-    "keep non-ASCII letters": ("src/slug.py", '.encode("ascii", "ignore").decode("ascii")', ""),
-    "first long word not cut": ("src/slug.py", "return slug or words[0][:max_length]", "return slug or words[0]"),
-    "underscore kept": ("src/slug.py", 'r"[a-z0-9]+"', 'r"[a-z0-9_]+"'),
-    "uppercase kept": ("src/slug.py", 're.findall(r"[a-z0-9]+", ascii_text.lower())', 're.findall(r"[A-Za-z0-9]+", ascii_text)'),
-}
+CONFIGS = ("ruff.toml", "mypy.ini", "pytest.ini", ".coveragerc")
+INVALID = re.compile(r"SyntaxError|NameError|fixture '[^']+' not found|IndentationError")
 
 
-def run(cmd: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace")
+def run(command: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+    """Run a command and capture its output."""
+    return subprocess.run(
+        command, cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace"
+    )
 
 
-def summary(out: str) -> str:
-    lines = [line for line in out.splitlines() if re.search(r"\d+ (passed|failed|error)", line)]
-    return lines[-1].strip("= ") if lines else out.strip().splitlines()[-1:][0] if out.strip() else "?"
+def last_line(done: subprocess.CompletedProcess[str]) -> str:
+    """Return the last line of the output of a command."""
+    lines = (done.stdout + done.stderr).strip().splitlines()
+    return lines[-1] if lines else ""
+
+
+def copy_code(kit: Path, project: Path, target: Path) -> None:
+    """Make a copy of the correct code, with the configs and the tests of the project."""
+    shutil.copytree(kit / "reference", target, ignore=shutil.ignore_patterns("tests", "__pycache__"))
+    for name in CONFIGS:
+        if (project / name).is_file():
+            shutil.copyfile(project / name, target / name)
+    shutil.copytree(
+        project / "tests", target / "tests", ignore=shutil.ignore_patterns("__pycache__")
+    )
+
+
+def gates(kit: Path, project: Path, code: Path) -> dict[str, bool]:
+    """Return the result of each gate, and print its line."""
+    pytest = [PY, "-m", "pytest", "-q", "-p", "no:cacheprovider"]
+    results: dict[str, bool] = {}
+    checks = {
+        "ruff check": (project, [PY, "-m", "ruff", "check", "tests"]),
+        "ruff format": (project, [PY, "-m", "ruff", "format", "--check", "tests"]),
+        "spec_coverage M1": (project, [PY, "scripts/spec_coverage.py", "M1"]),
+        "pass on correct code": (code, pytest),
+        "mypy with the code": (code, [PY, "-m", "mypy", "tests"]),
+        "coverage 80%": (code, [*pytest, "--cov=src", "--cov-branch", "--cov-fail-under=80"]),
+    }
+    for name, (cwd, command) in checks.items():
+        done = run(command, cwd)
+        results[name] = done.returncode == 0
+        print(f"{'passed' if results[name] else 'FAILED'}  {name}: {last_line(done)}")
+    before = run([*pytest, "--tb=line"], project)
+    results["fail before the code"] = before.returncode != 0 and not INVALID.search(before.stdout)
+    print(f"{'passed' if results['fail before the code'] else 'FAILED'}  fail before the code")
+    same = all(
+        (project / "docs" / name).read_bytes() == (kit / "docs" / name).read_bytes()
+        for name in ("spec.md", "plan.md")
+    )
+    results["spec and plan unchanged"] = same
+    print(f"{'passed' if same else 'FAILED'}  spec and plan unchanged")
+    return results
+
+
+def caught_bugs(kit: Path, code: Path, scratch: Path) -> tuple[int, int]:
+    """Apply each seeded bug to a copy of the correct code; return how many a test caught."""
+    mutants = json.loads((kit / "mutants.json").read_text(encoding="utf-8"))
+    caught = 0
+    for number, mutant in enumerate(mutants):
+        copy = scratch / f"mutant-{number}"
+        shutil.copytree(code, copy)
+        path = copy / mutant["file"]
+        text = path.read_text(encoding="utf-8")
+        assert mutant["old"] in text, mutant["label"]
+        path.write_text(text.replace(mutant["old"], mutant["new"], 1), encoding="utf-8")
+        failed = run([PY, "-m", "pytest", "-q", "-p", "no:cacheprovider", "-x"], copy).returncode
+        caught += failed != 0
+        print(f"   {'CAUGHT' if failed else 'MISSED'}  {mutant['label']}")
+    return caught, len(mutants)
 
 
 def main() -> None:
-    trial, name = Path(sys.argv[1]), sys.argv[2]
-    tests = trial / name / "tests"
-    project = trial / f"eval-{name}"
-    shutil.rmtree(project, ignore_errors=True)
-    shutil.copytree(trial / "slugger", project, ignore=shutil.ignore_patterns(".git", "tests"))
-    shutil.copytree(tests, project / "tests")
-    files = sorted(p.relative_to(project).as_posix() for p in (project / "tests").rglob("*.py"))
+    """Print the gates and the seeded bugs; write the summary as JSON when --json is given."""
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("kit", type=Path)
+    parser.add_argument("project", type=Path)
+    parser.add_argument("--json", type=Path, default=None)
+    args = parser.parse_args()
+    files = sorted(p.relative_to(args.project).as_posix() for p in (args.project / "tests").rglob("test_*.py"))
     print("test files:", ", ".join(files))
-    print("ruff check:", run([PY, "-m", "ruff", "check", "tests"], project).stdout.strip().splitlines()[-1])
-    print("ruff format:", run([PY, "-m", "ruff", "format", "--check", "tests"], project).stdout.strip().splitlines()[-1])
-    mypy = run([PY, "-m", "mypy", "tests"], project).stdout.strip().splitlines()
-    print("mypy:", mypy[-1], *(f"\n    {line}" for line in mypy[:-1][:4]))
-    cov = run([PY, "scripts/spec_coverage.py", "M1"], project)
-    print("spec_coverage M1:", " / ".join(cov.stdout.strip().splitlines()[-2:]), f"(exit {cov.returncode})")
-    before = run([PY, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--tb=line", "-rN"], project)
-    print("before code:", summary(before.stdout))
-    reasons = sorted(set(re.findall(r"(ModuleNotFoundError[^\n]*|AssertionError|ImportError[^\n]*|SyntaxError|NameError|fixture '[^']+' not found)", before.stdout)))
-    print("   failure kinds:", reasons[:5])
-    collected = run([PY, "-m", "pytest", "--collect-only", "-q", "-p", "no:cacheprovider"], project)
-    print("cases collected:", summary(collected.stdout))
-    reference = trial / f"ref-{name}"
-    shutil.rmtree(reference, ignore_errors=True)
-    shutil.copytree(trial / "reference", reference, ignore=shutil.ignore_patterns("tests"))
-    shutil.copytree(tests, reference / "tests")
-    ref = run([PY, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--tb=short"], reference)
-    print("on correct code:", summary(ref.stdout))
-    if ref.returncode:
-        bad = [line for line in ref.stdout.splitlines() if line.startswith(("FAILED", "E "))]
-        print("\n".join("    " + line for line in bad[:12]))
-    caught = 0
-    for label, (rel, old, new) in MUTANTS.items():
-        mutant = trial / f"mut-{name}"
-        shutil.rmtree(mutant, ignore_errors=True)
-        shutil.copytree(reference, mutant)
-        path = mutant / rel
-        text = path.read_text(encoding="utf-8")
-        assert old in text, label
-        path.write_text(text.replace(old, new), encoding="utf-8")
-        result = run([PY, "-m", "pytest", "-q", "-p", "no:cacheprovider", "-x"], mutant)
-        caught += result.returncode != 0
-        print(f"   {'CAUGHT' if result.returncode else 'MISSED'}  {label}")
-    print(f"seeded bugs caught: {caught} of {len(MUTANTS)}")
+    with tempfile.TemporaryDirectory() as folder:
+        scratch = Path(folder)
+        code = scratch / "code"
+        copy_code(args.kit, args.project, code)
+        results = gates(args.kit, args.project, code)
+        caught, total = caught_bugs(args.kit, code, scratch)
+    print(f"seeded bugs caught: {caught} of {total}")
+    summary = {"gates": results, "all_gates": all(results.values()), "caught": caught, "total": total}
+    if args.json is not None:
+        args.json.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

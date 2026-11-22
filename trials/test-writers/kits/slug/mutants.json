@@ -1,0 +1,104 @@
+[
+  {
+    "label": "no NFKD",
+    "file": "src/slug.py",
+    "old": "unicodedata.normalize(\"NFKD\", title)",
+    "new": "title"
+  },
+  {
+    "label": "NFKC in place of NFKD",
+    "file": "src/slug.py",
+    "old": "\"NFKD\"",
+    "new": "\"NFKC\""
+  },
+  {
+    "label": "cut at N characters",
+    "file": "src/slug.py",
+    "old": "        if len(candidate) > max_length:\n            break\n        slug = candidate\n    return slug or words[0][:max_length]",
+    "new": "        slug = candidate\n    return slug[:max_length].rstrip('-')"
+  },
+  {
+    "label": "cut one word short (>=)",
+    "file": "src/slug.py",
+    "old": "len(candidate) > max_length",
+    "new": "len(candidate) >= max_length"
+  },
+  {
+    "label": "function default 50",
+    "file": "src/slug.py",
+    "old": "max_length: int = 60",
+    "new": "max_length: int = 50"
+  },
+  {
+    "label": "CLI default 50",
+    "file": "src/cli.py",
+    "old": "max_length = 60",
+    "new": "max_length = 50"
+  },
+  {
+    "label": "--max accepts 201",
+    "file": "src/cli.py",
+    "old": "<= 200",
+    "new": "<= 201"
+  },
+  {
+    "label": "--max accepts 0",
+    "file": "src/cli.py",
+    "old": "not 1 <=",
+    "new": "not 0 <="
+  },
+  {
+    "label": "--max accepts 1.5",
+    "file": "src/cli.py",
+    "old": "if not value.isdigit() or not 1 <= int(value) <= 200:",
+    "new": "if not value.replace('.', '', 1).isdigit() or not 1 <= int(float(value)) <= 200:"
+  },
+  {
+    "label": "empty-slug exit code 1",
+    "file": "src/cli.py",
+    "old": "        print(f\"error: {error}\", file=sys.stderr)\n        return 2",
+    "new": "        print(f\"error: {error}\", file=sys.stderr)\n        return 1"
+  },
+  {
+    "label": "empty-slug error on stdout",
+    "file": "src/cli.py",
+    "old": "print(f\"error: {error}\", file=sys.stderr)",
+    "new": "print(f\"error: {error}\")"
+  },
+  {
+    "label": "error wording",
+    "file": "src/slug.py",
+    "old": "\"the title has no letters or digits\"",
+    "new": "\"title has no letters or digits\""
+  },
+  {
+    "label": "no newline after slug",
+    "file": "src/cli.py",
+    "old": "print(make_slug(args[0], max_length))",
+    "new": "sys.stdout.write(make_slug(args[0], max_length))"
+  },
+  {
+    "label": "keep non-ASCII letters",
+    "file": "src/slug.py",
+    "old": ".encode(\"ascii\", \"ignore\").decode(\"ascii\")",
+    "new": ""
+  },
+  {
+    "label": "first long word not cut",
+    "file": "src/slug.py",
+    "old": "return slug or words[0][:max_length]",
+    "new": "return slug or words[0]"
+  },
+  {
+    "label": "underscore kept",
+    "file": "src/slug.py",
+    "old": "r\"[a-z0-9]+\"",
+    "new": "r\"[a-z0-9_]+\""
+  },
+  {
+    "label": "uppercase kept",
+    "file": "src/slug.py",
+    "old": "re.findall(r\"[a-z0-9]+\", ascii_text.lower())",
+    "new": "re.findall(r\"[A-Za-z0-9]+\", ascii_text)"
+  }
+]

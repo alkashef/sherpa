@@ -1,0 +1,20 @@
+[
+  {"label": "three decimals accepted", "file": "src/money.py", "old": "(\\d+)(?:\\.(\\d{1,2}))?", "new": "(\\d+)(?:\\.(\\d{1,3}))?"},
+  {"label": "zero accepted", "file": "src/money.py", "old": "if not 1 <= cents <= MAX_CENTS:", "new": "if not 0 <= cents <= MAX_CENTS:"},
+  {"label": "upper limit one cent too high", "file": "src/money.py", "old": "if not 1 <= cents <= MAX_CENTS:", "new": "if not 1 <= cents <= MAX_CENTS + 1:"},
+  {"label": "one decimal read as cents", "file": "src/money.py", "old": ".ljust(2, \"0\")", "new": ""},
+  {"label": "total without the leading zero of cents", "file": "src/money.py", "old": "{cents % 100:02d}", "new": "{cents % 100}"},
+  {"label": "uppercase category accepted", "file": "src/cli.py", "old": "r\"[a-z]{1,20}\"", "new": "r\"[a-zA-Z]{1,20}\""},
+  {"label": "category of 21 letters accepted", "file": "src/cli.py", "old": "r\"[a-z]{1,20}\"", "new": "r\"[a-z]{1,21}\""},
+  {"label": "category error on stdout", "file": "src/cli.py", "old": "print(f\"error: {CATEGORY_ERROR}\", file=sys.stderr)", "new": "print(f\"error: {CATEGORY_ERROR}\")"},
+  {"label": "amount error exits 1", "file": "src/cli.py", "old": "        print(f\"error: {error}\", file=sys.stderr)\n        return 2\n    if not CATEGORY", "new": "        print(f\"error: {error}\", file=sys.stderr)\n        return 1\n    if not CATEGORY"},
+  {"label": "invalid data file exits 2", "file": "src/cli.py", "old": "return 3", "new": "return 2"},
+  {"label": "total ignores the category", "file": "src/cli.py", "old": "if category is None or e.category == category", "new": "if True"},
+  {"label": "list newest first", "file": "src/cli.py", "old": "    for e in entries:\n", "new": "    for e in reversed(entries):\n"},
+  {"label": "list without the note", "file": "src/cli.py", "old": "\\t{e.category}\\t{e.note}", "new": "\\t{e.category}"},
+  {"label": "note dropped", "file": "src/cli.py", "old": "args[1], note or \"\", created", "new": "args[1], \"\", created"},
+  {"label": "add keeps only the new entry", "file": "src/cli.py", "old": "save(path, [*entries, entry])", "new": "save(path, [entry])"},
+  {"label": "default data file in the current folder", "file": "src/cli.py", "old": "DEFAULT_DATA = \"data/ledger.json\"", "new": "DEFAULT_DATA = \"ledger.json\""},
+  {"label": "missing data file raises", "file": "src/store.py", "old": "    if not path.exists():\n        return []\n", "new": ""},
+  {"label": "folder of the data file not made", "file": "src/store.py", "old": "    path.parent.mkdir(parents=True, exist_ok=True)\n", "new": ""}
+]
