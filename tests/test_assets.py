@@ -419,3 +419,12 @@ def test_no_asset_keeps_the_wording_of_another_project() -> None:
     sources += [*(assets / "scripts").glob("*.py"), assets / "CLAUDE_GOLDEN.md"]
     found = {p.name: words.findall(p.read_text(encoding="utf-8")) for p in sources}
     assert {name: hits for name, hits in found.items() if hits} == {}
+
+
+def test_the_skills_show_the_module_table_of_the_builder() -> None:
+    # One owner for the table of the modules: build_instance.py --list-modules (USER-19).
+    assert "--list-modules" in skill_text("write-design")
+    assert "--add <module>" in skill_text("write-design")
+    project_init = (bi.assets_dir().parent / "SKILL.md").read_text(encoding="utf-8")
+    assert "--list-modules" in project_init
+    assert "| `python` |" not in project_init

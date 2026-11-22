@@ -106,6 +106,15 @@ Record a question that the design cannot settle in the table "Open design questi
 Separate observed results, documented capabilities, estimates, assumptions, and planned checks. Cite sources for consequential claims.
 Never mark a test, benchmark, compatibility check, or prototype as successful unless it actually ran.
 
+## Match the modules to the design
+
+When the user approves the design, compare its languages, components and folders with the modules of the project: the files in `.claude/rules/` and the `paths:` globs at their top.
+
+1. Find the builder of the `project-init` skill: `build_instance.py` in the `scripts/` folder of that skill (for example `~/.claude/skills/project-init/scripts/`). The skill is installed for the user, not in the project. If you cannot find it, ask the user for its folder.
+2. Run `python <builder> --list-modules` and show its table as it is: `No. | Module | Section | Details`. Mark the modules that the project has.
+3. Propose, by number, each module that the design needs and the project lacks, and the globs of each rules file that do not match the folders of the design. The user approves.
+4. Run `python <builder> . --add <module> ...`. It adds the rules file, the config files and the folders of each module, and keeps every existing file. Then edit the `paths:` globs to the real folders.
+
 ## Finish at the design boundary
 
 Check that the design addresses the architectural drivers, respects the spec, and gives significant decisions real alternatives and validation methods.

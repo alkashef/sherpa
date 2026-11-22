@@ -1,11 +1,12 @@
 """build_instance.py: what it writes, what it leaves alone, and the CLAUDE.md line budget."""
 
 import json
+import sys
 from pathlib import Path
 
 import build_instance as bi
 import pytest
-from helpers import build, text_files
+from helpers import SCRIPTS, build, run, text_files
 
 ALL_MODULES = sorted(bi.optional_flags())
 PYTHON_FILES = [
@@ -195,3 +196,40 @@ def test_the_test_writer_is_recorded_with_its_model(tmp_path: Path) -> None:
     codex = json.loads((tmp_path / "b" / "config" / "test-writer.json").read_text("utf-8"))
     assert codex == {"writer": "codex", "model": "gpt-6.2-astra", "effort": "high"}
     assert build(tmp_path / "c", "--test-writer", "gpt").returncode != 0
+
+
+def test_the_modules_are_listed_as_a_numbered_table(tmp_path: Path) -> None:
+    result = build(tmp_path, "--list-modules")
+    assert result.returncode == 0, result.stderr
+    lines = result.stdout.splitlines()
+    assert lines[0] == "| No. | Module | Section | Details |"
+    rows = [line.split(" | ") for line in lines[2:]]
+    assert [row[1].strip("`") for row in rows] == list(bi.module_details())
+    assert [row[0].lstrip("| ") for row in rows] == [str(n) for n in range(1, len(rows) + 1)]
+    assert sorted(bi.module_details()) == sorted(bi.optional_flags())
+    assert "| 1 | `python` | Python |" in result.stdout
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_a_module_is_added_to_a_project_and_keeps_every_file(tmp_path: Path) -> None:
+    project = tmp_path / "app"
+    build(project, "--with", "python")
+    before = text_files(project)
+    result = build(project, "--add", "data", "logging")
+    assert result.returncode == 0, result.stderr
+    after = text_files(project)
+    assert {name: after[name] for name in before} == before
+    assert after[".claude/rules/data.md"].startswith('---\npaths:\n  - "data/**"')
+    assert "## Data and storage" in after[".claude/rules/data.md"]
+    # code-quality.md exists, so Logging gets a rules file of its own with the same globs.
+    assert after[".claude/rules/logging.md"].startswith('---\npaths:\n  - "src/**"')
+    assert "## Logging" in after[".claude/rules/logging.md"]
+    assert (project / "data" / ".gitkeep").is_file()
+    again = build(project, "--add", "data")
+    assert "skipped (exists)" in again.stdout
+
+
+def test_a_target_is_needed_to_build() -> None:
+    result = run([sys.executable, str(SCRIPTS / "build_instance.py"), "--with", "python"])
+    assert result.returncode != 0
+    assert "give the project folder (TARGET), or --list-modules" in result.stderr

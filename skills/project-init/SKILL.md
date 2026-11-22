@@ -22,7 +22,9 @@ To change what new projects get, edit `assets/`, not this file.
    - **Project name.** It becomes the GitHub repository name, the conda environment name, and the
      README title. Default: the folder name. Letters, digits, `.`, `_`, `-`.
    - **Purpose.** One line. It fills CLAUDE.md, the spec, the README, and the repository description.
-   - **Modules.** Propose the ones the purpose implies and let the user adjust. Default: `python`.
+   - **Modules.** Show the table that `python "<this skill's folder>\scripts\build_instance.py" --list-modules`
+     prints, as it is: `No. | Module | Section | Details`. Propose the numbers that the purpose
+     implies, and let the user choose by number. Default: `python`.
    - **Visibility.** Private by default. Use `--public` only if the user says so.
    - **Test writer.** The AI that writes the tests of each milestone, in a folder without the
      code. Default: Claude. Each other writer needs one sign-in to its command line; after that
@@ -35,19 +37,6 @@ To change what new projects get, edit `assets/`, not this file.
      | Antigravity | `--test-writer antigravity` | One interactive `agy` session, or `GEMINI_API_KEY` |
      | Codex | `--test-writer codex` | `codex login`, or `CODEX_API_KEY` |
      | GitHub Copilot | `--test-writer copilot` | `COPILOT_GITHUB_TOKEN`, a fine-grained token |
-
-   | Module | Add when the project has | Adds |
-   | --- | --- | --- |
-   | `python` | Python code | ruff, mypy, pytest configs, `requirements.txt`, Python rules |
-   | `javascript` | JavaScript or TypeScript | `package.json`, `tsconfig.json`, `eslint.config.js` |
-   | `html-css`, `ui-design` | a browser front end, a user interface | HTML/CSS and UI rules, `tests/e2e/ui/` |
-   | `http-apis` | an HTTP API | API rules |
-   | `data` | data files or a data store | data rules, `data/` |
-   | `cli` | a command-line interface | CLI rules |
-   | `llm` | LLM calls or local models | LLM rules, `models/`, `prompts/` |
-   | `logging`, `long-running`, `validation` | logging, async jobs, user input | those rules |
-   | `static-site` | a Markdown-to-HTML site | static-site rules, `content/`, `site/` |
-   | `mcp`, `docker` | an MCP server or host, Docker | those rules, `.dockerignore` |
 
 2. **Run the script** from the project folder with the PowerShell tool. It checks everything first
    and changes nothing if a check fails:

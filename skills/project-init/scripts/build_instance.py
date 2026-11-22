@@ -9,10 +9,16 @@ is the name of the TARGET folder unless --name is given.
 `config/test-writer.json` names the AI that writes the tests (--test-writer, default claude), with
 the model and effort recommended for it.
 
+--list-modules prints the modules as a numbered table, for /project-init and /write-design.
+--add adds modules to a project that exists: the rules file of each module (a file of its own when
+the shared rules file exists), its config files and its folders. It keeps every existing file.
+
 Usage:
     python build_instance.py TARGET --with python http-apis validation --purpose "Does X"
     python build_instance.py TARGET --with python --test-writer codex
     python build_instance.py TARGET --with python --dry-run
+    python build_instance.py --list-modules
+    python build_instance.py TARGET --add data cli
 """
 
 import argparse
@@ -81,6 +87,73 @@ def optional_flags() -> dict[str, str]:
         "mcp": "B8",
         "docker": "B9",
     }
+
+
+def module_details() -> dict[str, str]:
+    """Map each --with module, in the order of the table, to what its rules cover."""
+    return {
+        "python": "Ruff, mypy and pytest: type annotations, Google docstrings, dataclasses, the "
+        "conda environment and the check commands.",
+        "javascript": "Plain ES modules typed with JSDoc and checked by tsc, the ESLint limits, no "
+        "framework unless the design chooses one, and `node --test`.",
+        "html-css": "Semantic HTML, no inline styles or scripts, BEM class names, colors from the "
+        "theme, and nothing loaded from the network.",
+        "ui-design": "A quick, responsive and minimal interface with native controls, hover text "
+        "on each control, and the system fonts.",
+        "http-apis": "FastAPI handlers that call one service function, plural paths under `/api/`, "
+        "Pydantic bodies, and end-to-end tests through the test client.",
+        "data": "One module for each data store, read-only raw input, UUID IDs and UTC "
+        "timestamps, and a backup before a change rewrites stored data.",
+        "cli": "argparse in `main.py`, only the intended output on stdout, and exit codes.",
+        "llm": "One provider, prompts in files under `prompts/`, LLM output checked against a "
+        "schema, and each flow of data to a provider named in the design.",
+        "logging": "The logging library, set up once in the entry point, one line for each "
+        "event, and no secrets in the log.",
+        "long-running": "Async I/O at the boundaries, no block of the UI or the request path, and "
+        "a job ID for a long request.",
+        "validation": "One validation component at the boundary that reports every problem at "
+        "once, and a typed object for valid input.",
+        "static-site": "Markdown in `content/` as the source, and `site/` made by one build "
+        "script from one template, with no runtime dependency.",
+        "mcp": "The official MCP Python SDK, Streamable HTTP on 127.0.0.1, typed tool schemas "
+        "and tools that give the same result for the same input.",
+        "docker": "Docker for services and deployment, ports on 127.0.0.1, pinned base images, "
+        "and no secret or data in an image.",
+    }
+
+
+def module_table(sections: list[Section]) -> str:
+    """Render the modules as a numbered Markdown table: No., Module, Section, Details."""
+    titles = {section.section_id: section.title for section in sections}
+    lines = ["| No. | Module | Section | Details |", "| --- | --- | --- | --- |"]
+    for number, (flag, details) in enumerate(module_details().items(), start=1):
+        title = titles[optional_flags()[flag]]
+        lines.append(f"| {number} | `{flag}` | {title} | {details} |")
+    return "\n".join(lines) + "\n"
+
+
+def rules_file_of(section_id: str) -> tuple[str, list[str]]:
+    """Return the rules file that holds a section, and its path globs."""
+    for name, (globs, ids) in rule_files().items():
+        if section_id in ids:
+            return name, globs
+    raise ValueError(f"no rules file holds the section {section_id}")
+
+
+def added_rules(target: Path, flag: str, sections: list[Section]) -> dict[Path, str]:
+    """Return the rules file of a module that --add adds to a project that exists.
+
+    The section goes into its usual rules file when the project does not have that file yet,
+    else into a file named after the module, with the same globs. No existing file changes.
+    """
+    section_id = optional_flags()[flag]
+    section = next(s for s in sections if s.section_id == section_id)
+    name, globs = rules_file_of(section_id)
+    rules = target / ".claude" / "rules"
+    path = rules / f"{name}.md"
+    if path.exists():
+        path = rules / f"{flag}.md"
+    return {path: render_rule_file(globs, [section])}
 
 
 def test_writers() -> dict[str, tuple[str, str]]:
@@ -405,14 +478,14 @@ def make_empty_dir(path: Path, dry_run: bool) -> str:
 
 
 def parse_args() -> argparse.Namespace:
-    """Read the command-line options."""
+    """Read the command-line options. A TARGET is needed, except with --list-modules."""
     parser = argparse.ArgumentParser(
         description="Build a project instance from the golden CLAUDE.md."
     )
-    parser.add_argument("target", type=Path, help="the project folder to write into")
     parser.add_argument(
-        "--with", dest="flags", nargs="*", default=[], choices=sorted(optional_flags())
+        "target", type=Path, nargs="?", default=None, help="the project folder to write into"
     )
+    add_module_options(parser)
     parser.add_argument("--name", default="", help="project name (default: the TARGET folder name)")
     parser.add_argument("--purpose", default="", help="fills {{PURPOSE}}")
     parser.add_argument(
@@ -426,7 +499,27 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-command", default="", help="fills {{RUN_COMMAND}}")
     parser.add_argument("--force", action="store_true", help="overwrite existing files")
     parser.add_argument("--dry-run", action="store_true", help="list what would be written")
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.target is None and not args.list_modules:
+        parser.error("give the project folder (TARGET), or --list-modules")
+    return args
+
+
+def add_module_options(parser: argparse.ArgumentParser) -> None:
+    """Add the options that choose, list and add modules."""
+    parser.add_argument(
+        "--with", dest="flags", nargs="*", default=[], choices=sorted(optional_flags())
+    )
+    parser.add_argument(
+        "--list-modules", action="store_true", help="print the modules as a numbered table"
+    )
+    parser.add_argument(
+        "--add",
+        nargs="+",
+        default=[],
+        choices=sorted(optional_flags()),
+        help="add modules to a project that exists, and keep every existing file",
+    )
 
 
 def fills_from(args: argparse.Namespace) -> dict[str, str]:
@@ -442,11 +535,38 @@ def fills_from(args: argparse.Namespace) -> dict[str, str]:
     return fills
 
 
+def add_modules(args: argparse.Namespace, sections: list[Section]) -> None:
+    """Add the modules of --add to the project, and print what happened to each file."""
+    assets = assets_dir()
+    for flag in args.add:
+        for path, text in added_rules(args.target, flag, sections).items():
+            print(f"{write_text(path, text, False, args.dry_run):18} {path}")
+        for relative in template_files().get(flag, []):
+            path = args.target / relative
+            print(f"{copy_file(assets / relative, path, False, args.dry_run):18} {path}")
+        for folder in flag_folders().get(flag, {}):
+            path = args.target / folder.rstrip("/")
+            print(f"{make_empty_dir(path, args.dry_run):18} {path}")
+
+
 def main() -> int:
-    """Build the instance and print what happened to each file."""
+    """Build the instance, list the modules, or add modules; print what happened to each file."""
     args = parse_args()
     assets = assets_dir()
-    sections = select_sections(read_sections(assets / "CLAUDE_GOLDEN.md"), args.flags)
+    every_section = read_sections(assets / "CLAUDE_GOLDEN.md")
+    if args.list_modules:
+        print(module_table(every_section), end="")
+        return 0
+    if args.add:
+        add_modules(args, every_section)
+        return 0
+    build_project(args, select_sections(every_section, args.flags))
+    return 0
+
+
+def build_project(args: argparse.Namespace, sections: list[Section]) -> None:
+    """Write every file of a new project, and print what happened to each file."""
+    assets = assets_dir()
     outputs = plan_outputs(assets, args.target, sections, fills_from(args))
     outputs[args.target / ".vscode" / "extensions.json"] = extensions_json(args.flags)
     outputs[args.target / "config" / "test-writer.json"] = writer_config(args.test_writer)
@@ -457,7 +577,6 @@ def main() -> int:
         print(f"{copy_file(source, path, args.force, args.dry_run):18} {path}")
     for folder in empty_dirs(args.flags):
         print(f"{make_empty_dir(args.target / folder, args.dry_run):18} {args.target / folder}")
-    return 0
 
 
 if __name__ == "__main__":

@@ -390,11 +390,16 @@ From `skills/project-init/`:
 ```bash
 python scripts/init_project.py --with python http-apis --purpose "Does X"   # in the new folder
 python scripts/build_instance.py <folder> --with python --dry-run           # list only
+python scripts/build_instance.py --list-modules                             # the module table
+python scripts/build_instance.py <folder> --add data cli                    # add modules later
 ```
 
 `--with` modules: `logging`, `llm`, `long-running`, `validation`, `python`, `javascript`,
 `html-css`, `ui-design`, `http-apis`, `data`, `cli`, `static-site`, `mcp`, `docker`. Existing files
-are never overwritten unless `build_instance.py` gets `--force`.
+are never overwritten unless `build_instance.py` gets `--force`. `--list-modules` prints the
+numbered table of the modules that `/project-init` and `/write-design` show. `--add` gives a
+project that exists one more module: its rules file (a file named after the module when the
+shared rules file exists), its config files and its folders, and no existing file changes.
 
 ### Change what new projects get
 
