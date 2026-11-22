@@ -87,6 +87,9 @@ the diagram one time.
    - A rule that a real run later proves necessary comes back.
    - Examples to question: "Do not write your own ... context managers", "One class per file",
      and "a design pattern that no `Decided` decision names".
+   - **State on November 23, 2026:** the table is ready in `docs/audit-claude-golden.md` (180
+     rows: 117 keep, 28 tool, 20 move, 15 delete). It waits for the user's approval; no rule
+     changed.
 2. **The second trial of the test writers (USER-17, approved on November 21 and 22, 2026):** the
     build of USER-17 is done (Built, stage 15). Run the trial of the three writers again, with
     RUN-06 and RUN-07 in place, by the rule of the second trial: each writer runs 3 times on each

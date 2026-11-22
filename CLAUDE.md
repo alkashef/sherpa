@@ -50,6 +50,7 @@ wording where it costs nothing.
   session). `unapproved-ideas.md` has two parts. Part 1 holds what is left of the approved
   workflow changes, in the order of the work: delete an item in the commit that finishes it.
   Part 2 holds proposed workflow changes. Never implement one without the user's approval.
+  `audit-claude-golden.md` is the audit table of rank 17, waiting for the user's approval.
 - `README.md`: the full description, usage, contribution and test guide. Read it before changing
   what new projects get.
 
