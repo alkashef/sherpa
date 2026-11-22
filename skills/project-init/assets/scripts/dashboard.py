@@ -283,11 +283,13 @@ def design_by_requirement() -> dict[str, list[str]]:
     found: dict[str, list[str]] = {}
     for line in read("docs/design.md"):
         decision = DEC_ROW.match(line)
-        label = named(decision[1]) if decision else "a test-design row in design.md"
+        label = named(decision[1]) if decision else "a table row of design.md"
         if not line.startswith("|"):
             continue
         for spec_id in {i for i in ANY_ID.findall(line) if not i.startswith(("DEC-", "M"))}:
-            found.setdefault(spec_id, []).append(label)
+            labels = found.setdefault(spec_id, [])
+            if label not in labels:
+                labels.append(label)
     return found
 
 
