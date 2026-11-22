@@ -258,6 +258,7 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
   model is not pulled. Download models only with `scripts/download_models.py`, never at run time.
   At run time the app is offline, with telemetry off. Weights live in `models/` and are never
   committed.
+- Tests prove: a bad answer from the fake model gives the documented error.
 
 ## Git and destructive actions
 <!-- A15. Applies when: always. Commit and push timing is in docs/workflow.md. Needs .claude/settings.json (see assets/). -->
@@ -326,6 +327,7 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 - An API request that can run long starts the task and returns `202` with a job ID at once. The
   task runs in the background as an async task. `GET /api/jobs/<id>` reports status and progress,
   and the UI polls it. One object created in `main.py` holds the job state.
+- Tests prove: a stop in the middle, and a run that continues after it.
 
 ## Input validation
 <!-- A19. Applies when: the project accepts user input (forms, API requests, command-line arguments, uploaded files). -->
@@ -370,8 +372,8 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 - Checks. Run all of them and fix every failure: `mypy src`, `ruff check .`,
   `ruff format --check .`, and `python -m pytest --cov=src --cov-branch --cov-fail-under=80`.
   `python scripts/check.py` runs all of them.
-  `requirements.txt` lists `pytest`, `pytest-cov`, `mypy`, `ruff`, and `python-dotenv`, plus
-  `pytest-asyncio` for async code.
+  `requirements.txt` lists `pytest`, `pytest-cov`, `hypothesis`, `mypy`, `ruff`, and
+  `python-dotenv`, plus `pytest-asyncio` for async code.
 
 ## JavaScript and TypeScript
 <!-- B2. Applies when: the project has JavaScript or TypeScript. Needs package.json, tsconfig.json, and eslint.config.js (see assets/). -->
@@ -437,6 +439,7 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 - Use meaningful link text and `alt` text on images. Keep text contrast readable. Do not rely on
   color alone to convey meaning.
 - Mockups in `docs/` are a visual reference, not code to copy.
+- Tests prove: each user scenario in Playwright. The main flows work with the keyboard only.
 
 ## UI design
 <!-- B3a. Applies when: the project has a user interface. -->
@@ -456,6 +459,7 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
   it. Download it with `scripts/download_assets.py` into `src/assets/fonts/` or
   `src/assets/images/`, and commit the files. Never link to a font or an image online. The script
   records each source URL and license, and only assets whose license allows redistribution are used.
+- Tests prove: each user scenario in Playwright. The main flows work with the keyboard only.
 
 ## HTTP APIs
 <!-- B4. Applies when: the project exposes an HTTP API. -->
@@ -475,6 +479,8 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 - Allowed CORS origins come from config. The default is none.
 - End-to-end tests call the API through the framework's test client against temporary data. They do
   not start a server.
+- Tests prove: the status code and the body of each case. A slow or failed outside service (a
+  fake) gives the documented error.
 
 ## Data and storage
 <!-- B5. Applies when: the project reads or writes data files or a data store. -->
@@ -490,6 +496,8 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 - Use UUID strings for IDs and ISO 8601 UTC strings for timestamps.
 - Before a change rewrites stored data in place (a migration, an import), copy the data to
   `<name>.before-<change>`. Never delete these backups.
+- Tests prove: the stored form of each record. A write that stops in the middle leaves the old
+  data readable. Data of a released version still loads.
 
 ## CLI apps
 <!-- B6. Applies when: the project has a command-line interface. -->
@@ -500,6 +508,8 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
   progress counter may rewrite one line with `\r` and show counts only.
 - Exit with code 0 on success and a non-zero code on failure. Unexpected errors follow Error
   handling.
+- Tests prove: each exit code, stdout and stderr. A second run with the same input gives the same
+  result.
 
 ## Static-site builds (Node)
 <!-- B7. Applies when: the project generates a static site from Markdown. -->

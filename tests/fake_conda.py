@@ -47,7 +47,7 @@ def pip(args: list[str]) -> int:
             sys.stderr.write("ERROR: No matching distribution found for ruff\n")
             return 1
         return 0
-    names = ["pip", "pytest", "pytest_cov", "mypy", "ruff", "python-dotenv"]
+    names = ["pip", "pytest", "pytest_cov", "hypothesis", "mypy", "ruff", "python-dotenv"]
     sys.stdout.write(json.dumps([{"name": n, "version": "1.2.3"} for n in names]) + "\n")
     return 0
 

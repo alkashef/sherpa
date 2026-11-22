@@ -117,10 +117,11 @@ def project_skills() -> list[Path]:
     return sorted(p for p in (bi.assets_dir() / ".claude" / "skills").iterdir() if p.is_dir())
 
 
-def test_project_skills_are_the_six_slash_commands() -> None:
+def test_project_skills_are_the_seven_slash_commands() -> None:
     names = [p.name for p in project_skills()]
     assert names == [
         "code-review-sherpa",
+        "find-bugs",
         "sherpa",
         "write-design",
         "write-plan",
@@ -189,7 +190,14 @@ def workflow_text() -> str:
 
 def test_sherpa_is_the_way_in_and_routes_to_every_other_skill() -> None:
     assert "`/sherpa` is the way in" in workflow_text()
-    skills = ("/write-spec", "/write-design", "/write-plan", "/write-tests", "/code-review-sherpa")
+    skills = (
+        "/write-spec",
+        "/write-design",
+        "/write-plan",
+        "/write-tests",
+        "/code-review-sherpa",
+        "/find-bugs",
+    )
     for skill in skills:
         assert skill in skill_text("sherpa"), skill
     assert "scripts/milestones-runner.py" in skill_text("sherpa")
@@ -279,6 +287,42 @@ def test_the_test_session_tests_the_limits_and_the_defaults() -> None:
     text = skill_text("write-tests")
     for case in ("each limit", "one value on each side", "each default", "each invalid input"):
         assert case in text, case
+
+
+def test_find_bugs_changes_no_code_and_plans_each_bug() -> None:
+    text = skill_text("find-bugs")
+    for part in (
+        "Change no code and\nno test",
+        "since that tag",
+        "--cov-report=term-missing",
+        "pip-audit",
+        "npm audit",
+        "surviving mutants",
+        "`BUG: <requirement ID> | <file>:<line>",
+        "by the rules of `/write-plan`",
+        "Do not plan\n  it.",
+    ):
+        assert part in text, part
+
+
+def test_a_rule_for_all_inputs_gets_a_property_test_and_mutants_run_on_demand() -> None:
+    assert "@settings(max_examples=50)" in skill_text("write-tests")
+    workflow = (bi.assets_dir() / ".github" / "workflows" / "mutation.yml").read_text("utf-8")
+    assert "workflow_dispatch:" in workflow
+    assert "runs-on: ubuntu-latest" in workflow
+    assert "mutmut" in workflow
+    assert "@stryker-mutator/core" in workflow
+    assert "name: mutants" in workflow
+    assert ".github/workflows/mutation.yml" in bi.template_files()["python"]
+
+
+def test_each_module_names_what_its_tests_prove() -> None:
+    sections = {s.section_id: s for s in bi.read_sections(bi.assets_dir() / "CLAUDE_GOLDEN.md")}
+    for section_id in ("B6", "B5", "B4", "B3", "B3a", "A18", "A14"):
+        assert any(line.startswith("- Tests prove:") for line in sections[section_id].body), (
+            section_id
+        )
+    assert '"Tests prove"' in skill_text("write-design")
 
 
 def test_the_test_levels_are_the_same_everywhere() -> None:

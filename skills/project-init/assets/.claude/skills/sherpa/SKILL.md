@@ -1,6 +1,6 @@
 ---
 name: sherpa
-description: The way into spec-driven development (SDD) in this repo. Reads the state of docs/spec.md, docs/design.md, docs/plan.md and docs/unapproved-ideas.md and what the user asks, names the step of docs/workflow.md that comes next, and starts that one skill (/write-spec, /write-design, /write-plan, or a milestone with /write-tests). Use when the user asks for a new feature, a change, a fix of any size, the next step, to build or run milestones, to note or take up an idea, or where the project stands, even if they do not name a skill. Runs one step, then stops.
+description: The way into spec-driven development (SDD) in this repo. Reads the state of docs/spec.md, docs/design.md, docs/plan.md and docs/unapproved-ideas.md and what the user asks, names the step of docs/workflow.md that comes next, and starts that one skill (/write-spec, /write-design, /write-plan, a milestone with /write-tests, or /find-bugs before a release). Use when the user asks for a new feature, a change, a fix of any size, the next step, to build or run milestones, to note or take up an idea, or where the project stands, even if they do not name a skill. Runs one step, then stops.
 ---
 
 # Sherpa
@@ -39,6 +39,7 @@ the user that one question before you route.
 | A fix of any size, of behavior the spec already states | 3. Plan: one fix milestone | `/write-plan` |
 | To build, run or go on with the milestones | 4. Execute | see 4 below |
 | A release | none | see 4 below |
+| To look for bugs before a release | none | `/find-bugs` |
 | To note an idea for later | none | add one line to `docs/unapproved-ideas.md` |
 | To take up an idea from `docs/unapproved-ideas.md` | the row above that fits the idea | that row's skill |
 | Where the project stands, or what is next | none | the status report of 3 below |
@@ -95,7 +96,9 @@ For a status request, give only those lines, the number of unapproved ideas, and
   `docs/workflow.md` say, and report each decision as a `DECISION:` line. One milestone per
   request.
 - **When the user asks for a release:** give the command `python scripts/release.py M<n>`, where
-  M<n> is the last milestone of the release. The user runs it in a terminal.
+  M<n> is the last milestone of the release. The user runs it in a terminal. Before it, offer
+  `/find-bugs`: it looks for bugs in the code changed since the last release, and each bug becomes
+  a fix milestone.
 
 ## 5. Stop
 

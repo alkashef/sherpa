@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="The sherpa spec-driven development workflow: who does each step, what it produces, and what enforces it.">
 <!-- The SHA-256 of docs/workflow.md when this page was last made to agree with it. -->
-<meta name="workflow-md-sha256" content="60b30a6c0c1fd0f73605cc1dbdad71085073de270636ea0162fab9aebd686db0">
+<meta name="workflow-md-sha256" content="70ca302269e56884fb5f5c3895e0289444ec47faf6534fc5cbdce5af87e9cb83">
 <title>Sherpa SDD Workflow</title>
 <style>
   /* Layout: a slim /sherpa bar, then two rows of four cards that snake. Top row left to right (setup
@@ -402,7 +402,8 @@
             'A change of architecture, data, interfaces or libraries, with no change of behavior: `/write-design`',
             'Milestones, or a fix of behavior that the spec already states: `/write-plan`',
             'To build: the runner command (`python scripts/milestones-runner.py`), or one milestone in chat, with `--tests-only` and `--review-only` of the runner',
-            'A release: the command `python scripts/release.py M&lt;n&gt;`'
+            'A release: the command `python scripts/release.py M&lt;n&gt;`',
+            'Bugs before a release: `/find-bugs`. Each bug becomes a fix milestone.'
           ])],
         ['Order',
           p('An earlier item comes before a later one:'),
@@ -447,7 +448,7 @@
             '`CLAUDE.md`: the rules that are always loaded',
             '`.claude/rules/`: the path-scoped rules',
             '`.claude/settings.json`',
-            'The skills `/sherpa`, `/write-spec`, `/write-design`, `/write-plan`, `/write-tests` and `/code-review-sherpa`',
+            'The skills `/sherpa`, `/write-spec`, `/write-design`, `/write-plan`, `/write-tests`, `/code-review-sherpa` and `/find-bugs`',
             '`.githooks/pre-commit`',
             '`scripts/`: the checks, the runner, the live checks and the release script',
             '`docs/`: the workflow and this page, spec, design, plan, unapproved ideas, releases',

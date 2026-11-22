@@ -1,0 +1,78 @@
+# Mutation tests, on demand. Start them in GitHub: Actions, "Mutation tests", Run workflow.
+# They change the code of the files changed since the last release tag, one small change at a
+# time, and run the tests after each change. A change that no test notices is a surviving mutant.
+# The list of surviving mutants is the artifact "mutants"; /find-bugs reads it.
+# Python uses mutmut. mutmut 3 needs fork(), so it runs on Linux and not on Windows.
+# JavaScript uses Stryker.
+name: Mutation tests
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mutants:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find the files changed since the last release
+        run: |
+          tag=$(git describe --tags --abbrev=0 --match "v*" 2>/dev/null || true)
+          if [ -n "$tag" ]; then
+            git diff --name-only "$tag"..HEAD -- src > changed.txt
+          else
+            git ls-files src > changed.txt
+          fi
+          grep -E '\.py$' changed.txt > changed-python.txt || true
+          grep -E '\.(js|mjs)$' changed.txt > changed-javascript.txt || true
+          mkdir -p mutants
+
+      - name: Set up Python
+        if: hashFiles('requirements.txt') != ''
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run mutmut on the changed Python files
+        if: hashFiles('requirements.txt') != ''
+        run: |
+          if [ ! -s changed-python.txt ]; then
+            echo "No Python file changed since the last release." > mutants/python.txt
+            exit 0
+          fi
+          pip install -r requirements.txt mutmut
+          paths=$(paste -sd, changed-python.txt)
+          printf '[mutmut]\npaths_to_mutate=%s\ntests_dir=tests/\n' "$paths" > setup.cfg
+          mutmut run || true
+          mutmut results > mutants/python.txt || true
+
+      - name: Set up Node.js
+        if: hashFiles('package.json') != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run Stryker on the changed JavaScript files
+        if: hashFiles('package.json') != ''
+        run: |
+          if [ ! -s changed-javascript.txt ]; then
+            echo "No JavaScript file changed since the last release." > mutants/javascript.txt
+            exit 0
+          fi
+          npm ci
+          files=$(paste -sd, changed-javascript.txt)
+          npx --yes @stryker-mutator/core run --mutate "$files" --testRunner command \
+            --reporters clear-text,json || true
+          cp reports/mutation/mutation.json mutants/javascript.json || true
+
+      - name: Keep the list of surviving mutants
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutants
+          path: mutants/

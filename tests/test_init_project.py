@@ -121,11 +121,11 @@ def test_python_tools_are_installed_and_pinned_in_the_first_commit(sandbox: Sand
     result = sandbox.init("--with", "python")
     assert result.returncode == 0, result.stderr
     install = ["run", "-n", "demo", "python", "-m", "pip", "install"]
-    assert [*install, "pytest", "pytest-cov", "mypy", "ruff", "python-dotenv"] in (
+    assert [*install, "pytest", "pytest-cov", "hypothesis", "mypy", "ruff", "python-dotenv"] in (
         sandbox.conda_calls()
     )
     pins = [line for line in requirements(sandbox).splitlines() if not line.startswith("#")]
-    expected = ["pytest", "pytest-cov", "mypy", "ruff", "python-dotenv"]
+    expected = ["pytest", "pytest-cov", "hypothesis", "mypy", "ruff", "python-dotenv"]
     assert pins == [f"{tool}==1.2.3" for tool in expected]
     assert sandbox.git("rev-list", "--count", "HEAD") == "1"
     assert "Python tools installed and pinned" in result.stdout
@@ -140,7 +140,7 @@ def test_failed_pip_install_says_how_to_finish(sandbox: Sandbox) -> None:
     sandbox.env["FAKE_PIP_STATE"] = "fail"
     result = sandbox.init("--with", "python")
     assert result.returncode == 1
-    assert "pip install pytest pytest-cov mypy ruff python-dotenv" in result.stderr
+    assert "pip install pytest pytest-cov hypothesis mypy ruff python-dotenv" in result.stderr
     assert [line for line in requirements(sandbox).splitlines() if not line.startswith("#")] == []
     assert sandbox.remote_head() == sandbox.git("rev-parse", "HEAD")
 

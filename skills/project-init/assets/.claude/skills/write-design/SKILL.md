@@ -79,6 +79,7 @@ Cover these concerns where they apply:
 - Deployment, external data flows, secrets, settings, and operational failure handling.
 - How each requirement is tested, as one row of the table in "Test design": its level (`unit` for logic, `e2e` through the outermost non-browser entry point, `ui` for what only the page shows, `live` for what only a live external service can prove), the test tool, and the real local part or the fake that the test uses.
 - A test uses a real local part where one exists: a database file in a temporary folder, a server that the test starts on 127.0.0.1. Name a fake only for an external service.
+- For each module of the project, the test design covers what the line "Tests prove" of its rules file names (`.claude/rules/`), for the requirements that the module serves.
 - Every user scenario of a project with a browser front end gets a `ui` test. The browser tool is Playwright.
 - The module boundaries, as rows of the table "Module boundaries": each module under `src/`, and the other modules that it can import. `scripts/check.py` fails when the code breaks a row.
 

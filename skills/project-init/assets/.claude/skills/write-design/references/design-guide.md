@@ -35,6 +35,8 @@ State allowed dependency directions so an implementation session can locate the 
 Keep domain rules independent of replaceable external systems where this reduces risk.
 Reuse project patterns that already work. Add a boundary when it hides meaningful complexity, not merely to increase the number of layers.
 
+Take the folder layout from the documented structure of the chosen framework, when it has one. When the project has a frontend and a backend, give each its own folder. Inside a folder, group the files by feature when there is more than one feature.
+
 For a UI, define navigation, interaction states, and workflow contracts when they affect implementation.
 Use a separate visual design process for typography, detailed layouts, or aesthetic exploration when requested.
 

@@ -1,6 +1,6 @@
 ---
 name: project-init
-description: Set up the current folder as a new project from the golden templates and push it to GitHub. Run it in a new, empty project folder that is open in VS Code. Builds CLAUDE.md, the path-scoped rules, docs/ (workflow, spec, design, plan, unapproved ideas), the /sherpa, /write-spec, /write-design, /write-plan, /write-tests and /code-review-sherpa skills, README, tool configs and starting folders, then commits, creates the GitHub repository, pushes, and creates a conda environment with the project's name. Use whenever the user wants to start, init, bootstrap or scaffold a new project or repo, or says "new project", even if they do not mention GitHub or the docs. Not for adding files to an existing project.
+description: Set up the current folder as a new project from the golden templates and push it to GitHub. Run it in a new, empty project folder that is open in VS Code. Builds CLAUDE.md, the path-scoped rules, docs/ (workflow, spec, design, plan, unapproved ideas), the /sherpa, /write-spec, /write-design, /write-plan, /write-tests, /code-review-sherpa and /find-bugs skills, README, tool configs and starting folders, then commits, creates the GitHub repository, pushes, and creates a conda environment with the project's name. Use whenever the user wants to start, init, bootstrap or scaffold a new project or repo, or says "new project", even if they do not mention GitHub or the docs. Not for adding files to an existing project.
 ---
 
 # Project init
@@ -66,7 +66,7 @@ To change what new projects get, edit `assets/`, not this file.
    that conda is installed; (2) runs `git init -b main` unless the folder is already a repository
    with no commits; (3) runs `build_instance.py`, which keeps any file that already exists;
    (4) runs `conda create -n <name> python=3.12` unless that environment already exists and, with
-   the `python` module, installs pytest, pytest-cov, mypy, ruff and python-dotenv into it and pins
+   the `python` module, installs pytest, pytest-cov, hypothesis, mypy, ruff and python-dotenv into it and pins
    them in `requirements.txt`; (5) commits, then turns on the pre-commit hook
    (`git config core.hooksPath .githooks`); (6) runs `gh repo create` unless `origin` already
    exists, then pushes `main`. The first commit holds the whole scaffold, so the push is never

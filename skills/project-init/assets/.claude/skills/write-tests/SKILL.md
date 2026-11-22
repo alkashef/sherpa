@@ -56,6 +56,10 @@ comes back to you once, with its error type and message.
    - For each limit (a length, a range, a count), test the limit and one value on each side.
    - For each default, test a call that leaves out the value.
    - For each invalid input, test one value of each kind (out of range, wrong type).
+   - When a requirement states a rule for all inputs (every slug holds only lowercase letters,
+     a total never goes below zero), also write one property test with Hypothesis: `@given`
+     with a strategy for the inputs, and `@settings(max_examples=50)`. It carries the
+     requirement ID in its name, as the other tests do.
 4. Use invented data. No test outside `tests/live/` calls a live external service (an LLM, a
    network API), and no test reads the user's data. A test keeps its files in a temporary folder. Fix the clock and any random value, so
    the test gives the same result on every run.

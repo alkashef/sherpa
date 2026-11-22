@@ -166,7 +166,7 @@ def create_env(conda: str, name: str) -> str:
 
 def python_tools() -> list[str]:
     """Return the tools a Python project's checks and tests need, in requirements.txt order."""
-    return ["pytest", "pytest-cov", "mypy", "ruff", "python-dotenv"]
+    return ["pytest", "pytest-cov", "hypothesis", "mypy", "ruff", "python-dotenv"]
 
 
 def pinned_requirements(installed: list[dict[str, str]]) -> str:
