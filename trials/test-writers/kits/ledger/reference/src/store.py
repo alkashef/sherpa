@@ -2,12 +2,19 @@
 
 import json
 import os
+import re
 import tempfile
+import uuid
 from dataclasses import asdict, dataclass
+from datetime import datetime
 from pathlib import Path
 
 LEDGER_ERROR = "the data file is not a valid ledger"
 FIELDS = {"id": str, "amount_cents": int, "category": str, "note": str, "created": str}
+MAX_CENTS = 100_000_000
+CATEGORY = re.compile(r"[a-z]{1,20}")
+UUID_VERSION = 4
+UTC_TIME = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z")
 
 
 @dataclass(frozen=True)
@@ -38,13 +45,44 @@ def load(path: Path) -> list[Entry]:
 
 
 def valid_entry(entry: object) -> bool:
-    """Tell whether an object of the data file is an entry: the five keys, each of its type."""
+    """Tell whether an object of the data file is an entry of the data model of the design.
+
+    The five keys, each of its type, and the limits of the data model: a UUID 4, an amount of 1
+    to 100000000 cents, a category of 1 to 20 letters from a to z, and a time in UTC.
+    """
     if not isinstance(entry, dict) or set(entry) != set(FIELDS):
         return False
-    return all(
+    if not all(
         isinstance(entry[key], kind) and not isinstance(entry[key], bool)
         for key, kind in FIELDS.items()
+    ):
+        return False
+    return (
+        uuid4_text(entry["id"])
+        and 1 <= entry["amount_cents"] <= MAX_CENTS
+        and CATEGORY.fullmatch(entry["category"]) is not None
+        and utc_text(entry["created"])
     )
+
+
+def utc_text(text: str) -> bool:
+    """Tell whether a text is a time of ISO 8601 in UTC, such as 2026-11-23T10:00:00Z."""
+    if UTC_TIME.fullmatch(text) is None:
+        return False
+    try:
+        datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return True
+
+
+def uuid4_text(text: str) -> bool:
+    """Tell whether a text is a UUID of version 4, in its usual form."""
+    try:
+        value = uuid.UUID(text)
+    except ValueError:
+        return False
+    return value.version == UUID_VERSION and str(value) == text.lower()
 
 
 def save(path: Path, entries: list[Entry]) -> None:

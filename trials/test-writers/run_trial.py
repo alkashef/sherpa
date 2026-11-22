@@ -1,7 +1,7 @@
 """Run the second trial of the test writers, through the runner of a real sherpa project.
 
 Usage: python run_trial.py <work folder> [--writers claude codex antigravity] [--runs 3]
-           [--kits slug ledger] [--results results-2]
+           [--kits slug ledger] [--results results-2] [--rescore]
 
 For each kit, each writer and each run, it builds a project with sherpa's builder (named `sherpa`,
 so that the runner accepts this conda environment), puts in the docs of the kit, commits, and
@@ -10,7 +10,8 @@ tests with evaluate.py. The writers run in parallel, one thread each; the runs o
 one after another. It keeps the tests, the runner's output, the logs and the score of each run
 under the results folder, and writes summary.md by the rule of the second trial (docs/
 unapproved-ideas.md of sherpa): a writer qualifies only when all gates pass in all its runs; of
-those, the highest median of seeded bugs caught wins, and on a tie the faster one.
+those, the highest median of seeded bugs caught wins, and on a tie the faster one. --rescore
+scores the kept runs again, for a kit whose correct implementation changed.
 """
 
 import argparse
@@ -96,6 +97,20 @@ def one_run(work: Path, results: Path, kit: str, writer: str, number: int) -> di
     return summary
 
 
+def rescore(work: Path, results: Path, kit: str, writer: str, number: int) -> dict[str, object]:
+    """Score a kept run again with the current kit: same project, same tests, same time."""
+    folder = work / f"{kit}-{writer}-{number}" / "project"
+    keep = results / kit / writer / f"run{number}"
+    old = json.loads((keep / "score.json").read_text(encoding="utf-8"))
+    score = run([PY, str(HERE / "evaluate.py"), str(HERE / "kits" / kit), str(folder), "--json", str(keep / "score.json")], HERE)
+    (keep / "score.txt").write_text(score.stdout + score.stderr, encoding="utf-8")
+    summary = json.loads((keep / "score.json").read_text(encoding="utf-8"))
+    summary.update({key: old[key] for key in ("kit", "writer", "run", "seconds", "runner_exit")})
+    (keep / "score.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    print(f"{kit} {writer} run {number}: rescored, gates {summary['all_gates']}, caught {summary['caught']}/{summary['total']}", flush=True)
+    return summary
+
+
 def writer_runs(work: Path, results: Path, writer: str, kits: list[str], runs: int) -> list[dict[str, object]]:
     """Run every kit and run of one writer, one after another."""
     return [one_run(work, results, kit, writer, n) for kit in kits for n in range(1, runs + 1)]
@@ -125,11 +140,15 @@ def main() -> None:
     parser.add_argument("--kits", nargs="+", default=["slug", "ledger"])
     parser.add_argument("--runs", type=int, default=3)
     parser.add_argument("--results", type=Path, default=HERE / "results-2")
+    parser.add_argument("--rescore", action="store_true", help="score the kept runs again")
     args = parser.parse_args()
     args.results.mkdir(parents=True, exist_ok=True)
-    with ThreadPoolExecutor(max_workers=len(args.writers)) as pool:
-        futures = [pool.submit(writer_runs, args.work, args.results, w, args.kits, args.runs) for w in args.writers]
-        scores = [score for future in futures for score in future.result()]
+    if args.rescore:
+        scores = [rescore(args.work, args.results, k, w, n) for k in args.kits for w in args.writers for n in range(1, args.runs + 1)]
+    else:
+        with ThreadPoolExecutor(max_workers=len(args.writers)) as pool:
+            futures = [pool.submit(writer_runs, args.work, args.results, w, args.kits, args.runs) for w in args.writers]
+            scores = [score for future in futures for score in future.result()]
     (args.results / "summary.md").write_text(summary_table(scores, args.writers), encoding="utf-8")
     print((args.results / "summary.md").read_text(encoding="utf-8"))
 
