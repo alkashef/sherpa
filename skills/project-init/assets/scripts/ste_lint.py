@@ -13,8 +13,9 @@ the count for each 100 words. Code (fenced blocks and `inline code`) does not co
 place. `scripts/check.py` runs it on README.md, CLAUDE.md and docs/*.md. EARS keeps "shall": the
 flavored mode allows it.
 
-The rules and the score come from ste-lint.py of the asd-ste100 skill (score version 2), under
-this license:
+The rules and the score come from ste-lint.py of the asd-ste100 skill (score version 2). One
+change: a list item is a paragraph of its own, and a table row is in no paragraph, so a long list
+or table does not count as a long paragraph. The license of ste-lint.py:
 
     MIT License
 
@@ -161,6 +162,7 @@ STATIVE = (
     r"(?:closed|opened?|damaged|completed?|installed|connected|required|expected|configured"
     r"|enabled|disabled|deprecated|supported)"
 )
+LIST_ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+")
 LONG_SENTENCE = 20
 LONG_PARAGRAPH = 6
 FAILED = 1
@@ -186,11 +188,26 @@ def strip_code(text: str) -> str:
 
 
 def paragraphs(raw: str) -> list[str]:
-    """Return the paragraphs of a text, after the fenced code blocks are gone."""
+    """Return the paragraphs of a text, after the fenced code blocks are gone.
+
+    Each list item is a paragraph of its own, and a table row is in no paragraph: the style asks
+    for lists and tables before prose, so a long list or table is not a long paragraph.
+    """
     text = re.sub(r"```.*?```", "\n\n", raw, flags=re.DOTALL)
     text = re.sub(r"^[ \t]*```.*$", "\n", text, flags=re.MULTILINE)
     text = re.sub(r"`[^`]*`", " ", text)
-    return [part for part in re.split(r"\n\s*\n", text) if part.strip()]
+    found: list[str] = []
+    for block in re.split(r"\n\s*\n", text):
+        current: list[str] = []
+        for line in block.split("\n"):
+            if line.lstrip().startswith("|"):
+                continue
+            if LIST_ITEM.match(line) and current:
+                found.append("\n".join(current))
+                current = []
+            current.append(line)
+        found.append("\n".join(current))
+    return [part for part in found if part.strip()]
 
 
 def sentences(text: str) -> list[str]:

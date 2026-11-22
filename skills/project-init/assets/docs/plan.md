@@ -1,7 +1,7 @@
 # Plan — {{PROJECT_NAME}}
 
-Only unfinished milestones. Delete a milestone's row and block in the commit that finishes it; git
-history is the record. Template: `docs/workflow.md`.
+Only unfinished milestones. Delete the row and the block of a milestone in the commit that
+finishes it. Git history is the record. Template: `docs/workflow.md`.
 
 **Next milestone number: M1**
 

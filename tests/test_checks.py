@@ -470,3 +470,16 @@ def test_a_sentence_in_two_docs_fails(project: Sandbox) -> None:
     code, output = check(project.folder)
     assert code == 2
     assert "is in docs/a.md and docs/b.md. Keep it in one." in output
+
+
+def test_a_long_list_or_table_is_not_a_long_paragraph(tmp_path: Path) -> None:
+    # The style asks for lists and tables before prose (USER-20), so they do not count as one
+    # long paragraph, as they do in ste-lint.py.
+    items = "".join(f"- Item {n} names one short fact for the user.\n" for n in range(12))
+    table = "| A | B |\n| --- | --- |\n" + "| one | two |\n" * 12
+    doc = tmp_path / "list.md"
+    doc.write_text(items + "\n" + table, encoding="utf-8")
+    script = bi.assets_dir() / "scripts" / "ste_lint.py"
+    done = run([sys.executable, str(script), "--fail-over", "2.5", str(doc)])
+    assert done.returncode == 0, done.stdout
+    assert "0.0 for 100 (ok)" in done.stdout
