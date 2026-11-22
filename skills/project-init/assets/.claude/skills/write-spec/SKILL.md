@@ -80,6 +80,10 @@ and interrupted work when relevant. Establish the responsible role and expected 
 Clarify domain terms, data relationships, ownership, validation, retention, and permissions.
 Record the required effect of a failure. Leave its technical mechanism to design.
 
+Give each domain term one row in the glossary of section 2: the Term, its Meaning, and the words
+to Avoid (other words that users or documents use for the same thing). Use the Term everywhere
+in the spec. The design names its entities with these Terms, and the code its names.
+
 For each external system that the app uses, ask one question: what must the app do when this
 system fails? Record the answer as a requirement. With no such requirement, the app stops and
 shows the error: it does not retry and it does not fall back (`CLAUDE.md`, Error handling).
@@ -149,7 +153,8 @@ Review substance before wording:
 
 - Trace each requirement to a user task, business rule, quality need, or binding constraint.
 - Check that scenarios cover the agreed scope, including relevant roles and failure paths.
-- Check terminology, consistency, unique IDs, and unresolved conflicts.
+- Check terminology, consistency, unique IDs, and unresolved conflicts. Each domain term has a
+  glossary row, and the spec uses no word of an Avoid column.
 - Check that acceptance examples have domain-reviewed expected results.
 - Check that each user scenario has examples for its most likely cases and for its edge cases.
 - Check that every requirement states a result a test can observe.

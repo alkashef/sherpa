@@ -6,7 +6,9 @@ How to build what `spec.md` says. If this file and the spec disagree, the spec w
 
 One current decision per topic. Status: `Decided` means the user chose or confirmed it. `Proposed`
 means the AI derived it and the user has not confirmed it. `Superseded` means a newer decision
-replaced it: keep its row, and name the replacement in Why. Never reuse or renumber an ID.
+replaced it: keep its row, and name the replacement in Why. Never reuse or renumber an ID. Why
+names the driver (a requirement ID or a constraint) and the alternative that the decision rejects.
+A decision that needs more than its row gets a `### DEC-NNN: <topic>` block under the table.
 
 | ID | Status | Decision | Why |
 | --- | --- | --- | --- |
@@ -42,12 +44,17 @@ that it can import, or `none`. `scripts/check.py` fails when the code breaks a r
 
 ## 3. Data model
 
+One Mermaid `erDiagram`: each entity, with its typed attributes, and the relationships between
+the entities. Entity names are Terms of the glossary in `spec.md`. Then one line for each entity:
+the module that owns it, and where it is stored.
+
 TBD
 
 ## 4. Interfaces
 
 Name every interface a test needs: entry points, inputs and outputs, stored records, and public
-functions. The tests are written from the spec and this file, without the code.
+functions. For a stored record, link to its entity in "3. Data model" and do not copy its
+attributes. The tests are written from the spec and this file, without the code.
 
 TBD
 

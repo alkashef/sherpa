@@ -21,6 +21,7 @@ PYTHON_FILES = [
     "ruff.toml",
     "mypy.ini",
     "pytest.ini",
+    ".coveragerc",
     "requirements.txt",
     "scripts/cleanup.py",
     "scripts/spec_coverage.py",

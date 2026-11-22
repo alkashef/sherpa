@@ -209,6 +209,29 @@ def test_a_test_may_run_a_process(project: Sandbox) -> None:
     assert code == 0, output
 
 
+MAIN = (
+    '"""Entry point."""\n\nimport sys\n\nfrom src.calc import add\n\n'
+    'sys.stdout.write(f"{add(1, 2)}\\n")\n'
+)
+MAIN_TEST = (  # the only test that reaches src/calc.py runs main.py as a process
+    "import subprocess\nimport sys\n\n\n"
+    "def test_main_prints_the_sum() -> None:\n"
+    '    command = [sys.executable, "main.py"]\n'
+    "    done = subprocess.run(command, capture_output=True, text=True, check=False)\n"
+    '    assert done.stdout.strip() == "3"\n'
+)
+
+
+def test_code_that_a_test_runs_in_a_process_counts_for_coverage(project: Sandbox) -> None:
+    # Without `patch = subprocess` in .coveragerc, src/calc.py has 0% and the floor fails.
+    (project.folder / "src" / "__init__.py").write_text('"""Source."""\n', encoding="utf-8")
+    (project.folder / "src" / "calc.py").write_text(CALC, encoding="utf-8")
+    (project.folder / "main.py").write_text(MAIN, encoding="utf-8")
+    (project.folder / "tests" / "e2e" / "test_main.py").write_text(MAIN_TEST, encoding="utf-8")
+    code, output = check(project.folder)
+    assert code == 0, output
+
+
 def test_code_with_no_test_fails(project: Sandbox) -> None:
     # A package file that holds only a docstring is not code.
     (project.folder / "src" / "__init__.py").write_text(GOOD, encoding="utf-8")

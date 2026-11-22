@@ -15,7 +15,12 @@ Record how the business outcome will be evaluated when applicable.
 
 ## 2. Roles and glossary
 
-Define the relevant user roles, decision-makers, and ambiguous domain terms.
+Define the relevant user roles and decision-makers. Then give each domain term one row below.
+Avoid lists the other words that people use for the same thing. The spec and the code use the
+Term, never an Avoid word.
+
+| Term | Meaning | Avoid |
+| --- | --- | --- |
 
 ## 3. User scenarios
 

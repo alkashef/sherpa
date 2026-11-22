@@ -105,7 +105,7 @@ def template_files() -> dict[str, list[str]]:
             "scripts/release.py",
             "scripts/spec_coverage.py",
         ],
-        "python": ["ruff.toml", "mypy.ini", "pytest.ini", "requirements.txt"],
+        "python": ["ruff.toml", "mypy.ini", "pytest.ini", ".coveragerc", "requirements.txt"],
         "javascript": [
             "package.json",
             "tsconfig.json",

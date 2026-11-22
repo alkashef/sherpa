@@ -29,6 +29,7 @@
       "Edit(/ruff.toml)",
       "Edit(/mypy.ini)",
       "Edit(/pytest.ini)",
+      "Edit(/.coveragerc)",
       "Edit(/package.json)",
       "Edit(/tsconfig.json)",
       "Edit(/eslint.config.js)",

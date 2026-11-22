@@ -59,6 +59,7 @@ def test_check_configs_and_hooks_ask_before_an_edit() -> None:
         "ruff.toml",
         "mypy.ini",
         "pytest.ini",
+        ".coveragerc",
         "package.json",
         "tsconfig.json",
         "eslint.config.js",
@@ -217,6 +218,42 @@ def test_a_milestone_has_a_test_a_build_and_a_review_session() -> None:
     assert "/write-tests" in skill_text("write-plan")
     assert "/write-tests" in skill_text("write-spec")
     assert "/write-tests" in skill_text("write-design")
+
+
+def test_the_templates_of_the_skills_are_the_templates_of_the_docs() -> None:
+    # The copies drifted apart once: the design template had no table of module boundaries.
+    fills = {
+        "{{PROJECT_NAME}}": "<project name>",
+        "{{PURPOSE}}": "<purpose>",
+        "{{STACK}}": "<stack>",
+        "{{DIRECTORY_STRUCTURE}}": "<directory structure>",
+    }
+    skills = bi.assets_dir() / ".claude" / "skills"
+    pairs = {
+        "spec.md": skills / "write-spec" / "assets" / "spec-template.md",
+        "design.md": skills / "write-design" / "assets" / "design-template.md",
+    }
+    for doc, template in pairs.items():
+        text = (bi.assets_dir() / "docs" / doc).read_text(encoding="utf-8")
+        for placeholder, value in fills.items():
+            text = text.replace(placeholder, value)
+        assert template.read_text(encoding="utf-8") == text, doc
+
+
+def test_the_spec_has_a_glossary_and_the_design_a_data_model() -> None:
+    spec = (bi.assets_dir() / "docs" / "spec.md").read_text(encoding="utf-8")
+    design = (bi.assets_dir() / "docs" / "design.md").read_text(encoding="utf-8")
+    assert "| Term | Meaning | Avoid |" in spec
+    assert "erDiagram" in design
+    assert "glossary" in skill_text("write-spec")
+    assert "erDiagram" in skill_text("write-design")
+
+
+def test_the_test_session_tests_the_limits_and_the_defaults() -> None:
+    # In the trial of three test writers, two of them wrote only the planned examples (RUN-07).
+    text = skill_text("write-tests")
+    for case in ("each limit", "one value on each side", "each default", "each invalid input"):
+        assert case in text, case
 
 
 def test_the_test_levels_are_the_same_everywhere() -> None:

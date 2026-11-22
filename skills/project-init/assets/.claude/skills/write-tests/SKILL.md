@@ -47,6 +47,10 @@ Another session builds the code afterwards and may not change these tests. Write
    test that comes from an example carries the example ID in its name
    (`test_pay_001_ex_003_refund_over_limit`). So the source of each expected result is on record.
    Take each expected result from the spec. Never work it out the way the code would.
+   Then test the limits and the defaults that the requirements name:
+   - For each limit (a length, a range, a count), test the limit and one value on each side.
+   - For each default, test a call that leaves out the value.
+   - For each invalid input, test one value of each kind (out of range, wrong type).
 4. Use invented data. No test outside `tests/live/` calls a live external service (an LLM, a
    network API), and no test reads the user's data. A test keeps its files in a temporary folder. Fix the clock and any random value, so
    the test gives the same result on every run.

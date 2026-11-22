@@ -84,6 +84,8 @@ Cover these concerns where they apply:
 
 The test writer reads only the spec and the design, never the code (`/write-tests`). So name every interface a test needs: entry points, request and response fields, stored records, and public functions.
 
+Draw the data model under "Data model" as one Mermaid `erDiagram`: each entity with its typed attributes, and the relationships between the entities. Name each entity with a Term of the glossary in `docs/spec.md`. Under "Interfaces", link a stored record to its entity and do not copy its attributes.
+
 For an AI feature, define the provider or local runtime, outgoing data, output validation, failure handling, and test boundaries. Respect project rules.
 Draw one Mermaid diagram of the components and their interfaces under "Components". This diagram is required: show each component, each connection, and the contract or the data on each important connection. Add another diagram only when it clarifies boundaries, dependencies, or runtime behavior. Use the least detail that helps implementation.
 A retry, a fallback or a recovery needs a requirement that asks for it. Then a `Decided` decision says how, and the test design names the test that covers it (`CLAUDE.md`, Error handling).

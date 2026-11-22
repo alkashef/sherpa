@@ -2,72 +2,74 @@
 
 How to build what `spec.md` says. If this file and the spec disagree, the spec wins.
 
-Review state: <draft, awaiting a named decision, or approved scope with its approval reference>. The design is approved when no decision is `Proposed` and no design question is open.
-Spec baseline: <document path and revision when available>.
-
 ## 1. Decisions
 
-Keep one current decision per topic. Never reuse or renumber a decision ID. Keep the row of a replaced decision with the Status `Superseded`, and name its replacement in Why.
-Status: `Decided` means the user chose or confirmed it. `Proposed` means the AI derived it and the user has not confirmed it.
+One current decision per topic. Status: `Decided` means the user chose or confirmed it. `Proposed`
+means the AI derived it and the user has not confirmed it. `Superseded` means a newer decision
+replaced it: keep its row, and name the replacement in Why. Never reuse or renumber an ID. Why
+names the driver (a requirement ID or a constraint) and the alternative that the decision rejects.
+A decision that needs more than its row gets a `### DEC-NNN: <topic>` block under the table.
 
-| ID | Status | Decision | Why and requirement references |
+| ID | Status | Decision | Why |
 | --- | --- | --- | --- |
-| <DEC ID> | <Decided, Proposed or Superseded> | <chosen approach> | <reason, spec IDs, project constraint references> |
-
-### <DEC ID>: <topic>
-
-- Context: <driver or risk>.
-- Alternatives: <feasible alternatives and reasons for rejection>.
-- Consequences: <benefits, costs, limitations, and remaining risk>.
-- Evidence: <source or actual result, otherwise explicit assumption>.
-- Validation: <check and pass criterion, with planned or executed status>.
-- Revisit when: <specific change that would invalidate the choice>.
+| DEC-001 | Proposed | <stack> | TBD |
 
 ## 2. Architecture
 
 ### 2.1 Components
 
-| Component or layer | Responsibility and owned state | Allowed dependencies | References |
-| --- | --- | --- | --- |
+One Mermaid diagram of the components and their interfaces, then one line for each component:
+what it does and what it owns.
+
+TBD
 
 ### 2.2 Directory structure
 
-Create a folder only when it is listed here. Keep the layout consistent with the components.
+Create a folder only when it is listed here, and update this table in the same change.
 
-| Path | Purpose and owner |
-| --- | --- |
+<directory structure>
 
 ### 2.3 Settings
 
-| Setting | Default | Meaning and references |
+| Setting | Default | Meaning |
 | --- | --- | --- |
 
-### 2.4 Technology choices
+### 2.4 Module boundaries
 
-Record selected technologies and proposals here. Keep the installed dependency inventory and exact pins in the dependency files.
+A module is a folder or a file under `src/`. `May import` lists the other modules of this table
+that it can import, or `none`. `scripts/check.py` fails when the code breaks a row.
 
-| Technology | Role | Decision | State and compatibility constraint | Official source and date checked |
-| --- | --- | --- | --- | --- |
-
-### 2.5 Critical flows and operations
-
-<Describe applicable workflow paths, failures, deployment, recovery, and external data flows. Cite requirements and decisions.>
+| Module | May import |
+| --- | --- |
 
 ## 3. Data model
 
-<Define entities, types, ownership, relationships, integrity, persistence, and migration boundaries where applicable. Cite the relevant IDs.>
+One Mermaid `erDiagram`: each entity, with its typed attributes, and the relationships between
+the entities. Entity names are Terms of the glossary in `spec.md`. Then one line for each entity:
+the module that owns it, and where it is stored.
+
+TBD
 
 ## 4. Interfaces
 
-<Define applicable public contracts, inputs, outputs, validation, authorization, errors, and recovery. Name every interface a test needs: entry points, request and response fields, stored records, and public functions. Cite the relevant IDs.>
+Name every interface a test needs: entry points, inputs and outputs, stored records, and public
+functions. For a stored record, link to its entity in "3. Data model" and do not copy its
+attributes. The tests are written from the spec and this file, without the code.
+
+TBD
 
 ## 5. Test design
 
-<State the test level of each requirement (`unit`, `e2e` or `ui`), the test tools, the test harness, and the fake for each external system. The project rules own the test policy: cite them and do not weaken them.>
+The test level of each requirement (`unit`, `e2e`, `ui` or `live`), the test tool, and the real
+local part or the fake that the test uses. `CLAUDE.md` (Testing) owns the test rules.
+`scripts/spec_coverage.py --consistency` fails when a requirement has no row here.
+
+| Requirement | Level | Test tool | Real local part or fake |
+| --- | --- | --- | --- |
 
 ## 6. Open design questions
 
-| ID | Question, risk or design check, and references | Who decides | Blocks what |
-| --- | --- | --- | --- |
+The design is approved when no decision is `Proposed` and this table is empty.
 
-<Remove unused optional sections. Resolve material blockers before declaring the design ready for planning.>
+| ID | Question | Who decides | Blocks what |
+| --- | --- | --- | --- |

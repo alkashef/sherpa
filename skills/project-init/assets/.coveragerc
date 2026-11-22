@@ -1,0 +1,7 @@
+# Coverage configuration. pytest-cov reads it for the 80% branch-coverage floor.
+# Never weaken it to make a change pass. Fix the tests.
+
+[run]
+# Also measure the Python processes that a test starts, such as an end-to-end test that runs
+# main.py. Without it, code that only such a test reaches counts as not covered.
+patch = subprocess

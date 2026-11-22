@@ -1,8 +1,13 @@
-# Spec - [Project name]
+# Spec — <project name>
 
 Status: Draft
 
+What to build. Written with `/write-spec`. Change only with the user's approval. Each requirement is
+in EARS syntax and has an ID that tests cite.
+
 ## 1. Purpose and scope
+
+<purpose>
 
 Record the business problem, affected people, current workaround, desired
 improvement, in-scope work, exclusions, and binding constraints.
@@ -10,7 +15,12 @@ Record how the business outcome will be evaluated when applicable.
 
 ## 2. Roles and glossary
 
-Define the relevant user roles, decision-makers, and ambiguous domain terms.
+Define the relevant user roles and decision-makers. Then give each domain term one row below.
+Avoid lists the other words that people use for the same thing. The spec and the code use the
+Term, never an Avoid word.
+
+| Term | Meaning | Avoid |
+| --- | --- | --- |
 
 ## 3. User scenarios
 
@@ -20,6 +30,7 @@ For each `SCN-NNN`, record:
 - Trigger and preconditions
 - Main success path
 - Relevant alternate paths and failure paths
+- For each external system that the scenario uses: what the program does when that system fails
 - Observable result
 - Source and confirmation status
 
@@ -28,16 +39,15 @@ For each `SCN-NNN`, record:
 | ID | EARS requirement | Priority | Status | Business reason | Source | Scenarios | Examples |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 
-Use the project's status convention. Otherwise, distinguish Proposed, Confirmed,
-and Withdrawn requirements. A confirmed requirement still needs the applicable
-spec approval before implementation.
+Use `AREA-NNN` for IDs, for example `PAY-001`. Distinguish Proposed, Confirmed, and Withdrawn
+requirements. A confirmed requirement still needs the spec approval before implementation.
 
 ## 5. Non-functional requirements
 
 | ID | EARS requirement | Priority | Status | Business reason | Source | Acceptance evidence |
 | --- | --- | --- | --- | --- | --- | --- |
 
-State the relevant workload, conditions, and measurable acceptance limits.
+Use `NFR-NNN` for IDs. State the relevant workload, conditions, and measurable acceptance limits.
 Keep unknown limits in the open questions. Do not invent values.
 
 ## 6. Acceptance examples
@@ -45,7 +55,8 @@ Keep unknown limits in the open questions. Do not invent values.
 | ID | Requirement IDs | Situation and input | Expected result | Reviewed by |
 | --- | --- | --- | --- | --- |
 
-Record the actual reviewer or mark the example as awaiting review.
+List the cases of each user scenario: first the most likely cases, in full, then the edge cases.
+Each example gets a test. Record the actual reviewer or mark the example as awaiting review.
 Link rules by ID instead of repeating their text.
 
 ## 7. Assumptions and open questions
@@ -59,7 +70,7 @@ Record deliberately deferred decisions with their limits.
 ## 8. Review and approval
 
 Record the actual approval, its scope, and remaining exclusions when it occurs.
-Do not prefill approval or treat silence as consent.
+Do not prefill approval or treat silence as consent. When the spec is approved, change `Status`
+to `Approved`.
 
-For amendments, record the approved change and affected IDs here only if the
-project has no existing change-record convention. Preserve IDs and withdrawn rows.
+For amendments, record the approved change and affected IDs here. Preserve IDs and withdrawn rows.

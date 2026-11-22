@@ -134,7 +134,7 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 | `models/`, `prompts/` | Downloaded model weights (never committed; path from config) and LLM prompt files. |
 | `scripts/` | Setup, download, and maintenance scripts: `cleanup.py`, `check.py` (the checks the hooks run), `spec_coverage.py` (which requirement has a test), `milestones-runner.py` (runs the plan unattended), `download_models.py`, `download_assets.py`. |
 | `.vscode/`, `.claude/` | Shared editor settings and Claude Code settings. |
-| Root | `CLAUDE.md`, `README.md`, `requirements.txt`, `.gitignore`, `main.py` (Python entry point), `Dockerfile`, `compose.yaml`, `.dockerignore` (Docker), and the tool configs: `ruff.toml`, `mypy.ini`, `pytest.ini` (Python), `package.json`, `tsconfig.json`, `eslint.config.js` (JavaScript). |
+| Root | `CLAUDE.md`, `README.md`, `requirements.txt`, `.gitignore`, `main.py` (Python entry point), `Dockerfile`, `compose.yaml`, `.dockerignore` (Docker), and the tool configs: `ruff.toml`, `mypy.ini`, `pytest.ini`, `.coveragerc` (Python), `package.json`, `tsconfig.json`, `eslint.config.js` (JavaScript). |
 
 - All source code lives under `src/`, except the entry point `main.py`. Create a folder only when
   the layout in `docs/design.md` lists it, and update the layout in the same change.
@@ -145,7 +145,8 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 ## Naming and code documentation
 <!-- A8. Applies when: always. Name formats and docstring syntax are in the language sections. -->
 
-- Name things for their purpose, not for how they look or are built. Use one term per concept.
+- Name things for their purpose, not for how they look or are built. Use one term per concept:
+  the Term of the glossary in `docs/spec.md`, never a word of its Avoid column.
 - Every module, class, and function has a docstring. Tests are exempt: their names carry the
   requirement ID.
   - Module: what it does, what it does not do (and which module does), and the requirement or
@@ -344,7 +345,7 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
   test.
 
 ## Python
-<!-- B1. Applies when: the project uses Python. Needs ruff.toml, mypy.ini, and pytest.ini (see assets/). -->
+<!-- B1. Applies when: the project uses Python. Needs ruff.toml, mypy.ini, pytest.ini, and .coveragerc (see assets/). -->
 
 - Ruff (`ruff.toml`) and mypy (`mypy.ini`) enforce naming, type annotations, Google-style
   docstrings, absolute imports at the top of the file, `pathlib`, explicit file encodings,

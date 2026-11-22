@@ -480,6 +480,7 @@
           p('`/write-spec` does these steps:'),
           ol([
             'Asks one question at a time.',
+            'Gives each domain term one row in a glossary: the Term, its Meaning, and the words to Avoid. The design and the code use the Term.',
             'Writes each requirement as one statement in the Easy Approach to Requirements Syntax (EARS). A test can check the statement without the design.',
             'Gives each requirement a stable ID (`AREA-NNN` or `NFR-NNN`).',
             'Lists the cases of each user scenario as acceptance examples (`EX-NNN`): first the most likely cases, in full, then the edge cases.',
@@ -511,6 +512,7 @@
           ul([
             'Asks only what it cannot decide itself.',
             'Draws one diagram of the components and their interfaces.',
+            'Draws the data model as one Mermaid `erDiagram`, with the Terms of the glossary.',
             'Lists the module boundaries: which module can import which.',
             'Gives each requirement a test level (`unit`, `e2e`, `ui` or `live`).',
             'Names every interface that a test needs.',
@@ -521,7 +523,7 @@
           ul([
             'Decisions (`DEC-NNN`)',
             'Architecture, with the diagram and the module boundaries',
-            'Data model',
+            'Data model, with the `erDiagram`',
             'Interfaces',
             'Test design',
             'Open design questions'
