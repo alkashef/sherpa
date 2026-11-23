@@ -71,6 +71,7 @@ The approved changes are built. Their first text is in the git history of this f
 | 39 | The audit of `CLAUDE_GOLDEN.md` (`docs/audit-claude-golden.md`): the built `CLAUDE.md` drops from 199 to 138 lines. Architecture, Configuration and the test-code rules move to `code-quality`, the dependency list to the language files, the README rule to a new `readme` rules file; 15 rules go; ruff `FIX`, ESLint `no-warning-comments`, and Stylelint (no color outside `theme.css`, BEM class names) take over four rules. Five rows marked Tool keep their prose, because no tool checks them yet | Rank 17 (USER-06), table approved on November 23, 2026 |
 | 40 | After the user approves a block by the last review, the decision and the findings of the block go to the repairs, and no new review runs: when the repairs change nothing the runner merges, and when they commit a change the last review checks it and can block again. The runner reads the last Blocked and Approval entries of a milestone. The approval of a test that looks wrong no longer turns off the blocks of the review | RUN-08 (option C), approved on November 23, 2026 |
 | 41 | A finding of the last review blocks when it is `high`, or `medium` with a requirement ID as its rule. A `low` finding never blocks | RUN-09 (option B), approved on November 23, 2026 |
+| 42 | The fourth real run, November 23, 2026 (README, "Checked in real Claude Code sessions"): two milestones merged with the audited rules; RUN-08 worked in real sessions, with a second block and a test repair after the approvals. It found a fault, now repaired: a purpose of 12 words or more failed the plain-docs check at the first commit of the docs. No build session blocked, and RUN-09 let two faults of a requirement through: new ideas RUN-10 and RUN-11 | Item of the open work, approved on November 23, 2026 |
 
 One real run followed on November 21, 2026 (README, "Checked in real Claude Code sessions"). It
 proved the condition of the user's decision on rank 3: a `claude -p` session runs the built-in
@@ -85,11 +86,7 @@ after the walk-through of section G ends. Several of them change the same files 
 `/write-tests`, `assets/docs/workflow.md` and `workflow.html`), so one pass changes each file and
 the diagram one time.
 
-1. **A fourth real run (option B), approved on November 23, 2026,** after RUN-08 and RUN-09: one
-   project, two milestones, with real sessions. One milestone sends the user's name and email
-   address to an outside mailing-list service that only a `Proposed` decision names, so its build
-   session must block. The run checks a build session that blocks with partial work, the approval
-   path of RUN-08, and the audited rules.
+None.
 
 ### Decided with no work
 
@@ -154,7 +151,7 @@ The user decided these points of section G on November 21, 2026. They need no ch
 
 On November 22, 2026 the user decided each idea of Part 2, and Part 1 holds the result. The
 sections below keep the context of the ideas. A new idea goes here, with its own entry. The user
-decided RUN-08 and RUN-09 on November 23, 2026 (Part 1).
+decided RUN-08 and RUN-09 on November 23, 2026 (Part 1). Open: RUN-10 and RUN-11 (section E).
 
 ### A. Open decisions of the approved changes
 
@@ -218,6 +215,23 @@ below, and RUN-09 with its proposal: Part 1.
   low "missing test" finding with SLUG-005 in its rule blocked M1. Proposal: block for a high
   finding, or for a medium or high one that names a requirement.
 
+
+New ideas from the fourth real run (November 23, 2026). Nobody approved them.
+
+- **RUN-10: the review rates a fault of a requirement too low, and RUN-09 lets it through.** The
+  last review of M1 rated two faults of requirements as `low`: a `--max` of more than 4300 digits
+  ends in a traceback instead of the error of SLUG-007, and `python main.py Hello World` drops
+  `Hello` (SLUG-005). The review skill defines `high` as wrong behavior or a broken requirement.
+  Options: (A) go back to the old rule for a finding whose rule is a requirement ID: any severity
+  blocks; (B) keep RUN-09, and have the review skill say that a finding of wrong behavior against a
+  requirement is never `low`; (C) keep RUN-09 as it is, and accept these misses. Recommendation:
+  B first, and A if the next run misses a fault again.
+- **RUN-11: a build session did not block for a flow of user data that only a `Proposed` decision
+  names.** The build session of M2 wrote that the user must approve the flow (DEC-004), then
+  committed the milestone. Proposal: a start check of the runner refuses a milestone whose Refs
+  name a `Proposed` decision: the design is not approved, and the workflow needs an approved design
+  before the plan. An auto-decision of an earlier milestone is `Proposed` too, so the check names
+  the decision and says how to approve it.
 ### G. The user's list of November 21, 2026
 
 The user gave this list on November 21, 2026, and asked for a walk-through, one item at a time.

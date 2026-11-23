@@ -687,3 +687,31 @@ sherpa; the second attempt ran after their repair, and all three milestones merg
 - Two new ideas, approved and built on November 23, 2026: an approval let through the new
   findings of a later review, so now it covers only the code that the user saw (RUN-08); and a low
   finding that named a requirement blocked, so now a low finding never blocks (RUN-09).
+
+A fourth real run on November 23, 2026 checked the audited rules (a `CLAUDE.md` of 138 lines),
+RUN-08 and RUN-09, with the same model, effort and test writer, on a new project: M1, the slug
+tool; M2, a newsletter sign-up that sends the name and the email address of a reader to an outside
+mailing-list service, a flow that only a `Proposed` decision named. Both milestones merged, and the
+project's checks pass.
+
+- Before the first session, the run found a fault of sherpa: a purpose of 12 words or more failed
+  the plain-docs check at the first commit of the docs, because the builder writes it into
+  `README.md`, `CLAUDE.md` and the draft spec. It is repaired.
+- RUN-08 worked in real sessions. The last review blocked M2 (`medium`, SLUG-009: a redirect
+  counted as a success). After the approval, a repair session got the decision and the finding, and
+  no new first review ran. The repair committed a change, so the last review checked it and
+  blocked M2 again (no test of a redirect). The runner read the second Blocked entry and the second
+  Approval: the finding was about `tests/`, so a test session wrote the tests, a build session
+  committed them, and the last review let M2 merge. The two runs after the approvals took 102 and
+  129 seconds.
+- RUN-09 let two faults of a requirement through. The last review of M1 rated as `low` a
+  `--max` of more than 4300 digits, which still ends in a traceback instead of the error of
+  SLUG-007 (the third run rated the same fault `high`), and `python main.py Hello World`, which
+  drops `Hello`. By the review skill, a broken requirement is `high`; the old rule would have
+  blocked M1. New idea RUN-10.
+- No build session blocked. The build session of M2 wrote in its report that DEC-004 was still
+  `Proposed` and that the user must approve the flow of user data, then it committed the milestone
+  instead of blocking it, against the rule of the build prompt. The workflow normally stops this
+  earlier (a plan needs an approved design, with no `Proposed` decision), but no check enforces it.
+  New idea RUN-11. So a milestone that a build session blocks with partial work is still checked
+  only by the suite.
