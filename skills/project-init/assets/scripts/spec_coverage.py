@@ -28,6 +28,9 @@ The script has three modes. It only reads files.
   - The Refs entry of a milestone block names a requirement ID that is not a row of the spec.
   - The first cell of a row of the design's table "Test design" names such a requirement ID.
   - The Refs entry of a milestone block names a design decision that is not a row of the design.
+  - The Refs entry of a milestone block names a design decision whose Status is `Proposed`. The
+    design is approved only when no decision is `Proposed` (docs/workflow.md, step 2), and a
+    milestone builds only from an approved design. Only the user confirms a decision.
   - The Tests first entry of a milestone block names an acceptance example (as `EX-003`, also in
     a `Manual:` part) that is not a row of the spec. An example ID in a test name does not count.
   - A requirement ID of the spec has no test level. The table in the design's section "Test
@@ -74,6 +77,8 @@ HUMAN_CHECKS_HEADING = re.compile(r"^## Human checks", re.IGNORECASE)
 ANY_HEADING = re.compile(r"^#{1,3} ")
 ENTRY_START = re.compile(r"^- \*\*")
 WITHDRAWN = "withdrawn"
+PROPOSED = "proposed"
+STATUS_CELL = 1  # the cells of a decision row: ID, Status, Decision, Why
 
 # The design's section "5. Test design" ends at the next heading of its level. Its table gives each
 # requirement a test level, in the second cell of a row.
@@ -405,6 +410,34 @@ def plan_problems(
     return problems + unknown_names(PLAN_PATH, decisions, design_rows, DECISION_ROW)
 
 
+def proposed_decisions(design_lines: list[str]) -> list[str]:
+    """Return the ID of each decision row of the design whose Status is `Proposed`."""
+    return [
+        cells[0]
+        for cells in id_rows(design_lines)
+        if prefix_of(cells[0]) == DECISION_PREFIX
+        and len(cells) > STATUS_CELL
+        and cells[STATUS_CELL].strip("`* ").lower() == PROPOSED
+    ]
+
+
+def proposed_problems(blocks: dict[int, list[str]], proposed: list[str]) -> list[str]:
+    """Return a problem for each `Proposed` decision that the Refs of a milestone block name.
+
+    Args:
+        blocks: The lines of each milestone block of the plan.
+        proposed: The ID of each decision of the design whose Status is `Proposed`.
+    """
+    return [
+        f"{PLAN_PATH.as_posix()} names {name} in the Refs of milestone M{number}, but {name} is "
+        f"Proposed in {DESIGN_PATH.as_posix()}. The user must confirm it as Decided with "
+        "/write-design first."
+        for number, block in sorted(blocks.items())
+        for name in ids_with_prefix(entry_text(block, "Refs"), DECISION_PREFIX)
+        if name in proposed
+    ]
+
+
 def level_rows(design_lines: list[str]) -> list[list[str]]:
     """Return the cells of each table row in the design's section "Test design"."""
     section = section_lines(design_lines, TEST_DESIGN_HEADING, SECTION_HEADING)
@@ -458,6 +491,7 @@ def consistency_problems(root: Path) -> list[str]:
     levels = level_rows(design_lines)
     problems = design_problems(levels, spec_rows)
     problems += plan_problems(blocks, spec_rows, design_rows)
+    problems += proposed_problems(blocks, proposed_decisions(design_lines))
     return problems + level_problems(spec_ids_of(spec_lines), levels)
 
 

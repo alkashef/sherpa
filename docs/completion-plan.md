@@ -63,13 +63,17 @@ final behavior.
   - Decided on: November 23, 2026 (option B). Built in commit: "The review rates wrong behavior
     against a requirement high, never low (RUN-10)". The review prompt of the runner says it too,
     because it also rates the findings of the built-in `/code-review`.
-- [ ] **A2. RUN-11: a start check refuses a milestone whose Refs name a `Proposed` decision.**
+- [x] **A2. RUN-11: a start check refuses a milestone whose Refs name a `Proposed` decision.**
   Needs approval.
   - Done when: as for A1.
   - After A2, a `Proposed` decision no longer makes a build session block, so the kit of B1 needs
     another cause.
   - Estimate: 1 hour.
-  - Decided on: ____ Built in commit: ____
+  - Decided on: November 23, 2026 (option A). Built in commit: "The runner refuses a milestone
+    whose Refs name a Proposed decision (RUN-11)". The check is part of
+    `spec_coverage.py --consistency`, which the runner runs at its start, so `/write-plan` and the
+    dashboard also show the problem. Part 2 of `docs/unapproved-ideas.md` now has no open idea
+    (definition of done, point 1).
 
 ## B. Run the paths in real sessions
 
@@ -159,7 +163,7 @@ effort `medium` unless the step says otherwise.
   - Done on: ____ Commit (if the README changed): ____
 - [ ] **D3. Correct the old text that this plan found.**
   - `docs/unapproved-ideas.md`: the last line still says that Part 2 holds RUN-08 and RUN-09 (it
-    holds RUN-11), and a blank line is missing before section G.
+    holds none), and a blank line is missing before section G.
   - README, "File structure": the tree does not show `find-bugs`, `.github/workflows/`,
     `.coveragerc`, `.prettierrc.json`, `.stylelintrc.json`, `docs/audit-claude-golden.md` or
     `tests/test_dashboard.py`.

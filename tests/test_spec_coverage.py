@@ -378,6 +378,26 @@ def test_the_refs_and_the_tests_first_of_a_block_name_only_rows(
     assert lines == [f"docs/plan.md names {name}, which is not {kind}."]
 
 
+@pytest.mark.parametrize("status", ["Proposed", "`Proposed`"])
+def test_a_proposed_decision_in_the_refs_is_a_problem(tmp_path: Path, status: str) -> None:
+    # RUN-11: in the fourth real run a build session committed a flow of user data that only a
+    # Proposed decision named. The design is approved only when no decision is Proposed.
+    design = DESIGN.replace("| DEC-004 | Decided |", f"| DEC-004 | {status} |")
+    code, lines = consistency(project(tmp_path, design=design))
+    assert code == 1
+    assert lines == [
+        "docs/plan.md names DEC-004 in the Refs of milestone M1, but DEC-004 is Proposed in "
+        "docs/design.md. The user must confirm it as Decided with /write-design first."
+    ]
+
+
+def test_a_proposed_decision_that_no_refs_name_is_no_problem(tmp_path: Path) -> None:
+    row = "| DEC-004 | Decided | A SQLite file holds the balances. | PAY-001 needs a local store. |"
+    design = DESIGN.replace(row, row + "\n| DEC-005 | Proposed | A cache. | Auto-decided in M1. |")
+    code, lines = consistency(project(tmp_path, design=design))
+    assert code == 0, lines
+
+
 def test_an_id_in_another_place_of_the_plan_is_no_problem(tmp_path: Path) -> None:
     # Not checked: a test name, another entry of a block, and a line outside the blocks.
     plan = PLAN.replace("`test_pay_002_overpayment_refused`", "`test_pay_002_ex_009_refused`")

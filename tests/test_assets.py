@@ -248,6 +248,12 @@ def test_the_review_rates_wrong_behavior_against_a_requirement_high() -> None:
     review = skill_text("code-review-sherpa")
     assert "Wrong behavior against a requirement is `high` also when you report it" in review
     assert "Wrong behavior is never `low`." in review
+
+
+def test_the_plan_skill_never_changes_the_status_of_a_decision() -> None:
+    # RUN-11: --consistency refuses a Proposed decision in Refs, and only the user confirms one.
+    finish = " ".join(skill_text("write-plan").split())
+    assert "never change a Status. Tell the user to confirm it with `/write-design`." in finish
     assert "The review rates wrong behavior against a requirement `high`" in workflow_text()
 
 

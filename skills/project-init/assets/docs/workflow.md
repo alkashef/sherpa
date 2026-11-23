@@ -91,7 +91,7 @@ Each session starts with permission prompts off. Its guard rails are the rules i
 `.claude/settings.json`: a `deny` rule always refuses, and an `ask` rule refuses when nobody can
 answer. The runner does not start without that file, while the commit hook is off, when
 `python scripts/spec_coverage.py --consistency` finds an ID that the spec, the design and the plan
-do not agree on, when `python` on the PATH of a session is not the project's environment, or when
+do not agree on or a milestone whose Refs name a `Proposed` decision, when `python` on the PATH of a session is not the project's environment, or when
 a test writer other than Claude does not answer one short prompt.
 
 Before a run, so that it does not stop for something known in advance:

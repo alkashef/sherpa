@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="The sherpa spec-driven development workflow: who does each step, what it produces, and what enforces it.">
 <!-- The SHA-256 of docs/workflow.md when this page was last made to agree with it. -->
-<meta name="workflow-md-sha256" content="884fa2e0505974c96e21a5a76872e3db8d420eeb2b243a4f69afac357aaa6bfb">
+<meta name="workflow-md-sha256" content="10b049caae7117a3711efb9ab0d509e0143d0d03ca726190e0d7d97d94ddc9f4">
 <title>Sherpa SDD Workflow</title>
 <style>
   /* Layout: a slim /sherpa bar, then two rows of four cards that snake. Top row left to right (setup
@@ -574,7 +574,7 @@
           ul([
             'Every requirement ID in the spec must belong to at least one milestone.',
             '`spec_coverage.py` lists each ID as tested, manual, planned or missing.',
-            '`spec_coverage.py --consistency` fails when the plan names an ID that the spec or the design does not have.',
+            '`spec_coverage.py --consistency` fails when the plan names an ID that the spec or the design does not have, or names a `Proposed` decision in the Refs of a milestone.',
             'A `Decided` decision must name each dependency. The human installs it before the run.',
             'The runner reads the table.'
           ])]
@@ -623,7 +623,7 @@
             'The commit hook is on.',
             'Git is clean.',
             'The branch has an upstream.',
-            '`python scripts/spec_coverage.py --consistency` passes: the spec, the design and the plan agree on each ID.'
+            '`python scripts/spec_coverage.py --consistency` passes: the spec, the design and the plan agree on each ID, and no milestone names a `Proposed` decision in its Refs.'
           ]),
           p('Sessions run with `bypassPermissions`. Their guard rails are the deny and ask rules of `settings.json`.')],
         ['In chat',

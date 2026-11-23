@@ -692,6 +692,20 @@ def test_a_milestone_that_changes_the_spec_does_not_count(planned: Sandbox) -> N
     assert kinds(planned) == ["test M1", "build M1"]
 
 
+def test_runner_refuses_a_milestone_whose_refs_name_a_proposed_decision(
+    planned: Sandbox,
+) -> None:
+    # The design of a new project holds DEC-001 with the Status Proposed.
+    plan = PLAN.replace("- **Refs:** R2.", "- **Refs:** R2, DEC-001.")
+    commit_plan(planned, plan, "Name a Proposed decision")
+    code, output = run_runner(planned)
+    assert code == 1
+    assert "python scripts/spec_coverage.py --consistency failed" in output
+    assert "names DEC-001 in the Refs of milestone M2, but DEC-001 is Proposed" in output
+    assert "The user must confirm it as Decided with /write-design first." in output
+    assert logged_calls(planned.folder.parent / "claude.log") == []
+
+
 def test_runner_refuses_a_dirty_tree(planned: Sandbox) -> None:
     (planned.folder / "notes.txt").write_text("x", encoding="utf-8")
     code, output = run_runner(planned)

@@ -76,7 +76,8 @@ Sessions that continue skip the test session when the hashes file of the milesto
 
 Before the first milestone, the runner checks the conda environment, the settings file, the commit
 hook, a clean git tree, the upstream of the base branch, .gitignore,
-`python scripts/spec_coverage.py --consistency`, that `python` on the PATH of a session is the
+`python scripts/spec_coverage.py --consistency` (it also refuses a milestone whose Refs name a
+`Proposed` decision), that `python` on the PATH of a session is the
 project's environment, and that a test writer other than claude answers one short prompt. Each
 session gets the folders of the conda environment first on its PATH. It stops at a row whose
 Status is `blocked`. A session that did not finish is tried again (--retries, default 1) in a new

@@ -73,6 +73,7 @@ The approved changes are built. Their first text is in the git history of this f
 | 41 | A finding of the last review blocks when it is `high`, or `medium` with a requirement ID as its rule. A `low` finding never blocks | RUN-09 (option B), approved on November 23, 2026 |
 | 42 | The fourth real run, November 23, 2026 (README, "Checked in real Claude Code sessions"): two milestones merged with the audited rules; RUN-08 worked in real sessions, with a second block and a test repair after the approvals. It found a fault, now repaired: a purpose of 12 words or more failed the plain-docs check at the first commit of the docs. No build session blocked, and RUN-09 let two faults of a requirement through: new ideas RUN-10 and RUN-11 | Item of the open work, approved on November 23, 2026 |
 | 43 | `/code-review-sherpa` and the review prompt of the runner: wrong behavior against a requirement is `high`, also as a missing test and for a rare input, and wrong behavior is never `low`. `workflow.md` and the page say it | RUN-10 (option B), approved on November 23, 2026 |
+| 44 | `spec_coverage.py --consistency` refuses a `Proposed` decision in the Refs of a milestone, so the runner does not start, and the message says that the user must confirm it with `/write-design`. `/write-plan` never changes a Status to pass the check. `workflow.md`, the page and the README say it | RUN-11, approved on November 23, 2026 |
 
 One real run followed on November 21, 2026 (README, "Checked in real Claude Code sessions"). It
 proved the condition of the user's decision on rank 3: a `claude -p` session runs the built-in
@@ -152,7 +153,7 @@ The user decided these points of section G on November 21, 2026. They need no ch
 
 On November 22, 2026 the user decided each idea of Part 2, and Part 1 holds the result. The
 sections below keep the context of the ideas. A new idea goes here, with its own entry. The user
-decided RUN-08 and RUN-09 on November 23, 2026 (Part 1). Open: RUN-11 (section E).
+decided RUN-08 to RUN-11 on November 23, 2026 (Part 1). No idea is open.
 
 ### A. Open decisions of the approved changes
 
@@ -218,7 +219,7 @@ below, and RUN-09 with its proposal: Part 1.
 
 
 New ideas from the fourth real run (November 23, 2026). On the same day the user approved
-RUN-10 with option B (Part 1). Nobody approved RUN-11.
+RUN-10 with option B and RUN-11 with its proposal (Part 1).
 
 - **RUN-10: the review rates a fault of a requirement too low, and RUN-09 lets it through.** The
   last review of M1 rated two faults of requirements as `low`: a `--max` of more than 4300 digits
