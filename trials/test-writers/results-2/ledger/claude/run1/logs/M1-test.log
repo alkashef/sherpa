@@ -1,0 +1,33 @@
+Ignoring 30 permissions.allow entries from .claude/settings.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-d69cd472adb9"].hasTrustDialogAccepted: true in C:\Users\aa186095\.claude.json.
+I wrote the M1 tests and none pass yet. Every failure is for a valid reason: the code they test (`src/money.py`, `src/store.py`, `main.py`) does not exist yet. Ruff and the format check pass on `tests/`. Mypy's only errors are the two missing `src` modules. `spec_coverage.py M1` shows all 7 requirements and 10 acceptance examples as tested, and the consistency check passes.
+
+`★ Insight ─────────────────────────────────────`
+- The e2e tests remove `LEDGER_DATA` from the environment before each run and set it to a file in a temporary folder. The default-path test runs with that folder as the working directory, so no test touches the real `data/ledger.json`.
+- The amount and the stored entry are checked against exact texts from `docs/spec.md` and the data model in `docs/design.md`, such as `"12.50"` and `amount_cents: 1250`. They are never worked out the way the code would, so a rounding bug in the code cannot hide.
+`─────────────────────────────────────────────────`
+
+**Tests and how they fail now**
+
+| Test file | Tests (requirement / example) | Fails because |
+| --- | --- | --- |
+| `tests/unit/test_money.py` | `test_ledg_002_ex_002_three_decimals_are_refused` (LEDG-002 / EX-002), `test_ledg_002_ex_003_zero_is_refused` (EX-003), `test_ledg_002_ex_004_upper_limit` (EX-004), plus valid and invalid amounts, `format_amount` with two decimals (LEDG-004), and a Hypothesis round-trip property test (LEDG-002, 50 examples) | `ModuleNotFoundError: src.money` |
+| `tests/unit/test_store.py` | `test_ledg_006_missing_file_is_an_empty_ledger`, `test_ledg_007_invalid_file_raises_value_error` (10 kinds of invalid file), plus save/load order, overwrite, folder creation, the stored form, no temporary file left behind (DEC-003), the frozen `Entry`, and load leaves an invalid file unchanged | `ModuleNotFoundError: src.store` |
+| `tests/e2e/test_ledger_cli.py` | 27 tests that run the program as a process: all 9 e2e names in the plan (EX-001, 002, 004, 005, 006, 007, 008, 009, 010), plus EX-003 through the command line, the 1/20/21-letter category limits, an empty category, a digit, a non-a-to-z letter, an empty note, a new ID for each entry, the empty list, the total of a category with no entries, the default `data/ledger.json`, and LEDG-007 for `add` and `list` | exit 2: `can't open file ...main.py` |
+
+- **Manual:** none. Every requirement in Refs has a test.
+- **Live tests:** none.
+- **Older tests:** none existed, so nothing could break.
+
+**Files changed:** `tests/unit/test_money.py`, `tests/unit/test_store.py`, `tests/e2e/test_ledger_cli.py` (all new).
+**Tests added or updated:** the three files above, all added.
+**Tests run:** 0 passed out of 27 e2e tests. The two unit files stop at import, so their tests do not run yet. That is the expected state before the build.
+**Assumptions and open questions:**
+- The e2e file is named `test_ledger_cli.py` so it will not clash with a future `tests/unit/test_cli.py`.
+- The tests cannot fix the clock inside a subprocess, so they check only the format of the entry's time, not its value.
+
+DECISION: The stored entry uses the key names of the data model (`id`, `amount_cents`, `category`, `note`, `created`), and a wrong value type (`amount_cents` as a string) counts as not a valid ledger | design.md section 3 gives exactly five keys and their types, which is the strictest reading | none
+DECISION: `nan`, `inf`, `12,50` and negative amounts are refused | none of them is a number from 0.01 to 1000000.00 under LEDG-002 | none
+DECISION: The test of DEC-003 checks only what can be seen: the folder holds only `ledger.json` after a save. It does not fake a write that stops in the middle | faking that would tie the test to one implementation of the file replace | none
+DECISION: A refused `add` on an empty ledger is checked through `list` printing nothing, not through the file being absent | "store nothing" in LEDG-002 and LEDG-003 does not say whether an empty file may exist | none
+
+**TLDR: The M1 tests are written and all fail only because `src/money.py`, `src/store.py` and `main.py` do not exist yet. Every requirement and example has a test, and there are no design changes and nothing blocked.**

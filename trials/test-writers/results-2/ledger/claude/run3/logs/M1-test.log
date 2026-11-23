@@ -1,0 +1,55 @@
+Ignoring 30 permissions.allow entries from .claude/settings.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-694752f31ff3"].hasTrustDialogAccepted: true in C:\Users\aa186095\.claude.json.
+I wrote the M1 tests: 3 test files with 85 test cases. They fail now, for the expected reason: `src/` and `main.py` do not exist yet. I changed nothing outside `tests/` and committed nothing.
+
+**What I ran:**
+- `ruff check tests` and `ruff format --check tests` pass.
+- `mypy tests` gives only 2 errors: `import-not-found` for `src.money` and `src.store`. Both are modules that the Owner entry of M1 in docs/plan.md names.
+- `pytest`:
+  - The 2 unit files stop at collection with `ModuleNotFoundError: No module named 'src'`.
+  - All 35 e2e tests run and fail, because `main.py` is missing ("can't open file …main.py").
+- No older tests exist.
+
+**Tests (requirement in docs/spec.md, example, how each fails now):**
+
+| Test | Checks | Fails now |
+| --- | --- | --- |
+| unit `test_ledg_002_ex_002_three_decimals_are_refused` | LEDG-002, EX-002 | `src.money` missing |
+| unit `test_ledg_002_ex_003_zero_is_refused` | LEDG-002, EX-003 | `src.money` missing |
+| unit `test_ledg_002_ex_004_upper_limit`, `..._one_cent_over_the_upper_limit_is_refused` | LEDG-002, EX-004 | `src.money` missing |
+| unit `test_ledg_002_*` (lower limit ±1, valid amounts, 9 invalid kinds, 2 property tests) | LEDG-002 | `src.money` missing |
+| unit `test_ledg_004_format_amount_*` (table and property test) | LEDG-004, DEC-002 | `src.money` missing |
+| unit `test_ledg_006_missing_file_is_an_empty_ledger` | LEDG-006 | `src.store` missing |
+| unit `test_ledg_006_*` (stored form, makes the folder, replace, no stray temp file) | LEDG-006, DEC-003 | `src.store` missing |
+| unit `test_ledg_007_invalid_file_raises_value_error` and 9 invalid contents, file unchanged | LEDG-007 | `src.store` missing |
+| e2e `test_ledg_001_ex_001_add_prints_the_id_and_stores_the_entry` | LEDG-001, EX-001 | `main.py` missing |
+| e2e `test_ledg_001_ex_004_largest_amount_is_stored` | LEDG-001, EX-004 | `main.py` missing |
+| e2e `test_ledg_001_*` (stderr empty, stored fields and UTC time, empty note, new ID each time) | LEDG-001 | `main.py` missing |
+| e2e `test_ledg_002_ex_002_cli_refuses_three_decimals` | LEDG-002, EX-002 | `main.py` missing |
+| e2e `test_ledg_002_ex_003_cli_refuses_zero`, `test_ledg_002_ex_004_amount_over_the_limit_is_refused` | LEDG-002, EX-003, EX-004 | `main.py` missing |
+| e2e `test_ledg_002_*` (invalid amounts, lower limit) | LEDG-002 | `main.py` missing |
+| e2e `test_ledg_003_ex_005_uppercase_category_is_refused` | LEDG-003, EX-005 | `main.py` missing |
+| e2e `test_ledg_003_*` (lengths 0, 1, 20 and 21, digit, space, `é`, ledger unchanged) | LEDG-003 | `main.py` missing |
+| e2e `test_ledg_004_ex_006_total_and_total_of_a_category` | LEDG-004, EX-006 | `main.py` missing |
+| e2e `test_ledg_004_ex_007_empty_total` | LEDG-004, EX-007 | `main.py` missing |
+| e2e `test_ledg_004_*` (category with no entry, same result on a second run) | LEDG-004 | `main.py` missing |
+| e2e `test_ledg_005_ex_008_list_in_order_of_entry`, `test_ledg_005_empty_ledger_lists_nothing` | LEDG-005, EX-008 | `main.py` missing |
+| e2e `test_ledg_006_ex_009_add_makes_the_folder` | LEDG-006, EX-009 | `main.py` missing |
+| e2e `test_ledg_006_default_data_file_is_data_ledger_json`, `..._read_of_a_missing_file_makes_no_file` | LEDG-006 | `main.py` missing |
+| e2e `test_ledg_007_ex_010_invalid_data_file_exits_3` | LEDG-007, EX-010 | `main.py` missing |
+| e2e `test_ledg_007_invalid_data_file_changes_nothing` (list, add, total of a category) | LEDG-007 | `main.py` missing |
+
+- **Requirements in Refs without a test:** none. All 7 requirements and all 10 examples have a test, so no `Manual:` entry is needed.
+- **Live tests written and not run:** none.
+
+- **Files changed:** `tests/unit/test_money.py`, `tests/unit/test_store.py`, `tests/e2e/test_ledger_cli.py` (all new).
+- **Tests added or updated:** the 3 files above; no existing test changed.
+- **Tests run:** 0 passed out of 35 e2e tests; the 2 unit files (50 test cases) fail at import. Live tests: none.
+- **Assumptions and open questions:**
+  - `pytest` gives the warning "Unknown config option: asyncio_mode", because pytest-asyncio is not installed. It does no harm here.
+  - For EX-009 and the default data file, the e2e tests run `main.py` with its absolute path from a temporary folder, so the relative data path resolves there. The design says the tool runs from the project root.
+- DECISION: `parse_amount` refuses `nan`, `inf`, a negative number and an empty text | none of these is "a number from 0.01 to 1000000.00" (LEDG-002) | none
+- DECISION: `load` refuses an entry whose `amount_cents` is not an integer | the data model of docs/design.md gives `int`, and section 3 says any other content is not a valid ledger | none
+- DECISION: DEC-003 (the safe write, in docs/design.md) is tested through what can be seen: after two saves, the folder holds only the data file and the newest entries load | a test that breaks the write in the middle would depend on how the code is built | none
+- DECISION: the e2e tests check the stored JSON with the field names of the data model | the data rules say that tests prove the stored form of each record | none
+
+**TLDR: I wrote 85 test cases in 3 files for M1. Every requirement and example has a test. They fail only because `src/` and `main.py` do not exist yet. I made no design changes and committed nothing.**

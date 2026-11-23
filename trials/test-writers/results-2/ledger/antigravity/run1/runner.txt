@@ -1,0 +1,31 @@
+- `test_ledg_007_invalid_file_raises_value_error` — requirement LEDG-007 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-ede57f44343b/docs/spec.md) — `ModuleNotFoundError: No module named 'src'`
+- `test_ledg_007_invalid_ledger_shapes_raise_value_error` — LEDG-007 — `ModuleNotFoundError: No module named 'src'`
+- `test_ledg_003_valid_categories_accepted_by_cli` — requirement LEDG-003 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-ede57f44343b/docs/spec.md) — `ModuleNotFoundError: No module named 'src'`
+- `test_ledg_003_invalid_categories_refused_by_cli` — LEDG-003 — `ModuleNotFoundError: No module named 'src'`
+- `test_ledg_001_ex_001_add_prints_the_id_and_stores_the_entry` — requirement LEDG-001 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-ede57f44343b/docs/spec.md), acceptance example EX-001 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-ede57f44343b/docs/spec.md) — `assert 2 == 0` (`main.py` missing)
+- `test_ledg_001_add_without_note_stores_empty_note_and_utc_timestamp` — LEDG-001 — `assert 2 == 0` (`main.py` missing)
+- `test_ledg_001_ex_004_largest_amount_is_stored` — LEDG-001, EX-004 — `assert 2 == 0` (`main.py` missing)
+- `test_ledg_002_ex_002_cli_refuses_three_decimals` — LEDG-002, EX-002 — `assert 2 == 0` (`main.py` missing)
+- `test_ledg_002_ex_003_cli_refuses_zero` — LEDG-002, EX-003 — `AssertionError` on stderr (`main.py` missing)
+- `test_ledg_003_ex_005_uppercase_category_is_refused` — LEDG-003, acceptance example EX-005 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-ede57f44343b/docs/spec.md) — `AssertionError` on stderr (`main.py` missing)
+- `test_ledg_003_category_length_limits_accepted` — LEDG-003 — `assert 2 == 0` (`main.py` missing)
+- `test_ledg_003_invalid_category_limits_and_characters_refused` — LEDG-003 — `AssertionError` on stderr (`main.py` missing)
+- `test_ledg_004_ex_006_total_and_total_of_a_category` — LEDG-004, acceptance example EX-006 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-ede57f44343b/docs/spec.md) — `assert 2 == 0` (`main.py` missing)
+- `test_ledg_004_ex_007_empty_total` — LEDG-004, acceptance example EX-007 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-ede57f44343b/docs/spec.md) — `assert 2 == 0` (`main.py` missing)
+- `test_ledg_004_total_for_unknown_category_and_exact_cents` — LEDG-004 — `assert 2 == 0` (`main.py` missing)
+- `test_ledg_005_ex_008_list_in_order_of_entry` — requirement LEDG-005 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-ede57f44343b/docs/spec.md), acceptance example EX-008 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-ede57f44343b/docs/spec.md) — `assert 2 == 0` (`main.py` missing)
+- `test_ledg_005_list_on_empty_ledger_prints_nothing` — LEDG-005 — `assert 2 == 0` (`main.py` missing)
+- `test_ledg_006_ex_009_add_makes_the_folder` — LEDG-006, acceptance example EX-009 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-ede57f44343b/docs/spec.md) — `assert 2 == 0` (`main.py` missing)
+- `test_ledg_006_default_data_file_when_env_unset` — LEDG-006 — `assert 2 == 0` (`main.py` missing)
+- `test_ledg_007_ex_010_invalid_data_file_exits_3` — LEDG-007, acceptance example EX-010 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-ede57f44343b/docs/spec.md) — `assert 2 == 3` (`main.py` missing)
+- `test_ledg_007_invalid_data_file_exits_3_on_add_and_list` — LEDG-007 — `assert 2 == 3` (`main.py` missing)
+
+Requirements in **Refs** without a test: none.
+`live:` tests written and not run: none.
+
+- **Files changed:** [tests/unit/test_cli.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-ede57f44343b/tests/unit/test_cli.py), [tests/unit/test_money.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-ede57f44343b/tests/unit/test_money.py), [tests/unit/test_store.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-ede57f44343b/tests/unit/test_store.py), [tests/e2e/test_ledger.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-ede57f44343b/tests/e2e/test_ledger.py).
+- **Tests added or updated:** Updated type annotations on all tests in [test_cli.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-ede57f44343b/tests/unit/test_cli.py), [test_money.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-ede57f44343b/tests/unit/test_money.py), [test_store.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-ede57f44343b/tests/unit/test_store.py), and [test_ledger.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-ede57f44343b/tests/e2e/test_ledger.py), and updated `test_ledg_006_entry_is_frozen_dataclass` to mutate via `setattr` so strict `mypy` passes before and after `src/store.py` exists.
+- **Tests run:** 0 passed out of 22 executed e2e tests (22 failed because `main.py` is missing) plus 3 unit test modules failed at collection with `ModuleNotFoundError: No module named 'src'`.
+- **Assumptions and open questions:** None; all interfaces come directly from [design.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-ede57f44343b/docs/design.md) and all requirements/examples from [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-ede57f44343b/docs/spec.md).
+- **TLDR: Fixed all 41 strict mypy errors across the M1 test suite; ruff, mypy, and spec_coverage pass, and every unit and e2e test fails cleanly on the missing implementation.**
+The tests of milestone M1 in docs/plan.md are written and pass the checks.

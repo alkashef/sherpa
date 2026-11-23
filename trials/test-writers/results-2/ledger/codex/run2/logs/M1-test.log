@@ -1,0 +1,2406 @@
+OpenAI Codex v0.171.0-alpha.13
+--------
+workdir: C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+model: gpt-6.2-astra
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: high
+reasoning summaries: none
+session id: 01a20583-1809-7440-aad0-f17079f2d421
+--------
+user
+Write the failing tests of milestone M1 (Ledger tool) of docs/plan.md, as AGENTS.md says. This is the test session (docs/workflow.md, Execute); a build session writes the code afterwards and may not change your tests. This folder holds no src/ and no .git, on purpose: the tests come from the spec and the design. The runner copies tests/ back to the project and checks them. This is an unattended run: nobody can answer questions. Rules: (a) commit nothing, also not to block the milestone (d); (b) change only files under tests/, docs/design.md for an auto-decision (c), and docs/plan.md only to block the milestone (d). Never edit docs/spec.md, and never read the code in src/, also not through the shell; (c) for anything else that is open, such as a gap in docs/design.md, a Decided decision that the tests cannot follow, or a detail of a library, decide the most conservative option and carry on. When the decision changes the design, add a DEC-NNN (the next free number) to docs/design.md with the Status Proposed, and write 'auto-decided in M1, review' in its Why. When it replaces a Decided decision, set that one to Superseded. Never renumber an ID; (d) stop the milestone only if its tests need a new or changed requirement in docs/spec.md, an action that CLAUDE.md 'Git and destructive actions' forbids, real user data, or a dependency that docs/design.md does not name in a Decided decision (the check and test tools of the project, such as pytest, pytest-cov, hypothesis and Playwright, are approved), and no Approval entry in the block permits it. To stop: set its Status in the table to `blocked`, add a Blocked entry with the reason and the exact question to its block (template in docs/workflow.md), change nothing else and commit nothing. Do not undo your work: the runner keeps it in the milestone branch; (e) a tool call that a settings rule denies is not allowed: do not retry it or work around it; (f) never call a live external service and do not start the app for a person. A test uses a real local part where one exists (a database file in a temporary folder, a server that it starts on 127.0.0.1) and a fake only for an external service. A test of the level `live` goes to tests/live/: write it, but do not run it; (g) write and change files with the file tools (Edit and Write), not through the shell; (h) end with the report of /write-tests. In it, write each decision of (c) as its own line: `DECISION: <what> | <why> | <DEC-NNN or none>`.
+codex
+I’ll use the write-tests skill to trace M1’s planned tests to the spec and design, then run them and report where they fail.
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "rg -n -A 20 '("'^#+ .*M1'"\\b|"'^'"\\| M1\\b)' docs/plan.md" in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath docs/workflow.md' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "rg --files --hidden -g '"'!src/**'"' -g '"'!.git/**'"'" in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+ succeeded in 265ms:
+16:### M1 — Ledger tool
+17-
+18-- **Refs:** LEDG-001, LEDG-002, LEDG-003, LEDG-004, LEDG-005, LEDG-006, LEDG-007, DEC-001, DEC-002, DEC-003.
+19-- **Owner:** `src/money.py`, `src/store.py`, `src/cli.py`, `main.py`.
+20-- **Tests first:**
+21-  - unit: `test_ledg_002_ex_002_three_decimals_are_refused`, `test_ledg_002_ex_003_zero_is_refused`,
+22-    `test_ledg_002_ex_004_upper_limit`, `test_ledg_006_missing_file_is_an_empty_ledger`,
+23-    `test_ledg_007_invalid_file_raises_value_error`.
+24-  - e2e: `test_ledg_001_ex_001_add_prints_the_id_and_stores_the_entry`,
+25-    `test_ledg_001_ex_004_largest_amount_is_stored`, `test_ledg_003_ex_005_uppercase_category_is_refused`,
+26-    `test_ledg_004_ex_006_total_and_total_of_a_category`, `test_ledg_004_ex_007_empty_total`,
+27-    `test_ledg_005_ex_008_list_in_order_of_entry`, `test_ledg_006_ex_009_add_makes_the_folder`,
+28-    `test_ledg_007_ex_010_invalid_data_file_exits_3`, `test_ledg_002_ex_002_cli_refuses_three_decimals`.
+29-- **Build:** `src/money.py`, `src/store.py`, `src/cli.py` and `main.py`.
+30-- **Gate:** `python scripts/check.py` passes, and `python scripts/spec_coverage.py M1` shows every
+31-  requirement and example of the Refs as tested.
+
+ succeeded in 266ms:
+# Workflow
+
+The same in every project. Project-specific rules are in `CLAUDE.md`.
+
+## The files
+
+| File | Role | Who edits |
+| --- | --- | --- |
+| `docs/spec.md` | What to build: requirements with IDs | The user owns it. The AI edits it with `/write-spec` and the user's approval |
+| `docs/design.md` | How to build it: architecture, data, interfaces, settings, test design, decisions | AI, with `/write-design` |
+| `docs/plan.md` | What is left: only unfinished milestones, with their questions and approvals | AI, with `/write-plan`. The user adds approvals |
+| `docs/unapproved-ideas.md` | What may come later: ideas that nobody approved | The user, and the AI when the user asks it to note an idea |
+| `docs/releases.md` | What was released: one row for each release | `scripts/release.py`, when the user starts it |
+
+Each fact lives in one file. Finished work is recorded by git history, not by the docs. `python scripts/dashboard.py` shows these facts on one page in the browser: what needs you, the plan and the releases, the trace of each requirement to its design, milestone, tests and code, and a map of the code. It reads the files and git, writes nothing, and reads them again on Refresh.
+
+A requirement has an ID (`AREA-NNN`, or `NFR-NNN` for a non-functional one), an acceptance example has an `EX-NNN`, and a design decision has a `DEC-NNN`. Never renumber or reuse an ID. `/write-spec` gives a requirement its ID when it adds it.
+
+## The loop
+
+`/sherpa` is the way in: it reads the state of these files and what the user asks, names the step below that comes next, and starts that step's skill. It runs one step, then stops.
+
+1. **Spec.** For a new project or a change, the user runs `/write-spec`. The AI interviews the user, one question at a time, and writes the requirements into `spec.md` as a draft (`Status: Draft`). For a spec that is already approved, it proposes each change first. The spec gives each domain term one row in its glossary (Term, Meaning, Avoid), and the design and the code use the Term. The user approves the spec. Then `Status` is `Approved`. Each requirement is one EARS statement that a test can check without the design. The acceptance examples (`EX-NNN`) list the cases of each user scenario: first the most likely cases, in full, then the edge cases. For each external system, the spec says what the program does when that system fails. The requirements and these examples are the tests designed from the spec.
+2. **Design.** Once the spec is approved, the user runs `/write-design`. The AI updates `design.md` and asks only what it cannot decide. If the design needs a different requirement, it proposes the spec change. The user approves it. The design shows the components and their interfaces in one diagram, draws the data model as one Mermaid `erDiagram`, lists the module boundaries (the checks enforce them), gives each requirement a test level (`unit`, `e2e`, `ui` or `live`) and names every interface a test needs. The user approves the design: then no decision is `Proposed` and no design question is open.
+3. **Plan.** Once the design is approved, the user runs `/write-plan`. The AI turns the spec and design into milestones in `plan.md`: for each, a row in the table "Milestones at a glance" (at the top, so the status of every milestone is visible at a glance) and a block under "Milestones" (templates below). A milestone gets a human test only when it completes a user scenario that no tool can prove. The plan keeps the human tests few, and the table shows them. It shows the table first. The user approves it. It numbers the milestones from the counter at the top of `plan.md`, then advances the counter.
+4. **Execute.** Work one milestone at a time, in order, in its own branch and in separate sessions. In chat, `python scripts/milestones-runner.py --tests-only M<n>` is the test session and `python scripts/milestones-runner.py --review-only M<n>` is the review session, with the same guards as in an unattended run.
+   1. Make the branch with `git switch -c milestone/M<n>` from the base branch (the branch where the work starts), and work there.
+   2. **Test session** (`/write-tests`): write the tests from the spec's requirements and examples and from the design. Name each after the requirement ID it verifies, and after the example ID when it comes from an example. The session runs in a temporary folder without the code: it holds the docs, the rules, the tool configs and `tests/`, but no `src/` and no `.git`. The AI that `config/test-writer.json` names writes the tests: Claude (the default), Antigravity, Codex or GitHub Copilot.
+   3. The runner copies `tests/` back and checks it: ruff and mypy pass on `tests/`, each new test fails for a valid reason (a wrong value, or a missing module that the Owner names), and each older test passes. The exit code of the writer does not count. A problem goes back to the writer, with its error type and message and no line of the code, for one round of repair. Do not commit.
+   4. **Build session:** read the design sections that the Refs name, then implement the smallest change that passes. Do not change a file in `tests/`. A test that looks wrong is a blocker (step 5).
+   5. Run the checks: `python scripts/check.py` (the tests, and the type check and lint named in `CLAUDE.md`) and `python scripts/spec_coverage.py M<n>` (each requirement ID in its Refs, and each acceptance example of those requirements, has a test or a `Manual:` entry). If any fail, go back to step 4.4.
+   6. Update docs the change made inaccurate (README, design).
+   7. Delete the milestone's row and block from `plan.md`.
+   8. Commit only the files this milestone changed, with the message `M<n>: <title>`. The pre-commit hook runs the checks again. Do not push.
+   9. **Review session** (`/code-review-sherpa`): a fresh session reviews the diff of the branch in a temporary git worktree, first with the built-in `/code-review` if Claude Code has it, and reports each finding as a `FINDING:` line. The worktree is deleted after the review, so a change that the review makes cannot reach the branch. A finding names the file where the fix goes. A finding about `tests/` goes to a test session in the folder of step 2. If it changes a test, a build session makes the tests pass and commits as `M<n>: test repairs`. Any other finding goes to a repair session (it changes no file in `tests/`, passes the checks again and commits as `M<n>: review repairs`). Then a last review runs. A finding of the last review blocks the milestone (step 5) when its severity is `high` or its rule is a requirement ID. The other findings stay in the report. A repair or build session after the review that finds a test wrong reports a `BLOCKED:` line: the runner keeps its work in the branch and blocks the milestone, and after the approval a test session gets the decision before the build goes on.
+   10. Merge: `git switch main` (the base branch), `git merge --ff-only milestone/M<n>`, `git push`, and `git branch -d milestone/M<n>`. Do not start the next milestone until the push succeeds.
+   11. **Human test:** if the block has a **Human test** entry, tell the user what to test and wait for the answer. A fault that the user finds is a fix milestone.
+5. **Blocked.** If a milestone needs something it may not do on its own, stop it. These are the only reasons: a new or changed requirement in `spec.md`, an action `CLAUDE.md` forbids, a new flow of user data to an external service, real user data, a secret in a committed file, a dependency that `design.md` does not name in a `Decided` decision (the check and test tools of the project are approved), a test that the build session finds wrong, or a finding of the last review that blocks the merge (step 4.9). In `plan.md`, set its Status to `blocked` and add a **Blocked** entry to its block (template below). Change nothing else and commit nothing: the other changes stay in the milestone branch. In an unattended run, the runner commits them there as `M<n>: partial work`, commits `plan.md` alone on the base branch with the message `M<n>: blocked`, and pushes the base branch. In chat, ask the user and wait.
+6. **Approval.** The user answers in the milestone's block: an **Approval** entry with the decision, and Status `approved`. Then the user commits `plan.md` and the milestone runs again, from the work that its branch kept. The approval permits exactly what it says, even an action the rules otherwise forbid, and nothing more. A settings rule denies editing `spec.md` in an unattended run, so for a change to the spec the user makes the edit and the Approval says so. To refuse, the user rewrites or deletes the milestone instead.
+
+## Rules
+
+- Never edit `spec.md` without the user's approval, given in chat or in an **Approval** entry. Running `/write-spec` allows draft requirements only. The spec is final when the user approves it.
+- If the spec and the design disagree, the spec wins. In a milestone, in chat or unattended, fix the design and record it as a decision (below). Outside a milestone, stop and ask.
+- Stay in scope. When in doubt about the spec, ask. Only the spec is locked: a milestone never changes it. Everything else that step 5 does not name as a blocker may change in a milestone, in chat or unattended, without a question: a design decision (also a `Decided` one), a module, an interface, a setting. Decide it, record it and report it.
+- A decision in a milestone: pick the most conservative option and carry on. When it changes the design, add a `DEC-NNN` (the next free number) to `design.md` with the Status `Proposed`, and write "auto-decided in M<n>, review" in its Why. When it replaces a `Decided` decision, set that one to `Superseded`. The final report has one line per decision: `DECISION: <what> | <why> | <DEC-NNN or none>`. The user reviews these lines after the run and reverts or approves each.
+- A finding of a review: `FINDING: <high, medium or low> | <file>:<line> | <rule or smell> | <remedy>`. The file is the file where the fix goes: a missing test names a test file. A fault against a requirement that no test catches is a missing test, with the requirement ID as its rule. A review reports only a finding that it is sure of. The user reads the findings that a milestone kept after the run.
+- An idea in `unapproved-ideas.md` is not a requirement and not a decision. Never design, plan, test or build from it. It becomes work only through step 1, 2 or 3, with the approval that step needs. The skill that takes an idea up deletes its entry. To note an idea, add one line. Do not act on it.
+- Never report tests as passed unless they ran. Show failing output.
+- A milestone run calls no live external service (an LLM, a paid API, a production database) and uses no real user data. It does not start the app for a person. A test uses a real local part where one exists (a database file in a temporary folder, a server that the test starts on 127.0.0.1) and a fake only for an external service. Its Gate is the checks of step 4.
+- A live check is a test in `tests/live/` that calls a live external service with a test account. No milestone runs it. `python scripts/live_checks.py` runs the live checks after the milestones, and only when `plan.md` holds the user's approval with a budget ceiling under "## Live checks" (template below). The tests stop before they pass the ceiling.
+- Every fix, however small, is a milestone. A fix that changes no requirement and no design decision goes straight to `/write-plan`: one milestone whose Tests first holds a test that fails while the fault is there.
+- At each push, the GitHub Actions workflow "Checks" installs the project on a clean machine from its dependency files and runs `python scripts/check.py`.
+- Before a release, the user can run `/find-bugs`. It changes no code: it compares the code changed since the last release with the spec and the design, with most attention on the lines that no test runs, and reads the dependency audit and the surviving mutants of the workflow "Mutation tests" of GitHub Actions. Each bug becomes a fix milestone that the user approves. A finding that no requirement covers is a question about the spec.
+- A test of a rule for all inputs is also a property test (Hypothesis, at most 50 examples). Mutation tests run only on demand, on Linux, in GitHub Actions.
+- A release is a cut point. The user runs `python scripts/release.py M<n>`: the release holds every milestone up to M<n>, its version is the date (`YYYY.MM.DD`), and the script builds it into `dist/` with the installed versions (`pip freeze`, `npm ls --all`), tags the commit and adds a row to `docs/releases.md`. A version belongs to a release, not to a milestone. After the first release, a change that breaks the data or an interface of a released version needs a decision in `design.md` that records the transition.
+
+## Running milestones unattended
+
+`python scripts/milestones-runner.py [--start N] [--end N] [--retries N] [--resume]
+[--timeout-minutes N]`, run by the user from a terminal with the project's conda environment
+active, works through the table in order. Each milestone runs in its branch `milestone/M<n>`, in
+`claude -p` sessions with the model and effort of its row, following steps 4 to 6: a test session
+(by the test writer, in a folder without the code), a build session, a review session in a
+worktree and, when the review has findings, the sessions that repair them and a last review. The
+runner, not a session, merges the branch into the base branch, pushes and deletes the branch. A
+build or repair session that changed a test file counts as not finished, and so does a milestone
+whose sessions changed `docs/spec.md`. Each session gets the folders of the project's conda
+environment first on its PATH, and writes files with the Edit and Write tools.
+
+The runner stops at a `blocked` row, at a milestone that becomes blocked (and prints its
+question), at a human test that the user does not confirm, or at a milestone that did not finish
+(its row is still in the table, git is not clean, or a check of the runner failed) after its
+retries. A session that did not finish is tried again in a new session (`--retries`, default 1)
+that continues from the changes the first one left and gets the reason for the failure. A session
+that runs over `--timeout-minutes` (default 90) counts as not finished. After the last try the
+runner stops. `--resume` starts the next run on that dirty tree and continues from it. After you
+approve and commit, run it again: it continues with the approved milestone, from the work that its
+branch kept.
+
+When the milestones of the run are done, the runner runs `python scripts/live_checks.py` and
+prints its result: passed, failed or not run. The runner shows a table of the run, redrawn each
+second: the finished milestones, the one that runs now, and the planned ones in dark grey. Its
+Decisions column counts the `DECISION:` lines of a milestone and its Findings column counts the
+`FINDING:` lines of its last review, and you read the lines themselves in its logs. A Total row
+gives the total time, and the last row a progress bar of the milestones done.
+Logs and timings go to `.claude/logs/`. It needs a clean git tree (except with `--resume`) and a
+branch that pushes to a remote.
+
+Each session starts with permission prompts off. Its guard rails are the rules in
+`.claude/settings.json`: a `deny` rule always refuses, and an `ask` rule refuses when nobody can
+answer. The runner does not start without that file, while the commit hook is off, when
+`python scripts/spec_coverage.py --consistency` finds an ID that the spec, the design and the plan
+do not agree on, when `python` on the PATH of a session is not the project's environment, or when
+a test writer other than Claude does not answer one short prompt.
+
+Before a run, so that it does not stop for something known in advance:
+
+1. Commit every doc change.
+2. Approve and install the dependencies the plan needs. An `ask` rule denies `pip install` and
+   `npm install` in an unattended run.
+3. After a fresh clone, turn the commit hook on: `git config core.hooksPath .githooks`.
+4. Make sure that `claude -p --permission-mode bypassPermissions "say ok"` works. An organisation
+   policy can disable it.
+5. Make sure that `git push` works without a prompt. A session cannot answer a sign-in window.
+6. For live checks, write your approval and the budget ceiling under "## Live checks" in
+   `plan.md`.
+7. For a test writer other than Claude, sign in to its command line once: `codex login`, one
+   interactive `agy` session, or `COPILOT_GITHUB_TOKEN`. `--test-writer` overrides
+   `config/test-writer.json` for one run.
+
+A milestone's Gate must be one that a session can meet alone: offline, with real local parts and
+with fakes for the external services, in temporary folders, with no user data and no human step.
+What only a person can judge is the **Human test** of its milestone: the runner prints it after
+the merge and waits for your answer. What needs a live service is a live check.
+
+## Milestone templates
+
+The table "Milestones at a glance" has the columns Milestone, Description, Model, Effort, Human
+test and Status. Model: `haiku`, `sonnet` or `opus` (the latest model of that family), or a full
+model ID such as `claude-sonnet-5-5` to stay on one version. Effort: `low`, `medium`, `high`,
+`xhigh` or `max`. Human test: `yes` or `no`. Status: `open`, then `blocked` and `approved` if it
+needs the user (steps 5 and 6).
+
+```markdown
+| **M<n>** <title> | <one line: what it delivers> | <model> | <effort> | <yes or no> | open |
+```
+
+A block under "Milestones":
+
+```markdown
+### M<n> â€” <title>
+
+- **Refs:** <requirement IDs (AREA-NNN, NFR-NNN)>, <design decisions (DEC-NNN)>.
+- **Owner:** <module or file that owns the change>.
+- **Tests first:** <test names, at least one per requirement ID and one per acceptance example, grouped as unit:, e2e:, ui:, live:>.
+- **Build:** <the smallest change that passes them>.
+- **Gate:** <what must be true before commit>.
+- **Human test:** <only when the row says yes: what the user tests, step by step, and the result to expect>.
+```
+
+The entries a blocked milestone adds to the end of its block: **Blocked** by the AI (step 5), then
+**Approval** by the user (step 6).
+
+```markdown
+- **Blocked:** <One sentence: what the milestone needs, and why it may not do it.>
+  - <Each fact behind the stop, with its source: a spec row, a plan block, a rule, file and line.>
+  - The other changes are kept in the milestone branch. To continue, approve one of these:
+    1. <The narrowest permission that lets the milestone go on.>
+    2. <Another way, if there is one.>
+- **Approval:** <The user's decision, in the user's words.>
+```
+
+The section for the live checks, after the last milestone block. The user writes the first two
+entries.
+
+```markdown
+## Live checks
+
+- **Approval:** <The user's decision, in the user's words.>
+- **Budget ceiling:** <The most that one run of the live checks may cost.>
+- <requirement ID>: <test name in tests/live/>
+```
+
+ succeeded in 242ms:
+tests\unit\.gitkeep
+tests\e2e\.gitkeep
+scripts\spec_coverage.py
+scripts\run-check.sh
+scripts\check.py
+ruff.toml
+requirements.txt
+pytest.ini
+mypy.ini
+docs\workflow.md
+docs\spec.md
+docs\plan.md
+docs\design.md
+AGENTS.md
+.coveragerc
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -Encoding utf8 -LiteralPath mypy.ini' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -Encoding utf8 -LiteralPath requirements.txt' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -Encoding utf8 -LiteralPath docs/design.md' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -Encoding utf8 -LiteralPath docs/spec.md' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -Encoding utf8 -LiteralPath ruff.toml' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -Encoding utf8 -LiteralPath pytest.ini' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+ succeeded in 338ms:
+# mypy configuration. It enforces the type rules in CLAUDE.md.
+[mypy]
+python_version = 3.12
+strict = True
+warn_unreachable = True
+files = src
+mypy_path = .
+namespace_packages = True
+explicit_package_bases = True
+
+ succeeded in 331ms:
+# Direct dependencies only, each pinned with == to the installed version.
+# Add when the environment is created: pytest, pytest-cov, hypothesis, mypy, ruff, python-dotenv
+# (and pytest-asyncio for async code).
+
+ succeeded in 333ms:
+# Design — ledger
+
+How to build what `spec.md` says. If this file and the spec disagree, the spec wins.
+
+## 1. Decisions
+
+One current decision per topic. Status: `Decided` means the user chose or confirmed it. `Proposed`
+means the AI derived it and the user has not confirmed it. `Superseded` means a newer decision
+replaced it: keep its row, and name the replacement in Why. Never reuse or renumber an ID. Why
+names the driver (a requirement ID or a constraint) and the alternative that the decision rejects.
+
+| ID | Status | Decision | Why |
+| --- | --- | --- | --- |
+| DEC-001 | Decided | Python 3.12, standard library only: `json`, `uuid`, `datetime`, `re` | A small tool needs no dependency; SQLite was rejected as more than one file needs |
+| DEC-002 | Decided | Amounts are whole cents (`int`) inside the program, and text with two decimals outside (LEDG-002, LEDG-004) | A `float` cannot hold 0.10 exactly |
+| DEC-003 | Decided | `src/store.py` writes the data file to a temporary file in the same folder, then replaces the data file with it (LEDG-006, LEDG-007) | A write that stops in the middle leaves the old file readable; a write in place was rejected |
+
+## 2. Architecture
+
+### 2.1 Components
+
+```mermaid
+flowchart LR
+    main["main.py"] -->|argv| cli["src/cli.py"]
+    cli -->|"text of the amount"| money["src/money.py"]
+    money -->|"cents or ValueError"| cli
+    cli -->|"path, entries"| store["src/store.py"]
+    store -->|"entries or ValueError"| cli
+    store -->|"JSON"| file[("data file")]
+```
+
+- `main.py`: the entry point. It calls `src.cli.main()` and exits with its return value.
+- `src/cli.py`: reads the arguments and `LEDGER_DATA`, checks the category, calls the other
+  modules, prints the result or the error, and returns the exit code.
+- `src/money.py`: turns the text of an amount into cents, and cents into text. Pure.
+- `src/store.py`: reads and writes the data file. The only module that touches it.
+
+### 2.2 Directory structure
+
+| Path | Holds |
+| --- | --- |
+| `main.py` | The entry point. |
+| `src/` | `money.py`, `store.py` and `cli.py`. |
+| `data/` | The default data file, `ledger.json` (never committed). |
+| `tests/` | `unit/` and `e2e/` tests. |
+
+### 2.3 Settings
+
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `LEDGER_DATA` (environment variable) | `data/ledger.json` | The path of the data file (LEDG-006) |
+
+### 2.4 Module boundaries
+
+| Module | May import |
+| --- | --- |
+| `src/money.py` | none |
+| `src/store.py` | none |
+| `src/cli.py` | `src/money.py`, `src/store.py` |
+
+## 3. Data model
+
+```mermaid
+erDiagram
+    ENTRY {
+        string id "UUID 4"
+        int amount_cents "1 to 100000000"
+        string category "1 to 20 letters a to z"
+        string note "can be empty"
+        string created "ISO 8601 in UTC, such as 2026-11-23T10:00:00Z"
+    }
+```
+
+- Entry: owned by `src/store.py`, stored in the data file.
+- The data file is a JSON object with one key, `entries`: a list of objects, each with exactly the
+  five keys of the entry. Any other content is not a valid ledger (LEDG-007).
+
+## 4. Interfaces
+
+Name every interface a test needs: entry points, inputs and outputs, stored records, and public
+functions. For a stored record, link to its entity in "3. Data model" and do not copy its
+attributes. The tests are written from the spec and this file, without the code.
+
+- `src.money.parse_amount(text: str) -> int`: returns the amount in cents. Raises
+  `ValueError("the amount must be a number from 0.01 to 1000000.00 with at most two decimals")`.
+- `src.money.format_amount(cents: int) -> str`: returns the amount with two decimals, such as
+  `12.50`.
+- `src.store.Entry`: a frozen dataclass with the five attributes of the entry (3. Data model), in
+  that order.
+- `src.store.load(path: Path) -> list[Entry]`: the entries of the data file, in the order of entry.
+  A missing file gives `[]`. Raises `ValueError("the data file is not a valid ledger")`.
+- `src.store.save(path: Path, entries: list[Entry]) -> None`: writes the entries, and makes the
+  folder of the file when it does not exist.
+- `src.cli.main(argv: list[str] | None = None) -> int`: `argv` without the program name (default:
+  `sys.argv[1:]`). Prints the result or the error and returns the exit code (0, 2 or 3).
+- Command line: `python main.py add AMOUNT CATEGORY [--note TEXT]`, `python main.py total
+  [--category CATEGORY]` and `python main.py list`, run from the project root, with the data file
+  of `LEDGER_DATA`.
+
+## 5. Test design
+
+| Requirement | Level | Test tool | Real local part or fake |
+| --- | --- | --- | --- |
+| LEDG-002 | unit | pytest, through `parse_amount` | None needed |
+| LEDG-006, LEDG-007 | unit | pytest, through `load` and `save` | A data file in a temporary folder |
+| LEDG-001, LEDG-002, LEDG-003, LEDG-004, LEDG-005, LEDG-006, LEDG-007 | e2e | pytest, runs `main.py` as a process with `sys.executable` and `subprocess.run`, with `LEDGER_DATA` set to a file in a temporary folder | The real program and a real data file |
+
+## 6. Open design questions
+
+The design is approved when no decision is `Proposed` and this table is empty.
+
+| ID | Question | Who decides | Blocks what |
+| --- | --- | --- | --- |
+
+ succeeded in 316ms:
+# Spec — ledger
+
+Status: Approved
+
+What to build. Written with `/write-spec`. Change only with the user's approval. Each requirement is
+in EARS syntax and has an ID that tests cite.
+
+## 1. Purpose and scope
+
+A command-line tool that keeps a ledger of small expenses in one data file. A person adds an
+expense after each purchase, and reads the total of a category at the end of the month. In scope:
+add, total and list, from the command line, one data file. Out of scope: edit or delete an entry,
+currencies, reports, more than one user.
+
+## 2. Roles and glossary
+
+Role: the owner of the ledger, who runs the tool in a terminal.
+
+| Term | Meaning | Avoid |
+| --- | --- | --- |
+| Entry | One expense in the ledger: ID, amount, category, note and time | record, row, item |
+| Amount | The money of one entry, in euros and cents | value, price, sum |
+| Category | A word that groups entries, such as `food` | tag, label, type |
+| Note | A free text of one entry; it can be empty | comment, description |
+| Data file | The JSON file that holds the entries | database, store file |
+| Total | The sum of the amounts of the entries | balance |
+
+## 3. User scenarios
+
+### SCN-001 Add an expense
+
+- Actor and goal: the owner wants to record one purchase.
+- Trigger: the owner runs `python main.py add AMOUNT CATEGORY [--note TEXT]`.
+- Main success path: the tool stores the entry, prints its ID and exits with 0.
+- Failure paths: an amount that is not valid; a category that is not valid; a data file that is
+  not a valid ledger.
+- Observable result: the ID on standard output, or an error on standard error.
+- Source: the owner, confirmed.
+
+### SCN-002 Read the ledger
+
+- Actor and goal: the owner wants the total of a category, or all the entries.
+- Trigger: the owner runs `python main.py total [--category CATEGORY]` or `python main.py list`.
+- Main success path: the tool prints the total or the entries and exits with 0.
+- Failure paths: a data file that is not a valid ledger.
+- Observable result: the total or the entries on standard output, or an error on standard error.
+- Source: the owner, confirmed.
+
+## 4. Functional requirements
+
+| ID | EARS requirement | Priority | Status | Business reason | Source | Scenarios | Examples |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| LEDG-001 | When the owner runs `python main.py add AMOUNT CATEGORY [--note TEXT]`, the tool shall store one entry with a new ID (a UUID 4 string), the amount, the category, the note (empty when none) and the time of the entry (ISO 8601 in UTC, such as `2026-11-23T10:00:00Z`), print the ID and a newline to standard output, and exit with 0. | Must | Confirmed | Record each purchase | Owner | SCN-001 | EX-001, EX-004 |
+| LEDG-002 | If the amount is not a number from 0.01 to 1000000.00 with at most two decimals, then the tool shall print `error: the amount must be a number from 0.01 to 1000000.00 with at most two decimals` and a newline to standard error, store nothing, and exit with 2. | Must | Confirmed | No wrong money in the ledger | Owner | SCN-001 | EX-002, EX-003, EX-004 |
+| LEDG-003 | If the category is not 1 to 20 lowercase letters from a to z, then the tool shall print `error: the category must be 1 to 20 lowercase letters` and a newline to standard error, store nothing, and exit with 2. | Must | Confirmed | Categories that group well | Owner | SCN-001 | EX-005 |
+| LEDG-004 | When the owner runs `python main.py total [--category CATEGORY]`, the tool shall print the sum of the amounts of the entries, of that category only when one is given, with two decimals and a newline, and exit with 0. The total of no entry is `0.00`. | Must | Confirmed | The money spent | Owner | SCN-002 | EX-006, EX-007 |
+| LEDG-005 | When the owner runs `python main.py list`, the tool shall print one line for each entry, in the order of entry: the ID, the amount with two decimals, the category and the note, separated by tab characters, and exit with 0. | Must | Confirmed | Check the entries | Owner | SCN-002 | EX-008 |
+| LEDG-006 | The tool shall keep the entries in the data file that the environment variable `LEDGER_DATA` names, by default `data/ledger.json` from the folder where it runs. A data file that does not exist is an empty ledger, and the tool makes its folder when it stores the first entry. | Must | Confirmed | One place for the data | Owner | SCN-001, SCN-002 | EX-009 |
+| LEDG-007 | If the data file is not a valid ledger, then the tool shall print `error: the data file is not a valid ledger` and a newline to standard error, change nothing, and exit with 3. | Must | Confirmed | No silent loss of data | Owner | SCN-001, SCN-002 | EX-010 |
+
+## 5. Non-functional requirements
+
+| ID | EARS requirement | Priority | Status | Business reason | Source | Acceptance evidence |
+| --- | --- | --- | --- | --- | --- | --- |
+
+## 6. Acceptance examples
+
+| ID | Requirement IDs | Situation and input | Expected result | Reviewed by |
+| --- | --- | --- | --- | --- |
+| EX-001 | LEDG-001 | An empty ledger. `add 12.50 food --note lunch` | Standard output is one UUID 4 and a newline, exit code 0. `list` then prints `<that ID>`, tab, `12.50`, tab, `food`, tab, `lunch` | Owner |
+| EX-002 | LEDG-002 | `add 12.345 food` | The amount error on standard error, exit code 2, and the ledger is unchanged | Owner |
+| EX-003 | LEDG-002 | `add 0 food` | The amount error on standard error, exit code 2 | Owner |
+| EX-004 | LEDG-001, LEDG-002 | `add 1000000.00 food`, then `add 1000000.01 food` | The first is stored (exit code 0); the second gives the amount error, exit code 2 | Owner |
+| EX-005 | LEDG-003 | `add 5 Food` | The category error on standard error, exit code 2, and nothing stored | Owner |
+| EX-006 | LEDG-004 | Entries `12.50 food`, `7.25 food`, `3 bus`. `total`, then `total --category food` | `22.75`, then `19.75` | Owner |
+| EX-007 | LEDG-004 | An empty ledger. `total` | `0.00`, exit code 0 | Owner |
+| EX-008 | LEDG-005 | Entries `4.10 bus` (no note), then `2 food --note bread` | Two lines, in that order: `<ID 1>`, tab, `4.10`, tab, `bus`, tab, nothing; then `<ID 2>`, tab, `2.00`, tab, `food`, tab, `bread` | Owner |
+| EX-009 | LEDG-006 | `LEDGER_DATA` names `new/ledger.json` in a folder where `new/` does not exist. `add 1 food` | Exit code 0; `new/ledger.json` exists and `total` prints `1.00` | Owner |
+| EX-010 | LEDG-007 | The data file holds `not json`. `total` | The data-file error on standard error, exit code 3, and the data file is unchanged | Owner |
+
+## 7. Assumptions and open questions
+
+| Item | Evidence or assumption | Consequence if wrong | Owner | Resolution or revisit condition |
+| --- | --- | --- | --- | --- |
+
+## 8. Review and approval
+
+Approved by the owner on November 23, 2026, in full.
+
+ succeeded in 306ms:
+# Ruff configuration (lint and format). It enforces the rules in CLAUDE.md.
+# Never disable a rule to make a change pass. Fix the code.
+
+line-length = 100
+target-version = "py312"
+src = ["."]
+
+[lint]
+preview = true
+explicit-preview-rules = true
+select = [
+    "E", "W", "F",   # pycodestyle and pyflakes: style, unused names, bare except (E722)
+    "I",             # import order
+    "N",             # naming
+    "D",             # docstrings on modules, classes, public functions
+    "ANN",           # type annotations, no Any (ANN401)
+    "UP",            # modern syntax (list[str], X | None)
+    "B",             # bugbear, including raise ... from err (B904)
+    "C90",           # complexity
+    "PLR",           # too many arguments and statements
+    "PLW",           # global statement, unspecified file encoding
+    "T20",           # no print
+    "BLE",           # no blind except
+    "TRY",           # exception handling style
+    "S",             # security checks
+    "PTH",           # pathlib instead of path strings
+    "ERA",           # no commented-out code
+    "SIM",           # simplifications
+    "TID",           # absolute imports only
+    "ASYNC",         # blocking calls inside async functions
+    "G",             # logging format
+    "PT",            # pytest style
+    "RUF",
+    "PLW1514",       # open text files with an explicit encoding (preview rule)
+    "PLC0415",       # imports at the top of the file, not inside a function
+]
+ignore = [
+    "TRY003",        # long messages in exceptions are fine (no custom exception classes)
+]
+
+[lint.pydocstyle]
+convention = "google"
+
+[lint.mccabe]
+max-complexity = 8
+
+[lint.pylint]
+max-args = 4
+max-positional-args = 4
+max-statements = 15   # proxy for "20 lines or fewer": ruff has no line-count rule
+
+[lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[lint.isort]
+# A test imports the code before the code exists. Without this line, ruff sorts
+# `from src.slug import x` as first-party only when `src/slug.py` exists, and its cache hides the
+# change of order until a checkout touches the file.
+known-first-party = ["src"]
+
+[lint.per-file-ignores]
+# Tests need no docstrings (see Naming). S603: an end-to-end test runs the program as a process,
+# and a test starts a real local server, each without a shell.
+"tests/**" = ["D", "ANN", "S101", "S603", "PLR2004", "PLR0913"]
+"scripts/**" = ["T20"]                                    # scripts print their output
+"scripts/check.py" = ["S603"]                             # runs the check tools, without a shell
+"scripts/milestones-runner.py" = ["S603", "S314"]         # runs git and claude, without a shell,
+                                                          # and reads the JUnit XML of pytest
+"scripts/live_checks.py" = ["S603"]                       # runs pytest and node, without a shell
+"scripts/release.py" = ["S603"]                           # runs git, without a shell
+"scripts/dashboard.py" = ["S603"]                         # runs git and spec_coverage.py, without a shell
+
+ succeeded in 289ms:
+# pytest configuration. Run with: python -m pytest --cov=src --cov-branch --cov-fail-under=80
+# .coveragerc makes the coverage count the processes that a test starts.
+# The normal run skips the live checks in tests/live/. Run them with: python scripts/live_checks.py
+[pytest]
+testpaths = tests
+norecursedirs = .* *.egg build dist node_modules venv tests/live
+asyncio_mode = auto
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -Encoding utf8 -LiteralPath .coveragerc,docs/plan.md' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "python -B -c \"import sys,importlib.util as u; print(sys.executable,sys.version); print({k:bool(u.find_spec(k)) for k in ('pytest','hypothesis','ruff','mypy','pytest_cov')})\"" in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Command python,pytest,ruff,mypy,conda -ErrorAction SilentlyContinue | Select-Object Name,Source' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+ succeeded in 257ms:
+
+Name       Source                                                                   
+----       ------                                                                   
+python.exe C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe        
+pytest.exe C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Scripts\pytest.exe
+ruff.exe   C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Scripts\ruff.exe  
+mypy.exe   C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Scripts\mypy.exe  
+conda      Conda                                                                    
+
+
+
+ succeeded in 257ms:
+# Coverage configuration. pytest-cov reads it for the 80% branch-coverage floor.
+# Never weaken it to make a change pass. Fix the tests.
+
+[run]
+# Also measure the Python processes that a test starts, such as an end-to-end test that runs
+# main.py. Without it, code that only such a test reaches counts as not covered.
+patch = subprocess
+# Plan — ledger
+
+Only unfinished milestones. Delete a milestone's row and block in the commit that finishes it; git
+history is the record. Template: `docs/workflow.md`.
+
+**Next milestone number: M2**
+
+## Milestones at a glance
+
+| Milestone | Description | Model | Effort | Human test | Status |
+| --- | --- | --- | --- | --- | --- |
+| **M1** Ledger tool | Adds, totals and lists expenses in one data file | sonnet | medium | no | open |
+
+## Milestones
+
+### M1 — Ledger tool
+
+- **Refs:** LEDG-001, LEDG-002, LEDG-003, LEDG-004, LEDG-005, LEDG-006, LEDG-007, DEC-001, DEC-002, DEC-003.
+- **Owner:** `src/money.py`, `src/store.py`, `src/cli.py`, `main.py`.
+- **Tests first:**
+  - unit: `test_ledg_002_ex_002_three_decimals_are_refused`, `test_ledg_002_ex_003_zero_is_refused`,
+    `test_ledg_002_ex_004_upper_limit`, `test_ledg_006_missing_file_is_an_empty_ledger`,
+    `test_ledg_007_invalid_file_raises_value_error`.
+  - e2e: `test_ledg_001_ex_001_add_prints_the_id_and_stores_the_entry`,
+    `test_ledg_001_ex_004_largest_amount_is_stored`, `test_ledg_003_ex_005_uppercase_category_is_refused`,
+    `test_ledg_004_ex_006_total_and_total_of_a_category`, `test_ledg_004_ex_007_empty_total`,
+    `test_ledg_005_ex_008_list_in_order_of_entry`, `test_ledg_006_ex_009_add_makes_the_folder`,
+    `test_ledg_007_ex_010_invalid_data_file_exits_3`, `test_ledg_002_ex_002_cli_refuses_three_decimals`.
+- **Build:** `src/money.py`, `src/store.py`, `src/cli.py` and `main.py`.
+- **Gate:** `python scripts/check.py` passes, and `python scripts/spec_coverage.py M1` shows every
+  requirement and example of the Refs as tested.
+
+ succeeded in 300ms:
+C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe 3.12.15 | packaged by Anaconda, Inc. | (main, Oct  1 2026, 20:14:50) [MSC v.1942 64 bit (AMD64)]
+{'pytest': True, 'hypothesis': True, 'ruff': True, 'mypy': True, 'pytest_cov': True}
+
+codex
+`src.money` owns amount conversion, `src.store` owns persistence, and `src.cli` exposes the commands through `main.py`. The design specifies the interfaces needed for all seven requirements and ten acceptance examples. I’ll use temporary ledger files for the storage and CLI tests.
+apply patch
+patch: completed
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\unit\test_money.py
+diff --git a/tests/unit/test_money.py b/tests/unit/test_money.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..c8296c638485a69841806e14c294fd3852296b8d
+--- /dev/null
++++ b/tests/unit/test_money.py
+@@ -0,0 +1,51 @@
++from importlib import import_module
++
++import pytest
++from hypothesis import given, settings
++from hypothesis import strategies as st
++
++money = import_module("src.money")
++
++
++def _assert_invalid_amount(text: str) -> None:
++    with pytest.raises(ValueError, match=r"^the amount must be a number from 0\.01 to "
++                       r"1000000\.00 with at most two decimals$"):
++        money.parse_amount(text)
++
++
++def test_ledg_002_ex_002_three_decimals_are_refused() -> None:
++    _assert_invalid_amount("12.345")
++
++
++def test_ledg_002_ex_003_zero_is_refused() -> None:
++    _assert_invalid_amount("0")
++
++
++def test_ledg_002_ex_004_upper_limit() -> None:
++    assert money.parse_amount("999999.99") == 99_999_999
++    assert money.parse_amount("1000000.00") == 100_000_000
++    _assert_invalid_amount("1000000.01")
++
++
++@pytest.mark.parametrize(("text", "cents"), [("0.01", 1), ("0.02", 2), ("4.1", 410), ("3", 300)])
++def test_ledg_002_valid_amount_in_cents(text: str, cents: int) -> None:
++    assert money.parse_amount(text) == cents
++
++
++@pytest.mark.parametrize("text", ["-0.01", "", "lunch", "1.000", "NaN", "Infinity"])
++def test_ledg_002_invalid_amount(text: str) -> None:
++    _assert_invalid_amount(text)
++
++
++@settings(max_examples=50, derandomize=True)
++@given(cents=st.integers(min_value=1, max_value=100_000_000))
++def test_ledg_002_each_two_decimal_amount_parses_to_whole_cents(cents: int) -> None:
++    euros, remainder = divmod(cents, 100)
++    parsed = money.parse_amount(f"{euros}.{remainder:02d}")
++    assert type(parsed) is int
++    assert parsed == cents
++
++
++@pytest.mark.parametrize(("cents", "text"), [(0, "0.00"), (1, "0.01"), (410, "4.10"), (300, "3.00")])
++def test_ledg_004_format_amount(cents: int, text: str) -> None:
++    assert money.format_amount(cents) == text
+
+apply patch
+patch: completed
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\unit\test_store.py
+diff --git a/tests/unit/test_money.py b/tests/unit/test_money.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..c8296c638485a69841806e14c294fd3852296b8d
+--- /dev/null
++++ b/tests/unit/test_money.py
+@@ -0,0 +1,51 @@
++from importlib import import_module
++
++import pytest
++from hypothesis import given, settings
++from hypothesis import strategies as st
++
++money = import_module("src.money")
++
++
++def _assert_invalid_amount(text: str) -> None:
++    with pytest.raises(ValueError, match=r"^the amount must be a number from 0\.01 to "
++                       r"1000000\.00 with at most two decimals$"):
++        money.parse_amount(text)
++
++
++def test_ledg_002_ex_002_three_decimals_are_refused() -> None:
++    _assert_invalid_amount("12.345")
++
++
++def test_ledg_002_ex_003_zero_is_refused() -> None:
++    _assert_invalid_amount("0")
++
++
++def test_ledg_002_ex_004_upper_limit() -> None:
++    assert money.parse_amount("999999.99") == 99_999_999
++    assert money.parse_amount("1000000.00") == 100_000_000
++    _assert_invalid_amount("1000000.01")
++
++
++@pytest.mark.parametrize(("text", "cents"), [("0.01", 1), ("0.02", 2), ("4.1", 410), ("3", 300)])
++def test_ledg_002_valid_amount_in_cents(text: str, cents: int) -> None:
++    assert money.parse_amount(text) == cents
++
++
++@pytest.mark.parametrize("text", ["-0.01", "", "lunch", "1.000", "NaN", "Infinity"])
++def test_ledg_002_invalid_amount(text: str) -> None:
++    _assert_invalid_amount(text)
++
++
++@settings(max_examples=50, derandomize=True)
++@given(cents=st.integers(min_value=1, max_value=100_000_000))
++def test_ledg_002_each_two_decimal_amount_parses_to_whole_cents(cents: int) -> None:
++    euros, remainder = divmod(cents, 100)
++    parsed = money.parse_amount(f"{euros}.{remainder:02d}")
++    assert type(parsed) is int
++    assert parsed == cents
++
++
++@pytest.mark.parametrize(("cents", "text"), [(0, "0.00"), (1, "0.01"), (410, "4.10"), (300, "3.00")])
++def test_ledg_004_format_amount(cents: int, text: str) -> None:
++    assert money.format_amount(cents) == text
+diff --git a/tests/unit/test_store.py b/tests/unit/test_store.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..0b42fdb9a9c3c4913b3e0af34e387be59fdc95eb
+--- /dev/null
++++ b/tests/unit/test_store.py
+@@ -0,0 +1,97 @@
++import json
++from importlib import import_module
++from pathlib import Path
++
++import pytest
++
++store = import_module("src.store")
++
++
++def _entry_fields() -> dict[str, object]:
++    return {
++        "id": "40d60ca3-6e57-48c4-a006-a72d23f69317",
++        "amount_cents": 410,
++        "category": "bus",
++        "note": "",
++        "created": "2026-11-23T10:00:00Z",
++    }
++
++
++def test_ledg_006_missing_file_is_an_empty_ledger(tmp_path: Path) -> None:
++    assert store.load(tmp_path / "missing.json") == []
++
++
++def test_ledg_006_save_writes_the_entry_fields(tmp_path: Path) -> None:
++    path = tmp_path / "new" / "ledger.json"
++    fields = _entry_fields()
++    store.save(path, [store.Entry(**fields)])
++    assert json.loads(path.read_text(encoding="utf-8")) == {"entries": [fields]}
++
++
++def test_ledg_006_load_reads_stored_entries_in_order(tmp_path: Path) -> None:
++    first = _entry_fields()
++    second = first | {"id": "a084e594-0308-40b1-b2b6-9124e73caa70", "note": "return"}
++    path = tmp_path / "ledger.json"
++    path.write_text(json.dumps({"entries": [first, second]}), encoding="utf-8")
++    assert store.load(path) == [store.Entry(**first), store.Entry(**second)]
++
++
++def test_ledg_006_save_replaces_the_previous_file(tmp_path: Path) -> None:
++    path = tmp_path / "ledger.json"
++    old_contents = b'{"entries":[]}'
++    path.write_bytes(old_contents)
++    previous = tmp_path / "previous.json"
++    previous.hardlink_to(path)
++    fields = _entry_fields()
++    store.save(path, [store.Entry(**fields)])
++    assert previous.read_bytes() == old_contents
++    assert json.loads(path.read_text(encoding="utf-8")) == {"entries": [fields]}
++
++
++def _assert_invalid_file(path: Path) -> None:
++    with pytest.raises(ValueError, match="^the data file is not a valid ledger$"):
++        store.load(path)
++
++
++@pytest.mark.parametrize(
++    "contents",
++    ["not json", "[]", "{}", '{"entries": {}}', '{"entries": [], "extra": 1}', '{"entries": [42]}'],
++)
++def test_ledg_007_invalid_file_raises_value_error(tmp_path: Path, contents: str) -> None:
++    path = tmp_path / "ledger.json"
++    path.write_text(contents, encoding="utf-8")
++    _assert_invalid_file(path)
++
++
++@pytest.mark.parametrize(
++    ("field", "value"),
++    [
++        ("amount_cents", 0),
++        ("amount_cents", 100_000_001),
++        ("amount_cents", True),
++        ("amount_cents", 4.1),
++        ("amount_cents", "410"),
++        ("id", "invalid"),
++        ("id", "40d60ca3-6e57-18c4-a006-a72d23f69317"),
++        ("category", "Bus"),
++        ("category", 12),
++        ("note", None),
++        ("created", "yesterday"),
++        ("created", "2026-11-23T10:00:00"),
++        ("extra", "unexpected"),
++    ],
++)
++def test_ledg_007_invalid_entry_field(tmp_path: Path, field: str, value: object) -> None:
++    fields = _entry_fields() | {field: value}
++    path = tmp_path / "ledger.json"
++    path.write_text(json.dumps({"entries": [fields]}), encoding="utf-8")
++    _assert_invalid_file(path)
++
++
++@pytest.mark.parametrize("field", ["id", "amount_cents", "category", "note", "created"])
++def test_ledg_007_missing_entry_field(tmp_path: Path, field: str) -> None:
++    fields = _entry_fields()
++    del fields[field]
++    path = tmp_path / "ledger.json"
++    path.write_text(json.dumps({"entries": [fields]}), encoding="utf-8")
++    _assert_invalid_file(path)
+
+apply patch
+patch: completed
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py
+diff --git a/tests/e2e/test_cli.py b/tests/e2e/test_cli.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..094200614848281a50109bda2644239d08cce26e
+--- /dev/null
++++ b/tests/e2e/test_cli.py
+@@ -0,0 +1,172 @@
++import json
++import os
++import subprocess
++import sys
++from datetime import datetime, timedelta
++from pathlib import Path
++from tempfile import TemporaryDirectory
++from uuid import UUID
++
++import pytest
++from hypothesis import given, settings
++from hypothesis import strategies as st
++
++
++def _run(
++    folder: Path, *args: str, data_file: str | None = "ledger.json"
++) -> subprocess.CompletedProcess[str]:
++    env = os.environ.copy()
++    if data_file is None:
++        env.pop("LEDGER_DATA", None)
++    else:
++        env["LEDGER_DATA"] = str(folder / data_file)
++    script = Path(__file__).resolve().parents[2] / "main.py"
++    return subprocess.run(
++        [sys.executable, str(script), *args],
++        cwd=folder,
++        env=env,
++        capture_output=True,
++        text=True,
++        check=False,
++    )
++
++
++def _output(result: subprocess.CompletedProcess[str]) -> str:
++    assert result.returncode == 0, result.stderr
++    assert result.stderr == ""
++    return result.stdout
++
++
++def _entry_id(result: subprocess.CompletedProcess[str]) -> str:
++    output = _output(result)
++    entry_id = output.removesuffix("\n")
++    assert UUID(entry_id).version == 4
++    assert output == f"{entry_id}\n"
++    return entry_id
++
++
++def _assert_amount_error(result: subprocess.CompletedProcess[str]) -> None:
++    assert result.stderr == (
++        "error: the amount must be a number from 0.01 to 1000000.00 with at most two decimals\n"
++    )
++    assert result.returncode == 2
++    assert result.stdout == ""
++
++
++def _assert_category_error(result: subprocess.CompletedProcess[str]) -> None:
++    assert result.stderr == "error: the category must be 1 to 20 lowercase letters\n"
++    assert result.returncode == 2
++    assert result.stdout == ""
++
++
++def test_ledg_001_ex_001_add_prints_the_id_and_stores_the_entry(tmp_path: Path) -> None:
++    entry_id = _entry_id(_run(tmp_path, "add", "12.50", "food", "--note", "lunch"))
++    assert _output(_run(tmp_path, "list")) == f"{entry_id}\t12.50\tfood\tlunch\n"
++    data = json.loads((tmp_path / "ledger.json").read_text(encoding="utf-8"))
++    [entry] = data["entries"]
++    created = entry["created"]
++    assert datetime.fromisoformat(created).utcoffset() == timedelta(0)
++    assert entry == {
++        "id": entry_id,
++        "amount_cents": 1250,
++        "category": "food",
++        "note": "lunch",
++        "created": created,
++    }
++
++
++def test_ledg_001_ex_004_largest_amount_is_stored(tmp_path: Path) -> None:
++    entry_id = _entry_id(_run(tmp_path, "add", "1000000.00", "food"))
++    expected = f"{entry_id}\t1000000.00\tfood\t\n"
++    assert _output(_run(tmp_path, "list")) == expected
++    _assert_amount_error(_run(tmp_path, "add", "1000000.01", "food"))
++    assert _output(_run(tmp_path, "list")) == expected
++
++
++def test_ledg_002_ex_002_cli_refuses_three_decimals(tmp_path: Path) -> None:
++    entry_id = _entry_id(_run(tmp_path, "add", "3", "bus"))
++    _assert_amount_error(_run(tmp_path, "add", "12.345", "food"))
++    assert _output(_run(tmp_path, "list")) == f"{entry_id}\t3.00\tbus\t\n"
++
++
++def test_ledg_002_ex_003_cli_refuses_zero(tmp_path: Path) -> None:
++    _assert_amount_error(_run(tmp_path, "add", "0", "food"))
++    assert _output(_run(tmp_path, "list")) == ""
++
++
++def test_ledg_003_ex_005_uppercase_category_is_refused(tmp_path: Path) -> None:
++    _assert_category_error(_run(tmp_path, "add", "5", "Food"))
++    assert _output(_run(tmp_path, "list")) == ""
++
++
++@pytest.mark.parametrize("category", ["a", "ab", "a" * 19, "a" * 20])
++def test_ledg_003_valid_category_lengths(tmp_path: Path, category: str) -> None:
++    entry_id = _entry_id(_run(tmp_path, "add", "1", category))
++    assert _output(_run(tmp_path, "list")) == f"{entry_id}\t1.00\t{category}\t\n"
++
++
++@pytest.mark.parametrize("category", ["", "a" * 21, "bus2", "two words", "café", "a_b", "a\n"])
++def test_ledg_003_invalid_categories(tmp_path: Path, category: str) -> None:
++    _assert_category_error(_run(tmp_path, "add", "1", category))
++    assert _output(_run(tmp_path, "list")) == ""
++
++
++@settings(max_examples=50, derandomize=True)
++@given(category=st.text(alphabet="abcdefghijklmnopqrstuvwxyzAB39-_ é", max_size=22))
++def test_ledg_003_only_lowercase_ascii_categories_of_allowed_length_are_stored(category: str) -> None:
++    with TemporaryDirectory() as directory:
++        folder = Path(directory)
++        added = _run(folder, "add", "1", category)
++        if 1 <= len(category) <= 20 and all("a" <= letter <= "z" for letter in category):
++            entry_id = _entry_id(added)
++            assert _output(_run(folder, "list")) == f"{entry_id}\t1.00\t{category}\t\n"
++        else:
++            _assert_category_error(added)
++            assert _output(_run(folder, "list")) == ""
++
++
++def test_ledg_004_ex_006_total_and_total_of_a_category(tmp_path: Path) -> None:
++    for amount, category in [("12.50", "food"), ("7.25", "food"), ("3", "bus")]:
++        _entry_id(_run(tmp_path, "add", amount, category))
++    assert _output(_run(tmp_path, "total")) == "22.75\n"
++    assert _output(_run(tmp_path, "total", "--category", "food")) == "19.75\n"
++    assert _output(_run(tmp_path, "total", "--category", "books")) == "0.00\n"
++    assert _output(_run(tmp_path, "total")) == "22.75\n"
++
++
++def test_ledg_004_ex_007_empty_total(tmp_path: Path) -> None:
++    assert _output(_run(tmp_path, "total")) == "0.00\n"
++
++
++def test_ledg_005_ex_008_list_in_order_of_entry(tmp_path: Path) -> None:
++    first = _entry_id(_run(tmp_path, "add", "4.10", "bus"))
++    second = _entry_id(_run(tmp_path, "add", "2", "food", "--note", "bread"))
++    assert first != second
++    assert _output(_run(tmp_path, "list")) == f"{first}\t4.10\tbus\t\n{second}\t2.00\tfood\tbread\n"
++    data = json.loads((tmp_path / "ledger.json").read_text(encoding="utf-8"))
++    assert data["entries"][0]["note"] == ""
++
++
++def test_ledg_006_ex_009_add_makes_the_folder(tmp_path: Path) -> None:
++    path = "new/ledger.json"
++    _entry_id(_run(tmp_path, "add", "1", "food", data_file=path))
++    assert (tmp_path / path).is_file()
++    assert _output(_run(tmp_path, "total", data_file=path)) == "1.00\n"
++
++
++def test_ledg_006_default_data_file_is_relative_to_working_folder(tmp_path: Path) -> None:
++    entry_id = _entry_id(_run(tmp_path, "add", "2", "food", data_file=None))
++    path = tmp_path / "data" / "ledger.json"
++    data = json.loads(path.read_text(encoding="utf-8"))
++    assert [entry["id"] for entry in data["entries"]] == [entry_id]
++
++
++@pytest.mark.parametrize("args", [("total",), ("list",), ("add", "1", "food")])
++def test_ledg_007_ex_010_invalid_data_file_exits_3(tmp_path: Path, args: tuple[str, ...]) -> None:
++    path = tmp_path / "ledger.json"
++    path.write_bytes(b"not json")
++    result = _run(tmp_path, *args)
++    assert result.stderr == "error: the data file is not a valid ledger\n"
++    assert result.returncode == 3
++    assert result.stdout == ""
++    assert path.read_bytes() == b"not json"
+diff --git a/tests/unit/test_money.py b/tests/unit/test_money.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..c8296c638485a69841806e14c294fd3852296b8d
+--- /dev/null
++++ b/tests/unit/test_money.py
+@@ -0,0 +1,51 @@
++from importlib import import_module
++
++import pytest
++from hypothesis import given, settings
++from hypothesis import strategies as st
++
++money = import_module("src.money")
++
++
++def _assert_invalid_amount(text: str) -> None:
++    with pytest.raises(ValueError, match=r"^the amount must be a number from 0\.01 to "
++                       r"1000000\.00 with at most two decimals$"):
++        money.parse_amount(text)
++
++
++def test_ledg_002_ex_002_three_decimals_are_refused() -> None:
++    _assert_invalid_amount("12.345")
++
++
++def test_ledg_002_ex_003_zero_is_refused() -> None:
++    _assert_invalid_amount("0")
++
++
++def test_ledg_002_ex_004_upper_limit() -> None:
++    assert money.parse_amount("999999.99") == 99_999_999
++    assert money.parse_amount("1000000.00") == 100_000_000
++    _assert_invalid_amount("1000000.01")
++
++
++@pytest.mark.parametrize(("text", "cents"), [("0.01", 1), ("0.02", 2), ("4.1", 410), ("3", 300)])
++def test_ledg_002_valid_amount_in_cents(text: str, cents: int) -> None:
++    assert money.parse_amount(text) == cents
++
++
++@pytest.mark.parametrize("text", ["-0.01", "", "lunch", "1.000", "NaN", "Infinity"])
++def test_ledg_002_invalid_amount(text: str) -> None:
++    _assert_invalid_amount(text)
++
++
++@settings(max_examples=50, derandomize=True)
++@given(cents=st.integers(min_value=1, max_value=100_000_000))
++def test_ledg_002_each_two_decimal_amount_parses_to_whole_cents(cents: int) -> None:
++    euros, remainder = divmod(cents, 100)
++    parsed = money.parse_amount(f"{euros}.{remainder:02d}")
++    assert type(parsed) is int
++    assert parsed == cents
++
++
++@pytest.mark.parametrize(("cents", "text"), [(0, "0.00"), (1, "0.01"), (410, "4.10"), (300, "3.00")])
++def test_ledg_004_format_amount(cents: int, text: str) -> None:
++    assert money.format_amount(cents) == text
+diff --git a/tests/unit/test_store.py b/tests/unit/test_store.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..0b42fdb9a9c3c4913b3e0af34e387be59fdc95eb
+--- /dev/null
++++ b/tests/unit/test_store.py
+@@ -0,0 +1,97 @@
++import json
++from importlib import import_module
++from pathlib import Path
++
++import pytest
++
++store = import_module("src.store")
++
++
++def _entry_fields() -> dict[str, object]:
++    return {
++        "id": "40d60ca3-6e57-48c4-a006-a72d23f69317",
++        "amount_cents": 410,
++        "category": "bus",
++        "note": "",
++        "created": "2026-11-23T10:00:00Z",
++    }
++
++
++def test_ledg_006_missing_file_is_an_empty_ledger(tmp_path: Path) -> None:
++    assert store.load(tmp_path / "missing.json") == []
++
++
++def test_ledg_006_save_writes_the_entry_fields(tmp_path: Path) -> None:
++    path = tmp_path / "new" / "ledger.json"
++    fields = _entry_fields()
++    store.save(path, [store.Entry(**fields)])
++    assert json.loads(path.read_text(encoding="utf-8")) == {"entries": [fields]}
++
++
++def test_ledg_006_load_reads_stored_entries_in_order(tmp_path: Path) -> None:
++    first = _entry_fields()
++    second = first | {"id": "a084e594-0308-40b1-b2b6-9124e73caa70", "note": "return"}
++    path = tmp_path / "ledger.json"
++    path.write_text(json.dumps({"entries": [first, second]}), encoding="utf-8")
++    assert store.load(path) == [store.Entry(**first), store.Entry(**second)]
++
++
++def test_ledg_006_save_replaces_the_previous_file(tmp_path: Path) -> None:
++    path = tmp_path / "ledger.json"
++    old_contents = b'{"entries":[]}'
++    path.write_bytes(old_contents)
++    previous = tmp_path / "previous.json"
++    previous.hardlink_to(path)
++    fields = _entry_fields()
++    store.save(path, [store.Entry(**fields)])
++    assert previous.read_bytes() == old_contents
++    assert json.loads(path.read_text(encoding="utf-8")) == {"entries": [fields]}
++
++
++def _assert_invalid_file(path: Path) -> None:
++    with pytest.raises(ValueError, match="^the data file is not a valid ledger$"):
++        store.load(path)
++
++
++@pytest.mark.parametrize(
++    "contents",
++    ["not json", "[]", "{}", '{"entries": {}}', '{"entries": [], "extra": 1}', '{"entries": [42]}'],
++)
++def test_ledg_007_invalid_file_raises_value_error(tmp_path: Path, contents: str) -> None:
++    path = tmp_path / "ledger.json"
++    path.write_text(contents, encoding="utf-8")
++    _assert_invalid_file(path)
++
++
++@pytest.mark.parametrize(
++    ("field", "value"),
++    [
++        ("amount_cents", 0),
++        ("amount_cents", 100_000_001),
++        ("amount_cents", True),
++        ("amount_cents", 4.1),
++        ("amount_cents", "410"),
++        ("id", "invalid"),
++        ("id", "40d60ca3-6e57-18c4-a006-a72d23f69317"),
++        ("category", "Bus"),
++        ("category", 12),
++        ("note", None),
++        ("created", "yesterday"),
++        ("created", "2026-11-23T10:00:00"),
++        ("extra", "unexpected"),
++    ],
++)
++def test_ledg_007_invalid_entry_field(tmp_path: Path, field: str, value: object) -> None:
++    fields = _entry_fields() | {field: value}
++    path = tmp_path / "ledger.json"
++    path.write_text(json.dumps({"entries": [fields]}), encoding="utf-8")
++    _assert_invalid_file(path)
++
++
++@pytest.mark.parametrize("field", ["id", "amount_cents", "category", "note", "created"])
++def test_ledg_007_missing_entry_field(tmp_path: Path, field: str) -> None:
++    fields = _entry_fields()
++    del fields[field]
++    path = tmp_path / "ledger.json"
++    path.write_text(json.dumps({"entries": [fields]}), encoding="utf-8")
++    _assert_invalid_file(path)
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'mypy --cache-dir=nul tests' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'python -B scripts/spec_coverage.py M1' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'ruff check --no-cache tests' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'ruff format --no-cache --diff tests' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+ exited 1 in 246ms:
+ exited 1 in 260ms:
+--- tests\e2e\test_cli.py
++++ tests\e2e\test_cli.py
+@@ -113,7 +113,9 @@
+ 
+ @settings(max_examples=50, derandomize=True)
+ @given(category=st.text(alphabet="abcdefghijklmnopqrstuvwxyzAB39-_ é", max_size=22))
+-def test_ledg_003_only_lowercase_ascii_categories_of_allowed_length_are_stored(category: str) -> None:
++def test_ledg_003_only_lowercase_ascii_categories_of_allowed_length_are_stored(
++    category: str,
++) -> None:
+     with TemporaryDirectory() as directory:
+         folder = Path(directory)
+         added = _run(folder, "add", "1", category)
+
+--- tests\unit\test_money.py
++++ tests\unit\test_money.py
+@@ -8,8 +8,11 @@
+ 
+ 
+ def _assert_invalid_amount(text: str) -> None:
+-    with pytest.raises(ValueError, match=r"^the amount must be a number from 0\.01 to "
+-                       r"1000000\.00 with at most two decimals$"):
++    with pytest.raises(
++        ValueError,
++        match=r"^the amount must be a number from 0\.01 to "
++        r"1000000\.00 with at most two decimals$",
++    ):
+         money.parse_amount(text)
+ 
+ 
+@@ -46,6 +49,8 @@
+     assert parsed == cents
+ 
+ 
+-@pytest.mark.parametrize(("cents", "text"), [(0, "0.00"), (1, "0.01"), (410, "4.10"), (300, "3.00")])
++@pytest.mark.parametrize(
++    ("cents", "text"), [(0, "0.00"), (1, "0.01"), (410, "4.10"), (300, "3.00")]
++)
+ def test_ledg_004_format_amount(cents: int, text: str) -> None:
+     assert money.format_amount(cents) == text
+
+2 files would be reformatted, 1 file already formatted
+
+ exited 1 in 265ms:
+line-too-long: Line too long (102 > 100)
+   --> tests\e2e\test_cli.py:116:101
+    |
+114 | @settings(max_examples=50, derandomize=True)
+115 | @given(category=st.text(alphabet="abcdefghijklmnopqrstuvwxyzAB39-_ é", max_size=22))
+116 | def test_ledg_003_only_lowercase_ascii_categories_of_allowed_length_are_stored(category: str) -> None:
+    |                                                                                                     ^^
+117 |     with TemporaryDirectory() as directory:
+118 |         folder = Path(directory)
+    |
+
+line-too-long: Line too long (101 > 100)
+  --> tests\unit\test_money.py:49:101
+   |
+49 | @pytest.mark.parametrize(("cents", "text"), [(0, "0.00"), (1, "0.01"), (410, "4.10"), (300, "3.00")])
+   |                                                                                                     ^
+50 | def test_ledg_004_format_amount(cents: int, text: str) -> None:
+51 |     assert money.format_amount(cents) == text
+   |
+
+pytest-raises-ambiguous-pattern: Pattern passed to `match=` contains metacharacters but is neither escaped nor raw
+  --> tests\unit\test_store.py:52:42
+   |
+51 | def _assert_invalid_file(path: Path) -> None:
+52 |     with pytest.raises(ValueError, match="^the data file is not a valid ledger$"):
+   |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+53 |         store.load(path)
+   |
+help: Use a raw string or `re.escape()` to make the intention explicit
+
+Found 3 errors.
+
+ succeeded in 374ms:
+LEDG-001  tested
+LEDG-002  tested
+LEDG-003  tested
+LEDG-004  tested
+LEDG-005  tested
+LEDG-006  tested
+LEDG-007  tested
+EX-001    tested
+EX-002    tested
+EX-003    tested
+EX-004    tested
+EX-005    tested
+EX-006    tested
+EX-007    tested
+EX-008    tested
+EX-009    tested
+EX-010    tested
+M1: 7 requirement ID(s) in Refs, all tested or manual.
+M1: 10 acceptance example(s) cite them, all tested or manual.
+
+apply patch
+patch: completed
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\unit\test_money.py
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\unit\test_store.py
+diff --git a/tests/e2e/test_cli.py b/tests/e2e/test_cli.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..2589c62379e08648eca5819a8e98a8e3ccb5252b
+--- /dev/null
++++ b/tests/e2e/test_cli.py
+@@ -0,0 +1,172 @@
++import json
++import os
++import subprocess
++import sys
++from datetime import datetime, timedelta
++from pathlib import Path
++from tempfile import TemporaryDirectory
++from uuid import UUID
++
++import pytest
++from hypothesis import given, settings
++from hypothesis import strategies as st
++
++
++def _run(
++    folder: Path, *args: str, data_file: str | None = "ledger.json"
++) -> subprocess.CompletedProcess[str]:
++    env = os.environ.copy()
++    if data_file is None:
++        env.pop("LEDGER_DATA", None)
++    else:
++        env["LEDGER_DATA"] = str(folder / data_file)
++    script = Path(__file__).resolve().parents[2] / "main.py"
++    return subprocess.run(
++        [sys.executable, str(script), *args],
++        cwd=folder,
++        env=env,
++        capture_output=True,
++        text=True,
++        check=False,
++    )
++
++
++def _output(result: subprocess.CompletedProcess[str]) -> str:
++    assert result.returncode == 0, result.stderr
++    assert result.stderr == ""
++    return result.stdout
++
++
++def _entry_id(result: subprocess.CompletedProcess[str]) -> str:
++    output = _output(result)
++    entry_id = output.removesuffix("\n")
++    assert UUID(entry_id).version == 4
++    assert output == f"{entry_id}\n"
++    return entry_id
++
++
++def _assert_amount_error(result: subprocess.CompletedProcess[str]) -> None:
++    assert result.stderr == (
++        "error: the amount must be a number from 0.01 to 1000000.00 with at most two decimals\n"
++    )
++    assert result.returncode == 2
++    assert result.stdout == ""
++
++
++def _assert_category_error(result: subprocess.CompletedProcess[str]) -> None:
++    assert result.stderr == "error: the category must be 1 to 20 lowercase letters\n"
++    assert result.returncode == 2
++    assert result.stdout == ""
++
++
++def test_ledg_001_ex_001_add_prints_the_id_and_stores_the_entry(tmp_path: Path) -> None:
++    entry_id = _entry_id(_run(tmp_path, "add", "12.50", "food", "--note", "lunch"))
++    assert _output(_run(tmp_path, "list")) == f"{entry_id}\t12.50\tfood\tlunch\n"
++    data = json.loads((tmp_path / "ledger.json").read_text(encoding="utf-8"))
++    [entry] = data["entries"]
++    created = entry["created"]
++    assert datetime.fromisoformat(created).utcoffset() == timedelta(0)
++    assert entry == {
++        "id": entry_id,
++        "amount_cents": 1250,
++        "category": "food",
++        "note": "lunch",
++        "created": created,
++    }
++
++
++def test_ledg_001_ex_004_largest_amount_is_stored(tmp_path: Path) -> None:
++    entry_id = _entry_id(_run(tmp_path, "add", "1000000.00", "food"))
++    expected = f"{entry_id}\t1000000.00\tfood\t\n"
++    assert _output(_run(tmp_path, "list")) == expected
++    _assert_amount_error(_run(tmp_path, "add", "1000000.01", "food"))
++    assert _output(_run(tmp_path, "list")) == expected
++
++
++def test_ledg_002_ex_002_cli_refuses_three_decimals(tmp_path: Path) -> None:
++    entry_id = _entry_id(_run(tmp_path, "add", "3", "bus"))
++    _assert_amount_error(_run(tmp_path, "add", "12.345", "food"))
++    assert _output(_run(tmp_path, "list")) == f"{entry_id}\t3.00\tbus\t\n"
++
++
++def test_ledg_002_ex_003_cli_refuses_zero(tmp_path: Path) -> None:
++    _assert_amount_error(_run(tmp_path, "add", "0", "food"))
++    assert _output(_run(tmp_path, "list")) == ""
++
++
++def test_ledg_003_ex_005_uppercase_category_is_refused(tmp_path: Path) -> None:
++    _assert_category_error(_run(tmp_path, "add", "5", "Food"))
++    assert _output(_run(tmp_path, "list")) == ""
++
++
++@pytest.mark.parametrize("category", ["a", "ab", "a" * 19, "a" * 20])
++def test_ledg_003_valid_category_lengths(tmp_path: Path, category: str) -> None:
++    entry_id = _entry_id(_run(tmp_path, "add", "1", category))
++    assert _output(_run(tmp_path, "list")) == f"{entry_id}\t1.00\t{category}\t\n"
++
++
++@pytest.mark.parametrize("category", ["", "a" * 21, "bus2", "two words", "café", "a_b", "a\n"])
++def test_ledg_003_invalid_categories(tmp_path: Path, category: str) -> None:
++    _assert_category_error(_run(tmp_path, "add", "1", category))
++    assert _output(_run(tmp_path, "list")) == ""
++
++
++@settings(max_examples=50, derandomize=True, deadline=None)
++@given(category=st.text(alphabet="abcdefghijklmnopqrstuvwxyzAB39-_ é", max_size=22))
++def test_ledg_003_only_valid_categories_are_stored(category: str) -> None:
++    with TemporaryDirectory() as directory:
++        folder = Path(directory)
++        added = _run(folder, "add", "1", category)
++        if 1 <= len(category) <= 20 and all("a" <= letter <= "z" for letter in category):
++            entry_id = _entry_id(added)
++            assert _output(_run(folder, "list")) == f"{entry_id}\t1.00\t{category}\t\n"
++        else:
++            _assert_category_error(added)
++            assert _output(_run(folder, "list")) == ""
++
++
++def test_ledg_004_ex_006_total_and_total_of_a_category(tmp_path: Path) -> None:
++    for amount, category in [("12.50", "food"), ("7.25", "food"), ("3", "bus")]:
++        _entry_id(_run(tmp_path, "add", amount, category))
++    assert _output(_run(tmp_path, "total")) == "22.75\n"
++    assert _output(_run(tmp_path, "total", "--category", "food")) == "19.75\n"
++    assert _output(_run(tmp_path, "total", "--category", "books")) == "0.00\n"
++    assert _output(_run(tmp_path, "total")) == "22.75\n"
++
++
++def test_ledg_004_ex_007_empty_total(tmp_path: Path) -> None:
++    assert _output(_run(tmp_path, "total")) == "0.00\n"
++
++
++def test_ledg_005_ex_008_list_in_order_of_entry(tmp_path: Path) -> None:
++    first = _entry_id(_run(tmp_path, "add", "4.10", "bus"))
++    second = _entry_id(_run(tmp_path, "add", "2", "food", "--note", "bread"))
++    assert first != second
++    assert _output(_run(tmp_path, "list")) == f"{first}\t4.10\tbus\t\n{second}\t2.00\tfood\tbread\n"
++    data = json.loads((tmp_path / "ledger.json").read_text(encoding="utf-8"))
++    assert data["entries"][0]["note"] == ""
++
++
++def test_ledg_006_ex_009_add_makes_the_folder(tmp_path: Path) -> None:
++    path = "new/ledger.json"
++    _entry_id(_run(tmp_path, "add", "1", "food", data_file=path))
++    assert (tmp_path / path).is_file()
++    assert _output(_run(tmp_path, "total", data_file=path)) == "1.00\n"
++
++
++def test_ledg_006_default_data_file_is_relative_to_working_folder(tmp_path: Path) -> None:
++    entry_id = _entry_id(_run(tmp_path, "add", "2", "food", data_file=None))
++    path = tmp_path / "data" / "ledger.json"
++    data = json.loads(path.read_text(encoding="utf-8"))
++    assert [entry["id"] for entry in data["entries"]] == [entry_id]
++
++
++@pytest.mark.parametrize("args", [("total",), ("list",), ("add", "1", "food")])
++def test_ledg_007_ex_010_invalid_data_file_exits_3(tmp_path: Path, args: tuple[str, ...]) -> None:
++    path = tmp_path / "ledger.json"
++    path.write_bytes(b"not json")
++    result = _run(tmp_path, *args)
++    assert result.stderr == "error: the data file is not a valid ledger\n"
++    assert result.returncode == 3
++    assert result.stdout == ""
++    assert path.read_bytes() == b"not json"
+diff --git a/tests/unit/test_money.py b/tests/unit/test_money.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..6a750a39a49425d8ea88671b9c05704cb627e90e
+--- /dev/null
++++ b/tests/unit/test_money.py
+@@ -0,0 +1,56 @@
++from importlib import import_module
++
++import pytest
++from hypothesis import given, settings
++from hypothesis import strategies as st
++
++money = import_module("src.money")
++
++
++def _assert_invalid_amount(text: str) -> None:
++    with pytest.raises(
++        ValueError,
++        match=r"^the amount must be a number from 0\.01 to "
++        r"1000000\.00 with at most two decimals\Z",
++    ):
++        money.parse_amount(text)
++
++
++def test_ledg_002_ex_002_three_decimals_are_refused() -> None:
++    _assert_invalid_amount("12.345")
++
++
++def test_ledg_002_ex_003_zero_is_refused() -> None:
++    _assert_invalid_amount("0")
++
++
++def test_ledg_002_ex_004_upper_limit() -> None:
++    assert money.parse_amount("999999.99") == 99_999_999
++    assert money.parse_amount("1000000.00") == 100_000_000
++    _assert_invalid_amount("1000000.01")
++
++
++@pytest.mark.parametrize(("text", "cents"), [("0.01", 1), ("0.02", 2), ("4.1", 410), ("3", 300)])
++def test_ledg_002_valid_amount_in_cents(text: str, cents: int) -> None:
++    assert money.parse_amount(text) == cents
++
++
++@pytest.mark.parametrize("text", ["-0.01", "", "lunch", "1.000", "NaN", "Infinity"])
++def test_ledg_002_invalid_amount(text: str) -> None:
++    _assert_invalid_amount(text)
++
++
++@settings(max_examples=50, derandomize=True)
++@given(cents=st.integers(min_value=1, max_value=100_000_000))
++def test_ledg_002_each_two_decimal_amount_parses_to_whole_cents(cents: int) -> None:
++    euros, remainder = divmod(cents, 100)
++    parsed = money.parse_amount(f"{euros}.{remainder:02d}")
++    assert type(parsed) is int
++    assert parsed == cents
++
++
++@pytest.mark.parametrize(
++    ("cents", "text"), [(0, "0.00"), (1, "0.01"), (410, "4.10"), (300, "3.00")]
++)
++def test_ledg_004_format_amount(cents: int, text: str) -> None:
++    assert money.format_amount(cents) == text
+diff --git a/tests/unit/test_store.py b/tests/unit/test_store.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..d1dc9d6468c1648db71ca37d63e71e8df6e49c68
+--- /dev/null
++++ b/tests/unit/test_store.py
+@@ -0,0 +1,97 @@
++import json
++from importlib import import_module
++from pathlib import Path
++
++import pytest
++
++store = import_module("src.store")
++
++
++def _entry_fields() -> dict[str, object]:
++    return {
++        "id": "40d60ca3-6e57-48c4-a006-a72d23f69317",
++        "amount_cents": 410,
++        "category": "bus",
++        "note": "",
++        "created": "2026-11-23T10:00:00Z",
++    }
++
++
++def test_ledg_006_missing_file_is_an_empty_ledger(tmp_path: Path) -> None:
++    assert store.load(tmp_path / "missing.json") == []
++
++
++def test_ledg_006_save_writes_the_entry_fields(tmp_path: Path) -> None:
++    path = tmp_path / "new" / "ledger.json"
++    fields = _entry_fields()
++    store.save(path, [store.Entry(**fields)])
++    assert json.loads(path.read_text(encoding="utf-8")) == {"entries": [fields]}
++
++
++def test_ledg_006_load_reads_stored_entries_in_order(tmp_path: Path) -> None:
++    first = _entry_fields()
++    second = first | {"id": "a084e594-0308-40b1-b2b6-9124e73caa70", "note": "return"}
++    path = tmp_path / "ledger.json"
++    path.write_text(json.dumps({"entries": [first, second]}), encoding="utf-8")
++    assert store.load(path) == [store.Entry(**first), store.Entry(**second)]
++
++
++def test_ledg_006_save_replaces_the_previous_file(tmp_path: Path) -> None:
++    path = tmp_path / "ledger.json"
++    old_contents = b'{"entries":[]}'
++    path.write_bytes(old_contents)
++    previous = tmp_path / "previous.json"
++    previous.hardlink_to(path)
++    fields = _entry_fields()
++    store.save(path, [store.Entry(**fields)])
++    assert previous.read_bytes() == old_contents
++    assert json.loads(path.read_text(encoding="utf-8")) == {"entries": [fields]}
++
++
++def _assert_invalid_file(path: Path) -> None:
++    with pytest.raises(ValueError, match=r"^the data file is not a valid ledger\Z"):
++        store.load(path)
++
++
++@pytest.mark.parametrize(
++    "contents",
++    ["not json", "[]", "{}", '{"entries": {}}', '{"entries": [], "extra": 1}', '{"entries": [42]}'],
++)
++def test_ledg_007_invalid_file_raises_value_error(tmp_path: Path, contents: str) -> None:
++    path = tmp_path / "ledger.json"
++    path.write_text(contents, encoding="utf-8")
++    _assert_invalid_file(path)
++
++
++@pytest.mark.parametrize(
++    ("field", "value"),
++    [
++        ("amount_cents", 0),
++        ("amount_cents", 100_000_001),
++        ("amount_cents", True),
++        ("amount_cents", 4.1),
++        ("amount_cents", "410"),
++        ("id", "invalid"),
++        ("id", "40d60ca3-6e57-18c4-a006-a72d23f69317"),
++        ("category", "Bus"),
++        ("category", 12),
++        ("note", None),
++        ("created", "yesterday"),
++        ("created", "2026-11-23T10:00:00"),
++        ("extra", "unexpected"),
++    ],
++)
++def test_ledg_007_invalid_entry_field(tmp_path: Path, field: str, value: object) -> None:
++    fields = _entry_fields() | {field: value}
++    path = tmp_path / "ledger.json"
++    path.write_text(json.dumps({"entries": [fields]}), encoding="utf-8")
++    _assert_invalid_file(path)
++
++
++@pytest.mark.parametrize("field", ["id", "amount_cents", "category", "note", "created"])
++def test_ledg_007_missing_entry_field(tmp_path: Path, field: str) -> None:
++    fields = _entry_fields()
++    del fields[field]
++    path = tmp_path / "ledger.json"
++    path.write_text(json.dumps({"entries": [fields]}), encoding="utf-8")
++    _assert_invalid_file(path)
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'python -B -m mypy --no-incremental --cache-dir $env:TEMP'"\\sherpa-m1-type-cache tests" in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'ruff format --no-cache --check tests' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'ruff check --no-cache tests' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$env:PYTHONDONTWRITEBYTECODE='"'1'
+"'$env:HYPOTHESIS_STORAGE_DIRECTORY="$env:TEMP'"\\sherpa-m1-hypothesis\"
+python -B -m pytest -q -p no:cacheprovider --continue-on-collection-errors --tb=line tests/unit/test_money.py tests/unit/test_store.py tests/e2e/test_cli.py" in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+ succeeded in 253ms:
+3 files already formatted
+
+ succeeded in 266ms:
+All checks passed!
+
+ succeeded in 1887ms:
+Success: no issues found in 3 source files
+
+ exited 1 in 16390ms:
+EEEEEEEEEEEEEEEEFEEEEEEEE                                                [100%]
+=================================== ERRORS ====================================
+__________________ ERROR collecting tests/unit/test_money.py __________________
+ImportError while importing test module 'C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\unit\test_money.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\miniconda3\envs\sherpa\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\unit\test_money.py:7: in <module>
+    money = import_module("src.money")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\miniconda3\envs\sherpa\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   ModuleNotFoundError: No module named 'src'
+__________________ ERROR collecting tests/unit/test_store.py __________________
+ImportError while importing test module 'C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\unit\test_store.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\miniconda3\envs\sherpa\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\unit\test_store.py:7: in <module>
+    store = import_module("src.store")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\miniconda3\envs\sherpa\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   ModuleNotFoundError: No module named 'src'
+_ ERROR at setup of test_ledg_001_ex_001_add_prints_the_id_and_stores_the_entry _
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+_______ ERROR at setup of test_ledg_001_ex_004_largest_amount_is_stored _______
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+______ ERROR at setup of test_ledg_002_ex_002_cli_refuses_three_decimals ______
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+___________ ERROR at setup of test_ledg_002_ex_003_cli_refuses_zero ___________
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+____ ERROR at setup of test_ledg_003_ex_005_uppercase_category_is_refused _____
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+__________ ERROR at setup of test_ledg_003_valid_category_lengths[a] __________
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+_________ ERROR at setup of test_ledg_003_valid_category_lengths[ab] __________
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+_ ERROR at setup of test_ledg_003_valid_category_lengths[aaaaaaaaaaaaaaaaaaa] _
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+_ ERROR at setup of test_ledg_003_valid_category_lengths[aaaaaaaaaaaaaaaaaaaa] _
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+____________ ERROR at setup of test_ledg_003_invalid_categories[] _____________
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+__ ERROR at setup of test_ledg_003_invalid_categories[aaaaaaaaaaaaaaaaaaaaa] __
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+__________ ERROR at setup of test_ledg_003_invalid_categories[bus2] ___________
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+________ ERROR at setup of test_ledg_003_invalid_categories[two words] ________
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+_________ ERROR at setup of test_ledg_003_invalid_categories[caf\xe9] _________
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+___________ ERROR at setup of test_ledg_003_invalid_categories[a_b] ___________
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+___________ ERROR at setup of test_ledg_003_invalid_categories[a\n] ___________
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+____ ERROR at setup of test_ledg_004_ex_006_total_and_total_of_a_category _____
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+_____________ ERROR at setup of test_ledg_004_ex_007_empty_total ______________
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+________ ERROR at setup of test_ledg_005_ex_008_list_in_order_of_entry ________
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+_________ ERROR at setup of test_ledg_006_ex_009_add_makes_the_folder _________
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+_ ERROR at setup of test_ledg_006_default_data_file_is_relative_to_working_folder _
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+___ ERROR at setup of test_ledg_007_ex_010_invalid_data_file_exits_3[args0] ___
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+___ ERROR at setup of test_ledg_007_ex_010_invalid_data_file_exits_3[args1] ___
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+___ ERROR at setup of test_ledg_007_ex_010_invalid_data_file_exits_3[args2] ___
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\pytest-of-aa186095'
+================================== FAILURES ===================================
+  + Exception Group Traceback (most recent call last):
+  |   File "C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py", line 115, in test_ledg_003_only_valid_categories_are_stored
+  |     @given(category=st.text(alphabet="abcdefghijklmnopqrstuvwxyzAB39-_ �", max_size=22))
+  |                    ^^^
+  |   File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\hypothesis\core.py", line 2334, in wrapped_test
+  |     raise the_error_hypothesis_found
+  | ExceptionGroup: Hypothesis found 2 distinct failures. (2 sub-exceptions)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py", line 121, in test_ledg_003_only_valid_categories_are_stored
+    |     entry_id = _entry_id(added)
+    |                ^^^^^^^^^^^^^^^^
+    |   File "C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py", line 41, in _entry_id
+    |     output = _output(result)
+    |              ^^^^^^^^^^^^^^^
+    |   File "C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py", line 35, in _output
+    |     assert result.returncode == 0, result.stderr
+    | AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+    |   
+    | assert 2 == 0
+    |  +  where 2 = CompletedProcess(args=['C:\\Users\\aa186095\\AppData\\Local\\miniconda3\\envs\\sherpa\\python.exe', 'C:\\Users\\aa1860...\aa186095\\\\AppData\\\\Local\\\\Temp\\\\sherpa-tests-c23af7aac00d\\\\main.py': [Errno 2] No such file or directory\n").returncode
+    | 
+    | During handling of the above exception, another exception occurred:
+    | 
+    | Traceback (most recent call last):
+    |   File "<frozen os>", line 366, in walk
+    | PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\tmpvh8neoiw'
+    | 
+    | During handling of the above exception, another exception occurred:
+    | 
+    | Traceback (most recent call last):
+    |   File "C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py", line 117, in test_ledg_003_only_valid_categories_are_stored
+    |     with TemporaryDirectory() as directory:
+    |          ^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\tempfile.py", line 950, in __exit__
+    |     self.cleanup()
+    |   File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\tempfile.py", line 954, in cleanup
+    |     self._rmtree(self.name, ignore_errors=self._ignore_cleanup_errors)
+    |   File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\tempfile.py", line 934, in _rmtree
+    |     _shutil.rmtree(name, onexc=onexc)
+    |   File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\shutil.py", line 781, in rmtree
+    |     return _rmtree_unsafe(path, onexc)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\shutil.py", line 623, in _rmtree_unsafe
+    |     for dirpath, dirnames, filenames in results:
+    |                                         ^^^^^^^
+    |   File "<frozen os>", line 369, in walk
+    |   File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\shutil.py", line 621, in onerror
+    |     onexc(os.scandir, err.filename, err)
+    |   File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\tempfile.py", line 906, in onexc
+    |     _resetperms(path)
+    |   File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\tempfile.py", line 286, in _resetperms
+    |     _dont_follow_symlinks(_os.chmod, path, 0o700)
+    |   File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    |     func(path, *args)
+    | PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\tmpvh8neoiw'
+    | Failing test case: test_ledg_003_only_valid_categories_are_stored(
+    |     category='a',  # or any other generated value
+    | )
+    +---------------- 2 ----------------
+    | Traceback (most recent call last):
+    |   File "C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py", line 124, in test_ledg_003_only_valid_categories_are_stored
+    |     _assert_category_error(added)
+    |   File "C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py", line 57, in _assert_category_error
+    |     assert result.stderr == "error: the category must be 1 to 20 lowercase letters\n"
+    | AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the c...ase letters\n'
+    |   
+    |   - error: the category must be 1 to 20 lowercase letters
+    |   + C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+    | 
+    | During handling of the above exception, another exception occurred:
+    | 
+    | Traceback (most recent call last):
+    |   File "<frozen os>", line 366, in walk
+    | PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\tmpya2lphm7'
+    | 
+    | During handling of the above exception, another exception occurred:
+    | 
+    | Traceback (most recent call last):
+    |   File "C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py", line 117, in test_ledg_003_only_valid_categories_are_stored
+    |     with TemporaryDirectory() as directory:
+    |          ^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\tempfile.py", line 950, in __exit__
+    |     self.cleanup()
+    |   File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\tempfile.py", line 954, in cleanup
+    |     self._rmtree(self.name, ignore_errors=self._ignore_cleanup_errors)
+    |   File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\tempfile.py", line 934, in _rmtree
+    |     _shutil.rmtree(name, onexc=onexc)
+    |   File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\shutil.py", line 781, in rmtree
+    |     return _rmtree_unsafe(path, onexc)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\shutil.py", line 623, in _rmtree_unsafe
+    |     for dirpath, dirnames, filenames in results:
+    |                                         ^^^^^^^
+    |   File "<frozen os>", line 369, in walk
+    |   File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\shutil.py", line 621, in onerror
+    |     onexc(os.scandir, err.filename, err)
+    |   File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\tempfile.py", line 906, in onexc
+    |     _resetperms(path)
+    |   File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\tempfile.py", line 286, in _resetperms
+    |     _dont_follow_symlinks(_os.chmod, path, 0o700)
+    |   File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    |     func(path, *args)
+    | PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\tmpya2lphm7'
+    | Failing test case: test_ledg_003_only_valid_categories_are_stored(
+    |     category='',  # or any other generated value
+    | )
+    +------------------------------------
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:115: ExceptionGroup: Hypothesis found 2 distinct failures. (2 sub-exceptions)
+============================== warnings summary ===============================
+..\..\miniconda3\envs\sherpa\Lib\site-packages\_pytest\config\__init__.py:1464
+  C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\_pytest\config\__init__.py:1464: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_cli.py::test_ledg_003_only_valid_categories_are_stored
+ERROR tests/unit/test_money.py
+ERROR tests/unit/test_store.py
+ERROR tests/e2e/test_cli.py::test_ledg_001_ex_001_add_prints_the_id_and_stores_the_entry
+ERROR tests/e2e/test_cli.py::test_ledg_001_ex_004_largest_amount_is_stored - ...
+ERROR tests/e2e/test_cli.py::test_ledg_002_ex_002_cli_refuses_three_decimals
+ERROR tests/e2e/test_cli.py::test_ledg_002_ex_003_cli_refuses_zero - Permissi...
+ERROR tests/e2e/test_cli.py::test_ledg_003_ex_005_uppercase_category_is_refused
+ERROR tests/e2e/test_cli.py::test_ledg_003_valid_category_lengths[a] - Permis...
+ERROR tests/e2e/test_cli.py::test_ledg_003_valid_category_lengths[ab] - Permi...
+ERROR tests/e2e/test_cli.py::test_ledg_003_valid_category_lengths[aaaaaaaaaaaaaaaaaaa]
+ERROR tests/e2e/test_cli.py::test_ledg_003_valid_category_lengths[aaaaaaaaaaaaaaaaaaaa]
+ERROR tests/e2e/test_cli.py::test_ledg_003_invalid_categories[] - PermissionE...
+ERROR tests/e2e/test_cli.py::test_ledg_003_invalid_categories[aaaaaaaaaaaaaaaaaaaaa]
+ERROR tests/e2e/test_cli.py::test_ledg_003_invalid_categories[bus2] - Permiss...
+ERROR tests/e2e/test_cli.py::test_ledg_003_invalid_categories[two words] - Pe...
+ERROR tests/e2e/test_cli.py::test_ledg_003_invalid_categories[caf\xe9] - Perm...
+ERROR tests/e2e/test_cli.py::test_ledg_003_invalid_categories[a_b] - Permissi...
+ERROR tests/e2e/test_cli.py::test_ledg_003_invalid_categories[a\n] - Permissi...
+ERROR tests/e2e/test_cli.py::test_ledg_004_ex_006_total_and_total_of_a_category
+ERROR tests/e2e/test_cli.py::test_ledg_004_ex_007_empty_total - PermissionErr...
+ERROR tests/e2e/test_cli.py::test_ledg_005_ex_008_list_in_order_of_entry - Pe...
+ERROR tests/e2e/test_cli.py::test_ledg_006_ex_009_add_makes_the_folder - Perm...
+ERROR tests/e2e/test_cli.py::test_ledg_006_default_data_file_is_relative_to_working_folder
+ERROR tests/e2e/test_cli.py::test_ledg_007_ex_010_invalid_data_file_exits_3[args0]
+ERROR tests/e2e/test_cli.py::test_ledg_007_ex_010_invalid_data_file_exits_3[args1]
+ERROR tests/e2e/test_cli.py::test_ledg_007_ex_010_invalid_data_file_exits_3[args2]
+1 failed, 1 warning, 26 errors in 15.41s
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$env:TMPDIR=(Get-Location).Path
+$env:PYTHONDONTWRITEBYTECODE='"'1'
+python -B -m pytest -q -p no:cacheprovider --basetemp=.m1-run-01 --tb=short tests/e2e/test_cli.py::test_ledg_004_ex_007_empty_total" in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+ exited 1 in 1155ms:
+E                                                                        [100%]Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\pytest\__main__.py", line 9, in <module>
+    raise SystemExit(_console_main())
+                     ^^^^^^^^^^^^^^^
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\_pytest\config\__init__.py", line 253, in _console_main
+    code = _main(prog=_get_prog_name(sys.argv))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\_pytest\config\__init__.py", line 229, in _main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\pluggy\_callers.py", line 167, in _multicall
+    raise exception
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\_pytest\main.py", line 377, in pytest_cmdline_main
+    return wrap_session(config, _main)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\_pytest\main.py", line 365, in wrap_session
+    config.hook.pytest_sessionfinish(
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\pluggy\_callers.py", line 167, in _multicall
+    raise exception
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\_pytest\logging.py", line 888, in pytest_sessionfinish
+    return (yield)
+            ^^^^^
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\_pytest\terminal.py", line 961, in pytest_sessionfinish
+    result = yield
+             ^^^^^
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\_pytest\warnings.py", line 119, in pytest_sessionfinish
+    return (yield)
+            ^^^^^
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\_pytest\tmpdir.py", line 337, in pytest_sessionfinish
+    cleanup_dead_symlinks(basetemp)
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\_pytest\pathlib.py", line 354, in cleanup_dead_symlinks
+    for left_dir in root.iterdir():
+                    ^^^^^^^^^^^^^^
+  File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\pathlib.py", line 1056, in iterdir
+    for name in os.listdir(self):
+                ^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] Access is denied: 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\.m1-run-01'
+
+codex
+Ruff, mypy, and the coverage-by-ID check pass. Pytest hit a Windows permissions error while creating its temporary folders. I’ll rerun it with fresh scratch folders that inherit the workspace permissions so the CLI cases can reach `main.py`.
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$env:PYTHONDONTWRITEBYTECODE='"'1'
+"'$env:HYPOTHESIS_STORAGE_DIRECTORY="$env:TEMP'"\\sherpa-m1-hypothesis\"
+"'$pytestVerification = @'"'
+import os
+import sys
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from uuid import uuid4
+from unittest.mock import patch
+import pytest
+
+mkdir = os.mkdir
+def make_test_directory(path, mode=0o777, *, dir_fd=None):
+    return mkdir(path, 0o777 if mode == 0o700 else mode, dir_fd=dir_fd)
+
+with patch.object(os, \"mkdir\", make_test_directory), TemporaryDirectory(prefix=\"sherpa-m1-\") as run:
+    os.environ[\"TMPDIR\"] = run
+    args = [\"-q\", \"-p\", \"no:cacheprovider\", \"--continue-on-collection-errors\", \"--tb=line\", \"--basetemp\", str(Path(run) / \"cases\"), *sys.argv[1:]]
+    raise SystemExit(pytest.main(args))
+'@
+"'$pytestVerification | python -B - tests/unit/test_money.py tests/unit/test_store.py tests/e2e/test_cli.py' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+ exited 1 in 16686ms:
+FFFFFFFFFFFFFFFFFFFFFFFFF                                                [100%]
+=================================== ERRORS ====================================
+__________________ ERROR collecting tests/unit/test_money.py __________________
+ImportError while importing test module 'C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\unit\test_money.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\miniconda3\envs\sherpa\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\unit\test_money.py:7: in <module>
+    money = import_module("src.money")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\miniconda3\envs\sherpa\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   ModuleNotFoundError: No module named 'src'
+__________________ ERROR collecting tests/unit/test_store.py __________________
+ImportError while importing test module 'C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\unit\test_store.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\miniconda3\envs\sherpa\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\unit\test_store.py:7: in <module>
+    store = import_module("src.store")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\miniconda3\envs\sherpa\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   ModuleNotFoundError: No module named 'src'
+================================== FAILURES ===================================
+E   AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+      
+    assert 2 == 0
+     +  where 2 = CompletedProcess(args=['C:\\Users\\aa186095\\AppData\\Local\\miniconda3\\envs\\sherpa\\python.exe', 'C:\\Users\\aa1860...\aa186095\\\\AppData\\\\Local\\\\Temp\\\\sherpa-tests-c23af7aac00d\\\\main.py': [Errno 2] No such file or directory\n").returncode
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:35: AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+E   AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+      
+    assert 2 == 0
+     +  where 2 = CompletedProcess(args=['C:\\Users\\aa186095\\AppData\\Local\\miniconda3\\envs\\sherpa\\python.exe', 'C:\\Users\\aa1860...\aa186095\\\\AppData\\\\Local\\\\Temp\\\\sherpa-tests-c23af7aac00d\\\\main.py': [Errno 2] No such file or directory\n").returncode
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:35: AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+E   AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+      
+    assert 2 == 0
+     +  where 2 = CompletedProcess(args=['C:\\Users\\aa186095\\AppData\\Local\\miniconda3\\envs\\sherpa\\python.exe', 'C:\\Users\\aa1860...\aa186095\\\\AppData\\\\Local\\\\Temp\\\\sherpa-tests-c23af7aac00d\\\\main.py': [Errno 2] No such file or directory\n").returncode
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:35: AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+E   AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the a...wo decimals\n'
+      
+      - error: the amount must be a number from 0.01 to 1000000.00 with at most two decimals
+      + C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:49: AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the a...wo decimals\n'
+E   AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the c...ase letters\n'
+      
+      - error: the category must be 1 to 20 lowercase letters
+      + C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:57: AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the c...ase letters\n'
+E   AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+      
+    assert 2 == 0
+     +  where 2 = CompletedProcess(args=['C:\\Users\\aa186095\\AppData\\Local\\miniconda3\\envs\\sherpa\\python.exe', 'C:\\Users\\aa1860...\aa186095\\\\AppData\\\\Local\\\\Temp\\\\sherpa-tests-c23af7aac00d\\\\main.py': [Errno 2] No such file or directory\n").returncode
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:35: AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+E   AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+      
+    assert 2 == 0
+     +  where 2 = CompletedProcess(args=['C:\\Users\\aa186095\\AppData\\Local\\miniconda3\\envs\\sherpa\\python.exe', 'C:\\Users\\aa1860...\aa186095\\\\AppData\\\\Local\\\\Temp\\\\sherpa-tests-c23af7aac00d\\\\main.py': [Errno 2] No such file or directory\n").returncode
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:35: AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+E   AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+      
+    assert 2 == 0
+     +  where 2 = CompletedProcess(args=['C:\\Users\\aa186095\\AppData\\Local\\miniconda3\\envs\\sherpa\\python.exe', 'C:\\Users\\aa1860...\aa186095\\\\AppData\\\\Local\\\\Temp\\\\sherpa-tests-c23af7aac00d\\\\main.py': [Errno 2] No such file or directory\n").returncode
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:35: AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+E   AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+      
+    assert 2 == 0
+     +  where 2 = CompletedProcess(args=['C:\\Users\\aa186095\\AppData\\Local\\miniconda3\\envs\\sherpa\\python.exe', 'C:\\Users\\aa1860...\aa186095\\\\AppData\\\\Local\\\\Temp\\\\sherpa-tests-c23af7aac00d\\\\main.py': [Errno 2] No such file or directory\n").returncode
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:35: AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+E   AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the c...ase letters\n'
+      
+      - error: the category must be 1 to 20 lowercase letters
+      + C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:57: AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the c...ase letters\n'
+E   AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the c...ase letters\n'
+      
+      - error: the category must be 1 to 20 lowercase letters
+      + C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:57: AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the c...ase letters\n'
+E   AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the c...ase letters\n'
+      
+      - error: the category must be 1 to 20 lowercase letters
+      + C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:57: AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the c...ase letters\n'
+E   AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the c...ase letters\n'
+      
+      - error: the category must be 1 to 20 lowercase letters
+      + C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:57: AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the c...ase letters\n'
+E   AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the c...ase letters\n'
+      
+      - error: the category must be 1 to 20 lowercase letters
+      + C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:57: AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the c...ase letters\n'
+E   AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the c...ase letters\n'
+      
+      - error: the category must be 1 to 20 lowercase letters
+      + C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:57: AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the c...ase letters\n'
+E   AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the c...ase letters\n'
+      
+      - error: the category must be 1 to 20 lowercase letters
+      + C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:57: AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the c...ase letters\n'
+  + Exception Group Traceback (most recent call last):
+  |   File "C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py", line 115, in test_ledg_003_only_valid_categories_are_stored
+  |     @given(category=st.text(alphabet="abcdefghijklmnopqrstuvwxyzAB39-_ �", max_size=22))
+  |                    ^^^
+  |   File "C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\hypothesis\core.py", line 2334, in wrapped_test
+  |     raise the_error_hypothesis_found
+  | ExceptionGroup: Hypothesis found 2 distinct failures. (2 sub-exceptions)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py", line 121, in test_ledg_003_only_valid_categories_are_stored
+    |     entry_id = _entry_id(added)
+    |                ^^^^^^^^^^^^^^^^
+    |   File "C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py", line 41, in _entry_id
+    |     output = _output(result)
+    |              ^^^^^^^^^^^^^^^
+    |   File "C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py", line 35, in _output
+    |     assert result.returncode == 0, result.stderr
+    | AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+    |   
+    | assert 2 == 0
+    |  +  where 2 = CompletedProcess(args=['C:\\Users\\aa186095\\AppData\\Local\\miniconda3\\envs\\sherpa\\python.exe', 'C:\\Users\\aa1860...\aa186095\\\\AppData\\\\Local\\\\Temp\\\\sherpa-tests-c23af7aac00d\\\\main.py': [Errno 2] No such file or directory\n").returncode
+    | Failing test case: test_ledg_003_only_valid_categories_are_stored(
+    |     category='a',  # or any other generated value
+    | )
+    +---------------- 2 ----------------
+    | Traceback (most recent call last):
+    |   File "C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py", line 124, in test_ledg_003_only_valid_categories_are_stored
+    |     _assert_category_error(added)
+    |   File "C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py", line 57, in _assert_category_error
+    |     assert result.stderr == "error: the category must be 1 to 20 lowercase letters\n"
+    | AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the c...ase letters\n'
+    |   
+    |   - error: the category must be 1 to 20 lowercase letters
+    |   + C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+    | Failing test case: test_ledg_003_only_valid_categories_are_stored(
+    |     category='',  # or any other generated value
+    | )
+    +------------------------------------
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:115: ExceptionGroup: Hypothesis found 2 distinct failures. (2 sub-exceptions)
+E   AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+      
+    assert 2 == 0
+     +  where 2 = CompletedProcess(args=['C:\\Users\\aa186095\\AppData\\Local\\miniconda3\\envs\\sherpa\\python.exe', 'C:\\Users\\aa1860...\aa186095\\\\AppData\\\\Local\\\\Temp\\\\sherpa-tests-c23af7aac00d\\\\main.py': [Errno 2] No such file or directory\n").returncode
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:35: AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+E   AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+      
+    assert 2 == 0
+     +  where 2 = CompletedProcess(args=['C:\\Users\\aa186095\\AppData\\Local\\miniconda3\\envs\\sherpa\\python.exe', 'C:\\Users\\aa1860...\aa186095\\\\AppData\\\\Local\\\\Temp\\\\sherpa-tests-c23af7aac00d\\\\main.py': [Errno 2] No such file or directory\n").returncode
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:35: AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+E   AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+      
+    assert 2 == 0
+     +  where 2 = CompletedProcess(args=['C:\\Users\\aa186095\\AppData\\Local\\miniconda3\\envs\\sherpa\\python.exe', 'C:\\Users\\aa1860...\aa186095\\\\AppData\\\\Local\\\\Temp\\\\sherpa-tests-c23af7aac00d\\\\main.py': [Errno 2] No such file or directory\n").returncode
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:35: AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+E   AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+      
+    assert 2 == 0
+     +  where 2 = CompletedProcess(args=['C:\\Users\\aa186095\\AppData\\Local\\miniconda3\\envs\\sherpa\\python.exe', 'C:\\Users\\aa1860...\aa186095\\\\AppData\\\\Local\\\\Temp\\\\sherpa-tests-c23af7aac00d\\\\main.py': [Errno 2] No such file or directory\n").returncode
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:35: AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+E   AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+      
+    assert 2 == 0
+     +  where 2 = CompletedProcess(args=['C:\\Users\\aa186095\\AppData\\Local\\miniconda3\\envs\\sherpa\\python.exe', 'C:\\Users\\aa1860...\aa186095\\\\AppData\\\\Local\\\\Temp\\\\sherpa-tests-c23af7aac00d\\\\main.py': [Errno 2] No such file or directory\n").returncode
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:35: AssertionError: C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+E   AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the d...alid ledger\n'
+      
+      - error: the data file is not a valid ledger
+      + C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:169: AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the d...alid ledger\n'
+E   AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the d...alid ledger\n'
+      
+      - error: the data file is not a valid ledger
+      + C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:169: AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the d...alid ledger\n'
+E   AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the d...alid ledger\n'
+      
+      - error: the data file is not a valid ledger
+      + C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe: can't open file 'C:\\Users\\aa186095\\AppData\\Local\\Temp\\sherpa-tests-c23af7aac00d\\main.py': [Errno 2] No such file or directory
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\tests\e2e\test_cli.py:169: AssertionError: assert 'C:\\Users\\a...r directory\n' == 'error: the d...alid ledger\n'
+============================== warnings summary ===============================
+..\..\miniconda3\envs\sherpa\Lib\site-packages\_pytest\config\__init__.py:1464
+  C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\_pytest\config\__init__.py:1464: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_cli.py::test_ledg_001_ex_001_add_prints_the_id_and_stores_the_entry
+FAILED tests/e2e/test_cli.py::test_ledg_001_ex_004_largest_amount_is_stored
+FAILED tests/e2e/test_cli.py::test_ledg_002_ex_002_cli_refuses_three_decimals
+FAILED tests/e2e/test_cli.py::test_ledg_002_ex_003_cli_refuses_zero - Asserti...
+FAILED tests/e2e/test_cli.py::test_ledg_003_ex_005_uppercase_category_is_refused
+FAILED tests/e2e/test_cli.py::test_ledg_003_valid_category_lengths[a] - Asser...
+FAILED tests/e2e/test_cli.py::test_ledg_003_valid_category_lengths[ab] - Asse...
+FAILED tests/e2e/test_cli.py::test_ledg_003_valid_category_lengths[aaaaaaaaaaaaaaaaaaa]
+FAILED tests/e2e/test_cli.py::test_ledg_003_valid_category_lengths[aaaaaaaaaaaaaaaaaaaa]
+FAILED tests/e2e/test_cli.py::test_ledg_003_invalid_categories[] - AssertionE...
+FAILED tests/e2e/test_cli.py::test_ledg_003_invalid_categories[aaaaaaaaaaaaaaaaaaaaa]
+FAILED tests/e2e/test_cli.py::test_ledg_003_invalid_categories[bus2] - Assert...
+FAILED tests/e2e/test_cli.py::test_ledg_003_invalid_categories[two words] - A...
+FAILED tests/e2e/test_cli.py::test_ledg_003_invalid_categories[caf\xe9] - Ass...
+FAILED tests/e2e/test_cli.py::test_ledg_003_invalid_categories[a_b] - Asserti...
+FAILED tests/e2e/test_cli.py::test_ledg_003_invalid_categories[a\n] - Asserti...
+FAILED tests/e2e/test_cli.py::test_ledg_003_only_valid_categories_are_stored
+FAILED tests/e2e/test_cli.py::test_ledg_004_ex_006_total_and_total_of_a_category
+FAILED tests/e2e/test_cli.py::test_ledg_004_ex_007_empty_total - AssertionErr...
+FAILED tests/e2e/test_cli.py::test_ledg_005_ex_008_list_in_order_of_entry - A...
+FAILED tests/e2e/test_cli.py::test_ledg_006_ex_009_add_makes_the_folder - Ass...
+FAILED tests/e2e/test_cli.py::test_ledg_006_default_data_file_is_relative_to_working_folder
+FAILED tests/e2e/test_cli.py::test_ledg_007_ex_010_invalid_data_file_exits_3[args0]
+FAILED tests/e2e/test_cli.py::test_ledg_007_ex_010_invalid_data_file_exits_3[args1]
+FAILED tests/e2e/test_cli.py::test_ledg_007_ex_010_invalid_data_file_exits_3[args2]
+ERROR tests/unit/test_money.py
+ERROR tests/unit/test_store.py
+25 failed, 1 warning, 2 errors in 15.93s
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-ChildItem -Force -Name' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "rg -n '"'^def test_'"' tests" in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$env:PYTHONDONTWRITEBYTECODE='"'1'
+"'$pytestVerification = @'"'
+import os
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
+import pytest
+
+mkdir = os.mkdir
+def make_test_directory(path, mode=0o777, *, dir_fd=None):
+    return mkdir(path, 0o777 if mode == 0o700 else mode, dir_fd=dir_fd)
+
+with patch.object(os, \"mkdir\", make_test_directory), TemporaryDirectory(prefix=\"sherpa-m1-suite-\") as run:
+    os.environ.update(TMPDIR=run, HYPOTHESIS_STORAGE_DIRECTORY=run, COVERAGE_FILE=str(Path(run) / \".coverage\"))
+    raise SystemExit(pytest.main([\"-q\", \"-p\", \"no:cacheprovider\", \"--continue-on-collection-errors\", \"--basetemp\", str(Path(run) / \"cases\"), \"--tb=no\", \"--cov=src\", \"--cov-branch\", \"--cov-fail-under=80\"]))
+'@
+"'$pytestVerification | python -B -' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+ succeeded in 306ms:
+.m1-run-01
+docs
+scripts
+tests
+.coveragerc
+AGENTS.md
+mypy.ini
+pytest.ini
+requirements.txt
+ruff.toml
+
+ succeeded in 331ms:
+tests\unit\test_store.py:20:def test_ledg_006_missing_file_is_an_empty_ledger(tmp_path: Path) -> None:
+tests\unit\test_store.py:24:def test_ledg_006_save_writes_the_entry_fields(tmp_path: Path) -> None:
+tests\unit\test_store.py:31:def test_ledg_006_load_reads_stored_entries_in_order(tmp_path: Path) -> None:
+tests\unit\test_store.py:39:def test_ledg_006_save_replaces_the_previous_file(tmp_path: Path) -> None:
+tests\unit\test_store.py:60:def test_ledg_007_invalid_file_raises_value_error(tmp_path: Path, contents: str) -> None:
+tests\unit\test_store.py:84:def test_ledg_007_invalid_entry_field(tmp_path: Path, field: str, value: object) -> None:
+tests\unit\test_store.py:92:def test_ledg_007_missing_entry_field(tmp_path: Path, field: str) -> None:
+tests\unit\test_money.py:19:def test_ledg_002_ex_002_three_decimals_are_refused() -> None:
+tests\unit\test_money.py:23:def test_ledg_002_ex_003_zero_is_refused() -> None:
+tests\unit\test_money.py:27:def test_ledg_002_ex_004_upper_limit() -> None:
+tests\unit\test_money.py:34:def test_ledg_002_valid_amount_in_cents(text: str, cents: int) -> None:
+tests\unit\test_money.py:39:def test_ledg_002_invalid_amount(text: str) -> None:
+tests\unit\test_money.py:45:def test_ledg_002_each_two_decimal_amount_parses_to_whole_cents(cents: int) -> None:
+tests\unit\test_money.py:55:def test_ledg_004_format_amount(cents: int, text: str) -> None:
+tests\e2e\test_cli.py:62:def test_ledg_001_ex_001_add_prints_the_id_and_stores_the_entry(tmp_path: Path) -> None:
+tests\e2e\test_cli.py:78:def test_ledg_001_ex_004_largest_amount_is_stored(tmp_path: Path) -> None:
+tests\e2e\test_cli.py:86:def test_ledg_002_ex_002_cli_refuses_three_decimals(tmp_path: Path) -> None:
+tests\e2e\test_cli.py:92:def test_ledg_002_ex_003_cli_refuses_zero(tmp_path: Path) -> None:
+tests\e2e\test_cli.py:97:def test_ledg_003_ex_005_uppercase_category_is_refused(tmp_path: Path) -> None:
+tests\e2e\test_cli.py:103:def test_ledg_003_valid_category_lengths(tmp_path: Path, category: str) -> None:
+tests\e2e\test_cli.py:109:def test_ledg_003_invalid_categories(tmp_path: Path, category: str) -> None:
+tests\e2e\test_cli.py:116:def test_ledg_003_only_valid_categories_are_stored(category: str) -> None:
+tests\e2e\test_cli.py:128:def test_ledg_004_ex_006_total_and_total_of_a_category(tmp_path: Path) -> None:
+tests\e2e\test_cli.py:137:def test_ledg_004_ex_007_empty_total(tmp_path: Path) -> None:
+tests\e2e\test_cli.py:141:def test_ledg_005_ex_008_list_in_order_of_entry(tmp_path: Path) -> None:
+tests\e2e\test_cli.py:150:def test_ledg_006_ex_009_add_makes_the_folder(tmp_path: Path) -> None:
+tests\e2e\test_cli.py:157:def test_ledg_006_default_data_file_is_relative_to_working_folder(tmp_path: Path) -> None:
+tests\e2e\test_cli.py:165:def test_ledg_007_ex_010_invalid_data_file_exits_3(tmp_path: Path, args: tuple[str, ...]) -> None:
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "[System.IO.Directory]::Delete((Join-Path (Get-Location).Path '.m1-run-01'), "'$false)' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d
+ exited 1 in 272ms:
+Exception calling "Delete" with "2" argument(s): "Access to the path 
+'C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-c23af7aac00d\.m1-run-01' is denied."
+At line:2 char:1
++ [System.IO.Directory]::Delete((Join-Path (Get-Location).Path '.m1-run ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:) [], MethodInvocationException
+    + FullyQualifiedErrorId : IOException
+ 
+
+codex
+All 25 CLI cases reached the missing `main.py` entry point. The two unit files stopped at collection because `src.money` and `src.store` are absent. The full-suite run with branch coverage is still in progress.
+ exited 1 in 101530ms:
+FFFFFFFFFFFFFFFFFFFFFFFFFC:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\coverage\inorout.py:558: CoverageWarning: Module src was never imported. (module-not-imported); see https://coverage.readthedocs.io/en/7.16.2/messages.html#warning-module-not-imported
+  self.warn(f"Module {pkg} was never imported.", slug="module-not-imported")
+C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\coverage\control.py:967: CoverageWarning: No data was collected. (no-data-collected); see https://coverage.readthedocs.io/en/7.16.2/messages.html#warning-no-data-collected
+  self._warn("No data was collected.", slug="no-data-collected")
+C:\Users\aa186095\AppData\Local\miniconda3\envs\project-init\Lib\site-packages\pytest_cov\plugin.py:366: CovReportWarning: Failed to generate report: No data to report.
+
+
+WARNING: Failed to generate report: No data to report.
+
+
+ERROR: Coverage failure: total of 0 is less than fail-under=80
+                                                                         [100%]
+============================== warnings summary ===============================
+..\..\miniconda3\envs\sherpa\Lib\site-packages\_pytest\config\__init__.py:1464
+  C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\_pytest\config\__init__.py:1464: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================== tests coverage ================================
+FAIL Required test coverage of 80% not reached. Total coverage: 0.00%
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_cli.py::test_ledg_001_ex_001_add_prints_the_id_and_stores_the_entry
+FAILED tests/e2e/test_cli.py::test_ledg_001_ex_004_largest_amount_is_stored
+FAILED tests/e2e/test_cli.py::test_ledg_002_ex_002_cli_refuses_three_decimals
+FAILED tests/e2e/test_cli.py::test_ledg_002_ex_003_cli_refuses_zero - Asserti...
+FAILED tests/e2e/test_cli.py::test_ledg_003_ex_005_uppercase_category_is_refused
+FAILED tests/e2e/test_cli.py::test_ledg_003_valid_category_lengths[a] - Asser...
+FAILED tests/e2e/test_cli.py::test_ledg_003_valid_category_lengths[ab] - Asse...
+FAILED tests/e2e/test_cli.py::test_ledg_003_valid_category_lengths[aaaaaaaaaaaaaaaaaaa]
+FAILED tests/e2e/test_cli.py::test_ledg_003_valid_category_lengths[aaaaaaaaaaaaaaaaaaaa]
+FAILED tests/e2e/test_cli.py::test_ledg_003_invalid_categories[] - AssertionE...
+FAILED tests/e2e/test_cli.py::test_ledg_003_invalid_categories[aaaaaaaaaaaaaaaaaaaaa]
+FAILED tests/e2e/test_cli.py::test_ledg_003_invalid_categories[bus2] - Assert...
+FAILED tests/e2e/test_cli.py::test_ledg_003_invalid_categories[two words] - A...
+FAILED tests/e2e/test_cli.py::test_ledg_003_invalid_categories[caf\xe9] - Ass...
+FAILED tests/e2e/test_cli.py::test_ledg_003_invalid_categories[a_b] - Asserti...
+FAILED tests/e2e/test_cli.py::test_ledg_003_invalid_categories[a\n] - Asserti...
+FAILED tests/e2e/test_cli.py::test_ledg_003_only_valid_categories_are_stored
+FAILED tests/e2e/test_cli.py::test_ledg_004_ex_006_total_and_total_of_a_category
+FAILED tests/e2e/test_cli.py::test_ledg_004_ex_007_empty_total - AssertionErr...
+FAILED tests/e2e/test_cli.py::test_ledg_005_ex_008_list_in_order_of_entry - A...
+FAILED tests/e2e/test_cli.py::test_ledg_006_ex_009_add_makes_the_folder - Ass...
+FAILED tests/e2e/test_cli.py::test_ledg_006_default_data_file_is_relative_to_working_folder
+FAILED tests/e2e/test_cli.py::test_ledg_007_ex_010_invalid_data_file_exits_3[args0]
+FAILED tests/e2e/test_cli.py::test_ledg_007_ex_010_invalid_data_file_exits_3[args1]
+FAILED tests/e2e/test_cli.py::test_ledg_007_ex_010_invalid_data_file_exits_3[args2]
+ERROR tests/unit/test_money.py
+ERROR tests/unit/test_store.py
+25 failed, 1 warning, 2 errors in 100.45s (0:01:40)
+
+codex
+**Files changed:** [test_money.py](tests/unit/test_money.py), [test_store.py](tests/unit/test_store.py), [test_cli.py](tests/e2e/test_cli.py).
+
+**Tests added or updated:** 28 new test functions. The IDs in each name identify the requirement and, where applicable, the acceptance example in `docs/spec.md`.
+
+| Test | Observed failure |
+|---|---|
+| `test_ledg_002_ex_002_three_decimals_are_refused` | `src.money` missing at collection |
+| `test_ledg_002_ex_003_zero_is_refused` | `src.money` missing at collection |
+| `test_ledg_002_ex_004_upper_limit` | `src.money` missing at collection |
+| `test_ledg_002_valid_amount_in_cents` | `src.money` missing at collection |
+| `test_ledg_002_invalid_amount` | `src.money` missing at collection |
+| `test_ledg_002_each_two_decimal_amount_parses_to_whole_cents` | `src.money` missing at collection |
+| `test_ledg_004_format_amount` | `src.money` missing at collection |
+| `test_ledg_006_missing_file_is_an_empty_ledger` | `src.store` missing at collection |
+| `test_ledg_006_save_writes_the_entry_fields` | `src.store` missing at collection |
+| `test_ledg_006_load_reads_stored_entries_in_order` | `src.store` missing at collection |
+| `test_ledg_006_save_replaces_the_previous_file` | `src.store` missing at collection |
+| `test_ledg_007_invalid_file_raises_value_error` | `src.store` missing at collection |
+| `test_ledg_007_invalid_entry_field` | `src.store` missing at collection |
+| `test_ledg_007_missing_entry_field` | `src.store` missing at collection |
+| `test_ledg_001_ex_001_add_prints_the_id_and_stores_the_entry` | `main.py` missing |
+| `test_ledg_001_ex_004_largest_amount_is_stored` | `main.py` missing |
+| `test_ledg_002_ex_002_cli_refuses_three_decimals` | `main.py` missing |
+| `test_ledg_002_ex_003_cli_refuses_zero` | `main.py` missing |
+| `test_ledg_003_ex_005_uppercase_category_is_refused` | `main.py` missing |
+| `test_ledg_003_valid_category_lengths` | `main.py` missing |
+| `test_ledg_003_invalid_categories` | `main.py` missing |
+| `test_ledg_003_only_valid_categories_are_stored` | `main.py` missing |
+| `test_ledg_004_ex_006_total_and_total_of_a_category` | `main.py` missing |
+| `test_ledg_004_ex_007_empty_total` | `main.py` missing |
+| `test_ledg_005_ex_008_list_in_order_of_entry` | `main.py` missing |
+| `test_ledg_006_ex_009_add_makes_the_folder` | `main.py` missing |
+| `test_ledg_006_default_data_file_is_relative_to_working_folder` | `main.py` missing |
+| `test_ledg_007_ex_010_invalid_data_file_exits_3` | `main.py` missing |
+
+**Tests run:** 0 passed out of 25 collected CLI cases. Both unit files stopped at collection with `ModuleNotFoundError: No module named 'src'`. Source coverage could not be measured. Ruff lint, formatting, and mypy passed.
+
+**Assumptions and open questions:** No open design questions. Windows denied cleanup of the initial pytest scratch directory `.m1-run-01`. Verification completed in fresh temporary folders.
+
+DECISION: Validate generated UUIDs and UTC timestamps by their documented properties | The CLI exposes no clock or ID override | none
+
+**TLDR: M1’s failing tests are ready for the build session. The spec coverage check confirms all 7 requirements and all 10 acceptance examples have tests.**
+tokens used
+55,800
+**Files changed:** [test_money.py](tests/unit/test_money.py), [test_store.py](tests/unit/test_store.py), [test_cli.py](tests/e2e/test_cli.py).
+
+**Tests added or updated:** 28 new test functions. The IDs in each name identify the requirement and, where applicable, the acceptance example in `docs/spec.md`.
+
+| Test | Observed failure |
+|---|---|
+| `test_ledg_002_ex_002_three_decimals_are_refused` | `src.money` missing at collection |
+| `test_ledg_002_ex_003_zero_is_refused` | `src.money` missing at collection |
+| `test_ledg_002_ex_004_upper_limit` | `src.money` missing at collection |
+| `test_ledg_002_valid_amount_in_cents` | `src.money` missing at collection |
+| `test_ledg_002_invalid_amount` | `src.money` missing at collection |
+| `test_ledg_002_each_two_decimal_amount_parses_to_whole_cents` | `src.money` missing at collection |
+| `test_ledg_004_format_amount` | `src.money` missing at collection |
+| `test_ledg_006_missing_file_is_an_empty_ledger` | `src.store` missing at collection |
+| `test_ledg_006_save_writes_the_entry_fields` | `src.store` missing at collection |
+| `test_ledg_006_load_reads_stored_entries_in_order` | `src.store` missing at collection |
+| `test_ledg_006_save_replaces_the_previous_file` | `src.store` missing at collection |
+| `test_ledg_007_invalid_file_raises_value_error` | `src.store` missing at collection |
+| `test_ledg_007_invalid_entry_field` | `src.store` missing at collection |
+| `test_ledg_007_missing_entry_field` | `src.store` missing at collection |
+| `test_ledg_001_ex_001_add_prints_the_id_and_stores_the_entry` | `main.py` missing |
+| `test_ledg_001_ex_004_largest_amount_is_stored` | `main.py` missing |
+| `test_ledg_002_ex_002_cli_refuses_three_decimals` | `main.py` missing |
+| `test_ledg_002_ex_003_cli_refuses_zero` | `main.py` missing |
+| `test_ledg_003_ex_005_uppercase_category_is_refused` | `main.py` missing |
+| `test_ledg_003_valid_category_lengths` | `main.py` missing |
+| `test_ledg_003_invalid_categories` | `main.py` missing |
+| `test_ledg_003_only_valid_categories_are_stored` | `main.py` missing |
+| `test_ledg_004_ex_006_total_and_total_of_a_category` | `main.py` missing |
+| `test_ledg_004_ex_007_empty_total` | `main.py` missing |
+| `test_ledg_005_ex_008_list_in_order_of_entry` | `main.py` missing |
+| `test_ledg_006_ex_009_add_makes_the_folder` | `main.py` missing |
+| `test_ledg_006_default_data_file_is_relative_to_working_folder` | `main.py` missing |
+| `test_ledg_007_ex_010_invalid_data_file_exits_3` | `main.py` missing |
+
+**Tests run:** 0 passed out of 25 collected CLI cases. Both unit files stopped at collection with `ModuleNotFoundError: No module named 'src'`. Source coverage could not be measured. Ruff lint, formatting, and mypy passed.
+
+**Assumptions and open questions:** No open design questions. Windows denied cleanup of the initial pytest scratch directory `.m1-run-01`. Verification completed in fresh temporary folders.
+
+DECISION: Validate generated UUIDs and UTC timestamps by their documented properties | The CLI exposes no clock or ID override | none
+
+**TLDR: M1’s failing tests are ready for the build session. The spec coverage check confirms all 7 requirements and all 10 acceptance examples have tests.**

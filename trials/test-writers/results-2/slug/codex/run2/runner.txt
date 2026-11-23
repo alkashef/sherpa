@@ -1,0 +1,31 @@
+**Files changed:** [tests/unit/test_slug.py](tests/unit/test_slug.py) and [tests/e2e/test_cli.py](tests/e2e/test_cli.py). No commit was made.
+
+**Tests added:** 16 test functions covering all 7 requirements and all 10 acceptance examples in `docs/spec.md`. The M1 spec coverage check passed.
+
+| Test | Current result |
+|---|---|
+| `test_slug_001_slug_holds_only_safe_characters` | Missing `src.slug` at collection |
+| `test_slug_001_ex_001_hello_world` | Missing `src.slug` at collection |
+| `test_slug_002_ex_002_accents_become_plain_letters` | Missing `src.slug` at collection |
+| `test_slug_002_ex_009_kelvin_sign_becomes_k` | Missing `src.slug` at collection |
+| `test_slug_002_ex_010_letters_without_ascii_form_are_dropped` | Missing `src.slug` at collection |
+| `test_slug_002_letters_without_ascii_form_inside_word_are_dropped` | Missing `src.slug` at collection |
+| `test_slug_003_ex_003_runs_of_symbols_become_one_hyphen` | Missing `src.slug` at collection |
+| `test_slug_004_ex_004_cut_keeps_whole_words` | Missing `src.slug` at collection |
+| `test_slug_004_ex_005_long_first_word_is_cut` | Missing `src.slug` at collection |
+| `test_slug_004_default_maximum_length` | Missing `src.slug` at collection |
+| `test_slug_006_empty_slug_raises_value_error` | Missing `src.slug` at collection |
+| `test_slug_005_ex_006_prints_slug_and_exits_0` | Missing `main.py`, exit 2 |
+| `test_slug_005_default_maximum_length_is_60` | Missing `main.py`, exit 2 |
+| `test_slug_005_accepts_valid_maximum_length` | Missing `main.py`, exit 2 |
+| `test_slug_006_ex_007_title_without_letters_exits_2` | Missing `main.py`, wrong stderr |
+| `test_slug_007_ex_008_max_out_of_range_exits_2` | Missing `main.py`, wrong stderr |
+
+**Tests run:** 0 passed out of 11 executed CLI cases. The unit file stopped at collection with `ModuleNotFoundError: No module named 'src'`. There were no older tests.
+
+**Static checks:** Ruff lint and formatting passed. Mypy reported one error for the missing `src.slug` import.
+
+**Assumptions and open questions:** None. No design decisions, manual checks, or live tests were needed.
+
+**TLDR: M1 is ready for the build session. All requirements and examples have tests, and the observed failures come from the two missing implementation entry points.**
+The tests of milestone M1 in docs/plan.md are written and pass the checks.

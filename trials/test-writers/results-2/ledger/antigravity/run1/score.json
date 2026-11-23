@@ -1,0 +1,20 @@
+{
+  "gates": {
+    "ruff check": true,
+    "ruff format": true,
+    "spec_coverage M1": true,
+    "pass on correct code": true,
+    "mypy with the code": true,
+    "coverage 80%": true,
+    "fail before the code": true,
+    "spec and plan unchanged": true
+  },
+  "all_gates": true,
+  "caught": 18,
+  "total": 18,
+  "kit": "ledger",
+  "writer": "antigravity",
+  "run": 1,
+  "seconds": 761,
+  "runner_exit": 0
+}

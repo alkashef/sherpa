@@ -1,0 +1,31 @@
+| e2e `test_ledg_001_*` (stderr empty, stored fields and UTC time, empty note, new ID each time) | LEDG-001 | `main.py` missing |
+| e2e `test_ledg_002_ex_002_cli_refuses_three_decimals` | LEDG-002, EX-002 | `main.py` missing |
+| e2e `test_ledg_002_ex_003_cli_refuses_zero`, `test_ledg_002_ex_004_amount_over_the_limit_is_refused` | LEDG-002, EX-003, EX-004 | `main.py` missing |
+| e2e `test_ledg_002_*` (invalid amounts, lower limit) | LEDG-002 | `main.py` missing |
+| e2e `test_ledg_003_ex_005_uppercase_category_is_refused` | LEDG-003, EX-005 | `main.py` missing |
+| e2e `test_ledg_003_*` (lengths 0, 1, 20 and 21, digit, space, `é`, ledger unchanged) | LEDG-003 | `main.py` missing |
+| e2e `test_ledg_004_ex_006_total_and_total_of_a_category` | LEDG-004, EX-006 | `main.py` missing |
+| e2e `test_ledg_004_ex_007_empty_total` | LEDG-004, EX-007 | `main.py` missing |
+| e2e `test_ledg_004_*` (category with no entry, same result on a second run) | LEDG-004 | `main.py` missing |
+| e2e `test_ledg_005_ex_008_list_in_order_of_entry`, `test_ledg_005_empty_ledger_lists_nothing` | LEDG-005, EX-008 | `main.py` missing |
+| e2e `test_ledg_006_ex_009_add_makes_the_folder` | LEDG-006, EX-009 | `main.py` missing |
+| e2e `test_ledg_006_default_data_file_is_data_ledger_json`, `..._read_of_a_missing_file_makes_no_file` | LEDG-006 | `main.py` missing |
+| e2e `test_ledg_007_ex_010_invalid_data_file_exits_3` | LEDG-007, EX-010 | `main.py` missing |
+| e2e `test_ledg_007_invalid_data_file_changes_nothing` (list, add, total of a category) | LEDG-007 | `main.py` missing |
+
+- **Requirements in Refs without a test:** none. All 7 requirements and all 10 examples have a test, so no `Manual:` entry is needed.
+- **Live tests written and not run:** none.
+
+- **Files changed:** `tests/unit/test_money.py`, `tests/unit/test_store.py`, `tests/e2e/test_ledger_cli.py` (all new).
+- **Tests added or updated:** the 3 files above; no existing test changed.
+- **Tests run:** 0 passed out of 35 e2e tests; the 2 unit files (50 test cases) fail at import. Live tests: none.
+- **Assumptions and open questions:**
+  - `pytest` gives the warning "Unknown config option: asyncio_mode", because pytest-asyncio is not installed. It does no harm here.
+  - For EX-009 and the default data file, the e2e tests run `main.py` with its absolute path from a temporary folder, so the relative data path resolves there. The design says the tool runs from the project root.
+- DECISION: `parse_amount` refuses `nan`, `inf`, a negative number and an empty text | none of these is "a number from 0.01 to 1000000.00" (LEDG-002) | none
+- DECISION: `load` refuses an entry whose `amount_cents` is not an integer | the data model of docs/design.md gives `int`, and section 3 says any other content is not a valid ledger | none
+- DECISION: DEC-003 (the safe write, in docs/design.md) is tested through what can be seen: after two saves, the folder holds only the data file and the newest entries load | a test that breaks the write in the middle would depend on how the code is built | none
+- DECISION: the e2e tests check the stored JSON with the field names of the data model | the data rules say that tests prove the stored form of each record | none
+
+**TLDR: I wrote 85 test cases in 3 files for M1. Every requirement and example has a test. They fail only because `src/` and `main.py` do not exist yet. I made no design changes and committed nothing.**
+The tests of milestone M1 in docs/plan.md are written and pass the checks.

@@ -1,0 +1,31 @@
+
+| Requirement | Tests | Examples covered |
+|---|---|---|
+| SLUG-001 (only safe characters) | Hypothesis property test (50 examples, fixed seed); EX-001 "Hello, World!"; uppercase becomes lowercase; digits are kept | EX-001 |
+| SLUG-002 (accents and compatibility forms) | EX-002, EX-009 (Kelvin sign), EX-010; a ligature compatibility form | EX-002, EX-009, EX-010 |
+| SLUG-003 (one hyphen per run of symbols) | EX-003; underscore becomes a hyphen; property test: no hyphen at the start or end, and no double hyphens | EX-003 |
+| SLUG-004 (cut to the maximum length) | EX-004, EX-005; the limit and one value on each side (10, 11, 12); a cut never ends with a hyphen; maximum length 1 and 200; default 60, tested at 61 and at 60; property test: never longer than the maximum | EX-004, EX-005 |
+| SLUG-005 (print the slug, exit 0) | e2e: EX-006; `--max 15`; default 60; `--max` 1 and 200; a second run gives the same result. In-process: `main` returns 0, and `main` uses `--max` | EX-006 |
+| SLUG-006 (title with no letters or digits) | unit: exact `ValueError` message for `!!!`, `""`, spaces only, and `日本`. e2e: EX-007 checks stderr, stdout and exit code. In-process: `main` reports the error | EX-007 |
+| SLUG-007 (`--max` not valid) | e2e: EX-008 (`--max 0`), then `201`, `-1`, `abc`, `1.5` and an empty value, each must give the exact error and exit code 2. In-process: `0`, `201` and `abc` | EX-008 |
+
+**Gaps:** every requirement in the M1 Refs has a test, so there is no `Manual:` entry. I wrote no `live:` tests.
+
+**Files changed:**
+- `tests/unit/test_slug.py`
+- `tests/unit/test_cli.py`
+- `tests/e2e/test_main.py`
+
+**Tests added or updated:** 3 new test files. All tests listed in the M1 Tests first entry, plus tests for the limits, the default and the invalid inputs. No existing test was changed.
+
+**Tests run:** 0 passed out of 14 e2e tests (expected, `main.py` is missing). The 2 unit files stop at collection because `src` is missing. There are no older tests.
+
+**Assumptions and open questions:**
+- SLUG-007 says "not an integer from 1 to 200", so the tests expect `-1`, `1.5` and an empty `--max` value to give the error.
+- The property tests start each title with `"Word "`, so the slug is never empty.
+- I added `tests/unit/test_cli.py` to call `src.cli.main` in-process. That way coverage does not depend only on the subprocess runs.
+
+DECISION: added in-process unit tests of `src.cli.main` next to the e2e tests listed in Tests first | the coverage floor should not depend only on measuring subprocesses, and this uses only the interface in section 4 of `docs/design.md` | none
+
+**TLDR: All M1 tests are written and fail only because `src/slug.py`, `src/cli.py` and `main.py` do not exist yet. Ruff passes, and mypy reports only those missing modules. Nothing is committed and the docs are unchanged.**
+The tests of milestone M1 in docs/plan.md are written and pass the checks.

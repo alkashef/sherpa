@@ -1,24 +1,29 @@
-# Trial of three test writers
+# Trials of the test writers
 
-The trial of November 21, 2026. Three AIs wrote the tests of one milestone from the same spec and
-the same design, in a folder without the code. One script scored their tests. The work that
-follows from it is in `docs/unapproved-ideas.md`, Part 1: USER-17 (with the rule of the second
-trial), RUN-06 and RUN-07. This folder is not part of the skill, and the test suite does not
-collect it.
+Two trials of the AIs that write the tests of a milestone from the spec and the design, in a folder
+without the code. One script scores their tests. This folder is not part of the skill, and the
+test suite does not collect it.
+
+- **The first trial**, November 21, 2026: one run of each writer on the slug tool, with folders
+  and commands made by hand. Its work is in `docs/unapproved-ideas.md`, Part 1: USER-17 (with the
+  rule of the second trial), RUN-06 and RUN-07.
+- **The second trial**, November 23, 2026: three runs of each writer on each of two projects,
+  through the runner of a real sherpa project (`milestones-runner.py --tests-only M1`). Its rule
+  decides the default writer.
 
 ## Contents
 
 | Path | What |
 | --- | --- |
-| `project/docs/` | The spec, design and plan of the trial project: a slug tool with 7 requirements, 10 acceptance examples and one milestone |
-| `prompts/agents.txt` | The prompt for Codex and Antigravity |
-| `prompts/claude.txt` | The prompt for Claude |
-| `records/AGENTS.md` | What Codex and Antigravity read: the `CLAUDE.md`, the Python rules and `/write-tests` of the trial project, under a short head |
-| `reference/` | A correct implementation. The tests must pass on it |
-| `evaluate.py` | The scoring script: ruff, mypy, `spec_coverage.py M1`, the failure before the code, the run on correct code, and 17 seeded bugs |
-| `results/<writer>/` | The tests and the final report of each writer |
+| `kits/slug/` | The slug tool: a spec with 7 requirements and 10 acceptance examples, a design, a plan with one milestone, a correct implementation (`reference/`) and 17 seeded bugs (`mutants.json`) |
+| `kits/ledger/` | A ledger of expenses that stores data in a JSON file: 7 requirements, 10 examples, a design with a data model, one milestone, a correct implementation and 18 seeded bugs |
+| `evaluate.py` | The scoring script: the gates (ruff check and format, `spec_coverage.py M1`, a valid failure before the code, a pass on correct code, mypy with the code, 80% coverage, the spec and the plan unchanged) and the seeded bugs |
+| `run_trial.py` | The second trial: builds a project for each run, runs the writer through the runner, scores the tests, and writes `results-2/summary.md` |
+| `prompts/`, `records/` | The prompts and the `AGENTS.md` of the first trial |
+| `results/<writer>/` | The tests and the final report of each writer in the first trial |
+| `results-2/<kit>/<writer>/run<n>/` | The tests, the runner's output, the logs and the score of each run of the second trial |
 
-## Results
+## Results of the first trial
 
 One run of each writer, effort `high`, on Windows 11.
 
@@ -44,7 +49,7 @@ One run of each writer, effort `high`, on Windows 11.
   ignored the allow list, and possibly the project hooks.
 - One run of each writer is weak evidence. The second trial decides the default writer.
 
-## Commands
+## Commands of the first trial
 
 The versions: Codex CLI 0.171.0-alpha.13 (the copy in the VS Code extension), Claude Code
 2.1.318, Antigravity CLI 1.4.7. Each command ran in the folder of its writer, with the folders of
@@ -62,13 +67,50 @@ agy --model gemini-4-neon-high --dangerously-skip-permissions --output-format js
   --print-timeout 20m -p "$(cat prompts/agents.txt)"
 ```
 
+## Results of the second trial
+
+November 23, 2026, on Windows 11. Each writer ran 3 times on each kit, at effort `high`: Claude
+`claude-opus-5-5`, Codex `gpt-6.2-astra`, Antigravity `gemini-4-neon-high`. The runner made the
+folder of each test session, ran the writer, copied `tests/` back, checked the tests and gave one
+round of repair when they needed it. `results-2/summary.md` has each run.
+
+| | Claude | Codex | Antigravity |
+| --- | --- | --- | --- |
+| All gates in all 6 runs | Yes | Yes | Yes |
+| Seeded bugs caught, slug (each run, of 17) | 16, 17, 17 | 16, 17, 16 | 17, 17, 17 |
+| Seeded bugs caught, ledger (each run, of 18) | 18, 18, 18 | 18, 18, 18 | 18, 18, 18 |
+| Median of seeded bugs caught | 17.5 | 17.5 | 17.5 |
+| Median time of a run | 217 s | 226 s | 512 s |
+| Test functions, slug and ledger | 26 to 34, 45 to 48 | 16 to 17, 25 to 28 | 25 to 38, 31 to 35 |
+| Rounds of repair | none | none | 3 (mypy, ledger) |
+
+**By the rule of the second trial, Claude stays the default writer.** All three writers qualify,
+the three medians tie at 17.5, and on a tie the faster writer wins: Claude, by 9 seconds. The
+margin is small, so Codex is an equal choice; Antigravity is as good and about twice as slow.
+
+- The three bugs that a writer missed were all defaults of the slug tool: the default maximum
+  length of the function (Codex, two runs) and of the command line (Claude, one run).
+- Antigravity got one round of repair in each ledger run: the runner's mypy check found 41 type
+  errors in its tests, and the writer repaired them.
+- The trial found two faults of sherpa before it could run: the folder of the test session shut
+  out the Codex sandbox (`tempfile.mkdtemp` makes a folder that only its owner can open), and
+  Codex blocked each milestone because pytest and Hypothesis are named in no design decision.
+  Both are repaired, and the trial ran again from the start.
+- The writers read the design of the ledger more strictly than its first correct implementation:
+  a data file with an extra key, or an entry that breaks a limit of the data model, is not a
+  valid ledger. The reference was corrected, and each run was scored again with it.
+
 ## Run it again
 
-1. Build the project, then copy the docs into it:
-   `python skills/project-init/scripts/build_instance.py <work>/slugger --with python cli --name slugger`,
-   then copy `project/docs/*.md` to `<work>/slugger/docs/`.
-2. Copy `reference/` to `<work>/reference/`.
-3. For each writer, make `<work>/tf-<writer>/` with the docs, the configs, an empty `tests/` and
-   the instruction files of that writer, and run its command there. After the build of USER-17,
-   the runner makes this folder.
-4. Score each writer with the environment of the project: `python evaluate.py <work> tf-<writer>`.
+The second trial, from the root of sherpa, with Codex on the PATH (the copy in the VS Code
+extension works) and one sign-in to each CLI:
+
+```bash
+python trials/test-writers/run_trial.py <work folder>
+python trials/test-writers/run_trial.py <work folder> --rescore    # after a change of a kit
+```
+
+One run: build a project with `build_instance.py ... --name sherpa`, copy the docs of a kit into
+it, commit, turn the hook on, run `python scripts/milestones-runner.py --tests-only M1
+--test-writer <writer>`, then `python trials/test-writers/evaluate.py trials/test-writers/kits/<kit>
+<project>`. `run_trial.py` does these steps.

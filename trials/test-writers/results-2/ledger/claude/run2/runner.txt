@@ -1,0 +1,31 @@
+| File | Requirement / example | Tests |
+| --- | --- | --- |
+| `test_money.py` | LEDG-002, EX-002, EX-003, EX-004 | The 3 examples by name, plus: amounts just above 1000000.00 and below 0.01 are refused, and 0.01 is accepted. Text to cents, and bad text: not a number, negative, comma, `nan`, `inf`, too big. Two property tests with at most 50 examples: every amount in range is accepted, and every amount with three decimals is refused. |
+| `test_money.py` | decision DEC-002 in `docs/design.md` | Cents become text with two decimals, including 0 → `0.00`. |
+| `test_store.py` | LEDG-006 | A missing file is an empty ledger; entries load back in order; the folder is made; the exact stored JSON; an empty ledger is stored as an empty list. |
+| `test_store.py` | LEDG-007 | Text that is not JSON gives the error, and so do 9 other bad contents: empty file, wrong top level, extra or missing keys, a wrong type. A valid file written by hand loads. |
+| `test_store.py` | decision DEC-003 | After a save, only the data file is in the folder. If the save stops at the replace step, the old ledger still loads. |
+| `test_ledger_cli.py` | LEDG-001, EX-001, EX-004 | The ID is a UUID 4 followed by a newline; the five keys are stored; the time is ISO 8601 in UTC; each entry gets a new ID; the largest amount is stored and one cent more is refused. |
+| `test_ledger_cli.py` | LEDG-002, EX-002, EX-003 | Three decimals, zero and `abc` give exit code 2 and the error text, and the ledger does not change. |
+| `test_ledger_cli.py` | LEDG-003, EX-005 | `Food` is refused; 20 letters and 1 letter are accepted; 21 letters, an empty category, a digit and `café` are refused. |
+| `test_ledger_cli.py` | LEDG-004, EX-006, EX-007 | The total and the total of a category; the empty total; a category with no entries gives `0.00`; a second run gives the same total. |
+| `test_ledger_cli.py` | LEDG-005, EX-008 | Entries list in order with tabs; an empty ledger lists nothing. |
+| `test_ledger_cli.py` | LEDG-006, EX-009 | A relative `LEDGER_DATA` path makes its folder; without `LEDGER_DATA` the file is `data/ledger.json`. |
+| `test_ledger_cli.py` | LEDG-007, EX-010 | A bad data file gives exit code 3 for `total`, `add` and `list`, and the file does not change. |
+
+- **Manual:** none.
+- **Live tests:** none. The milestone has no `live:` tests.
+
+**Files changed:** `tests/unit/test_money.py`, `tests/unit/test_store.py`, `tests/e2e/test_ledger_cli.py` (all new).
+**Tests added or updated:** the 75 above (new); no existing test changed.
+**Tests run:** 0 passed out of 75 in the project, as expected. Against my scratch build: 75 passed out of 75.
+**Assumptions and open questions:**
+- Two e2e tests run from a temporary folder, not the project root. The spec says the data path is relative to the folder where the tool runs, and this way no test writes the real `data/ledger.json`.
+- The DEC-003 test makes `os.replace` fail on purpose. This assumes the store replaces the file with `os.replace` or `Path.replace`.
+- I broke rule (g) once: I rewrote `test_money.py` once with a shell command instead of the file tools, to fix a lint finding. All later edits used the file tools.
+
+DECISION: E2e tests for a relative or default data path run from a temporary folder, not the project root | LEDG-006 says the path is relative to where the tool runs, and the tests must not touch the real `data/` | none
+DECISION: The stored ledger is invalid when `amount_cents` is not a whole number | The data model in design.md types it as `int`, and design.md says any other content is not a valid ledger (LEDG-007) | none
+
+**TLDR: 75 failing tests cover every requirement and example of M1, and all 75 pass against a reference build, so the build session can meet them; no design change and no block.**
+The tests of milestone M1 in docs/plan.md are written and pass the checks.

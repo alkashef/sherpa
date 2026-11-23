@@ -1,0 +1,31 @@
+**Unit tests, `tests/unit/test_cli.py`.** `src.cli.main` is called in the process, through the interface that `docs/design.md` names. Each fails at import with `ModuleNotFoundError`.
+- `test_slug_005_main_prints_slug_and_returns_0`, `test_slug_005_main_uses_max_option`: SLUG-005
+- `test_slug_006_main_returns_2_for_title_without_letters`: SLUG-006
+- `test_slug_007_main_returns_2_for_max_out_of_range`: SLUG-007
+
+**End-to-end tests, `tests/e2e/test_main_cli.py`.** These run `python main.py` as a process. Each fails now with exit code 2 and Python's "can't open file `main.py`" error, not the expected output.
+- `test_slug_005_ex_006_prints_slug_and_exits_0`: SLUG-005, EX-006
+- `test_slug_005_max_option_cuts_slug`, `test_slug_005_default_maximum_length_is_60`: SLUG-005
+- `test_slug_005_max_at_limits_is_accepted`: SLUG-005, with `--max 1` and `--max 200`
+- `test_slug_005_second_run_gives_same_result`: SLUG-005
+- `test_slug_006_ex_007_title_without_letters_exits_2`: SLUG-006, EX-007
+- `test_slug_007_ex_008_max_out_of_range_exits_2`: SLUG-007, EX-008
+- `test_slug_007_invalid_max_exits_2`: SLUG-007, with `201`, `-1`, `abc`, `1.5` and an empty value
+
+**Requirements without a test:** none, so the block needs no `Manual:` entry.
+
+**Live tests written and not run:** none.
+
+At first, `test_slug_005_second_run_gives_same_result` passed without any code, because two failed runs gave the same output. It now also checks the expected slug `creme-brulee`, so it fails for the right reason.
+
+---
+
+- **Files changed:** `tests/unit/test_slug.py`, `tests/unit/test_cli.py`, `tests/e2e/test_main_cli.py` (all new).
+- **Tests added or updated:** the 21 tests above (34 cases). No existing test was changed.
+- **Tests run:** 0 passed out of 34. The 2 unit files stop at import (20 cases not collected), and all 14 end-to-end cases fail. These failures are expected before the build session.
+- **Assumptions and open questions:** mypy on `tests/` reports `import-not-found` for `src.slug` and `src.cli` until the build session creates them. pytest shows an "Unknown config option: asyncio_mode" warning, because `pytest-asyncio` is not installed. The warning does not affect these tests.
+- DECISION: Named the end-to-end file `tests/e2e/test_main_cli.py`, not `test_cli.py` | Two test files with the same name in folders without `__init__.py` clash under pytest's default import mode | none
+- DECISION: Added in-process unit tests of `src.cli.main` in addition to the plan's end-to-end tests | They use the `main(argv)` interface that the design names, and they count toward the 80% coverage floor even if coverage of child processes fails | none
+- DECISION: The tests treat an empty `--max` value and `-1` as invalid values that exit with 2 | Requirement SLUG-007 says any value that is not an integer from 1 to 200 is invalid | none
+- **TLDR: The M1 tests are ready: 21 tests (34 cases) that fail only because `src/slug.py`, `src/cli.py` and `main.py` do not exist, and every requirement and example of M1 has a test.**
+The tests of milestone M1 in docs/plan.md are written and pass the checks.

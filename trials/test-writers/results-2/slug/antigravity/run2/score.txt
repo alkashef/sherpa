@@ -1,0 +1,27 @@
+test files: tests/e2e/test_cli.py, tests/unit/test_slug.py
+passed  ruff check: All checks passed!
+passed  ruff format: 2 files already formatted
+passed  spec_coverage M1: M1: 10 acceptance example(s) cite them, all tested or manual.
+passed  pass on correct code: 38 passed, 1 warning in 2.31s
+passed  mypy with the code: Success: no issues found in 2 source files
+passed  coverage 80%: 38 passed, 1 warning in 4.20s
+passed  fail before the code
+passed  spec and plan unchanged
+   CAUGHT  no NFKD
+   CAUGHT  NFKC in place of NFKD
+   CAUGHT  cut at N characters
+   CAUGHT  cut one word short (>=)
+   CAUGHT  function default 50
+   CAUGHT  CLI default 50
+   CAUGHT  --max accepts 201
+   CAUGHT  --max accepts 0
+   CAUGHT  --max accepts 1.5
+   CAUGHT  empty-slug exit code 1
+   CAUGHT  empty-slug error on stdout
+   CAUGHT  error wording
+   CAUGHT  no newline after slug
+   CAUGHT  keep non-ASCII letters
+   CAUGHT  first long word not cut
+   CAUGHT  underscore kept
+   CAUGHT  uppercase kept
+seeded bugs caught: 17 of 17

@@ -1,0 +1,31 @@
+31,496
+**Files changed:** [tests/unit/test_slug.py](tests/unit/test_slug.py) and [tests/e2e/test_cli.py](tests/e2e/test_cli.py).
+
+**Tests added or updated:** 17 new test functions. The coverage check found tests for all 7 M1 requirements and all 10 acceptance examples in `docs/spec.md`.
+
+| Test | Requirement | Example | Observed result |
+|---|---|---|---|
+| `test_slug_001_slug_holds_only_safe_characters` | SLUG-001 | — | Missing `src.slug` at collection |
+| `test_slug_001_ex_001_hello_world` | SLUG-001, SLUG-003 | EX-001 | Missing `src.slug` at collection |
+| `test_slug_002_ex_002_accents_become_plain_letters` | SLUG-002 | EX-002 | Missing `src.slug` at collection |
+| `test_slug_002_ex_009_kelvin_sign_becomes_k` | SLUG-002 | EX-009 | Missing `src.slug` at collection |
+| `test_slug_002_ex_010_letters_without_ascii_form_are_dropped` | SLUG-002 | EX-010 | Missing `src.slug` at collection |
+| `test_slug_002_drops_letters_without_ascii_form_inside_a_word` | SLUG-002 | — | Missing `src.slug` at collection |
+| `test_slug_002_expands_compatibility_ligature` | SLUG-002 | — | Missing `src.slug` at collection |
+| `test_slug_003_ex_003_runs_of_symbols_become_one_hyphen` | SLUG-003 | EX-003 | Missing `src.slug` at collection |
+| `test_slug_004_ex_004_cut_keeps_whole_words` | SLUG-004 | EX-004 | Missing `src.slug` at collection |
+| `test_slug_004_stops_at_last_complete_word` | SLUG-004 | — | Missing `src.slug` at collection |
+| `test_slug_004_ex_005_long_first_word_is_cut` | SLUG-004 | EX-005 | Missing `src.slug` at collection |
+| `test_slug_006_empty_slug_raises_value_error` | SLUG-006 | — | Missing `src.slug` at collection |
+| `test_slug_005_ex_006_prints_slug_and_exits_0` | SLUG-005 | EX-006 | Python could not open `main.py` |
+| `test_slug_005_default_maximum_length` | SLUG-005 | — | Python could not open `main.py` |
+| `test_slug_005_honors_valid_maximum_length` | SLUG-005 | — | Python could not open `main.py` |
+| `test_slug_006_ex_007_title_without_letters_exits_2` | SLUG-006 | EX-007 | Missing-file diagnostic on stderr |
+| `test_slug_007_ex_008_max_out_of_range_exits_2` | SLUG-007 | EX-008 | Missing-file diagnostic on stderr |
+
+**Tests run:** 0 passed out of 13 executed CLI cases. Unit collection stopped with `ModuleNotFoundError: No module named 'src'`. Ruff lint and formatting passed. Mypy reported only the missing `src.slug` import.
+
+**Assumptions and open questions:** None. No design decisions were needed. A temporary mypy cache directory outside the workspace could not be cleaned up.
+
+**TLDR: M1 is ready for the build session. All seven requirements and ten examples have tests, and the observed failures match the intentionally absent implementation.**
+The tests of milestone M1 in docs/plan.md are written and pass the checks.

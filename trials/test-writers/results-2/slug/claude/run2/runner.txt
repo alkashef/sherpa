@@ -1,0 +1,31 @@
+| Test | Checks |
+| --- | --- |
+| `test_slug_005_ex_006_prints_slug_and_exits_0` | SLUG-005, EX-006 |
+| `test_slug_005_max_option_cuts_slug` | SLUG-005 |
+| `test_slug_005_default_maximum_length_is_60` | SLUG-005 |
+| `test_slug_005_second_run_gives_same_result` | SLUG-005 |
+| `test_slug_006_ex_007_title_without_letters_exits_2` | SLUG-006, EX-007 |
+| `test_slug_007_ex_008_max_out_of_range_exits_2` | SLUG-007, EX-008 |
+| `test_slug_007_invalid_max_exits_2` (`201`, `-1`, `abc`, `1.5`, empty) | SLUG-007 |
+| `test_slug_007_max_at_limits_is_accepted` (`1`, `200`) | SLUG-007 |
+
+- **Requirements left to manual testing:** none. `scripts/spec_coverage.py M1` shows all 7 requirements and 10 examples as tested.
+- **Live tests:** none.
+
+`★ Insight ─────────────────────────────────────`
+- The formatter changed the `"\u212a"` escape into the real Kelvin character, and ruff then rejected it as an ambiguous character. Building it with `chr(0x212A)` keeps EX-009 testing the real code point, without a `noqa`.
+- The success tests do not check that standard error is empty, because SLUG-005 does not require it. The error tests do check standard error exactly, because SLUG-006 and SLUG-007 give the exact text.
+`─────────────────────────────────────────────────`
+
+- **Files changed:** `tests/unit/test_slug.py`, `tests/e2e/test_main.py` (both new).
+- **Tests added or updated:** the two files above: 18 unit test functions (21 cases) and 8 e2e test functions (13 cases).
+- **Tests run:** 0 passed out of 34. The 21 unit cases fail at collection (missing `src`) and the 13 e2e cases fail (missing `main.py`). No older tests exist. `ruff check` and `ruff format --check` pass on `tests/`. mypy reports only the missing module `src.slug`.
+- **Assumptions and open questions:**
+  - On success, the e2e tests check standard output and the exit code only.
+  - A `--max` with no value after it, and a missing title, are not covered: the spec does not say what the tool does then.
+  - pytest warns "Unknown config option: asyncio_mode", because pytest-asyncio is not installed. It is harmless.
+- DECISION: `--max` values `-1` and empty (`""`) count as invalid under SLUG-007 | the spec allows only an integer from 1 to 200 | none
+- DECISION: Kelvin sign built with `chr(0x212A)` in the EX-009 test | ruff RUF001 rejects the literal character and `noqa` is not allowed | none
+
+**TLDR: The M1 tests are written and cover every requirement and example. All 34 cases fail only because `src/slug.py` and `main.py` do not exist yet. The design did not change and nothing is blocked.**
+The tests of milestone M1 in docs/plan.md are written and pass the checks.

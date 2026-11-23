@@ -1,0 +1,31 @@
+- `tests/unit/test_store.py::test_ledg_007_invalid_file_raises_value_error` — requirement LEDG-007 in `docs/spec.md` — fails at collection with `ModuleNotFoundError: No module named 'src'`
+- `tests/unit/test_store.py::test_ledg_007_invalid_ledger_structures_raise_value_error` — LEDG-007 — fails at collection with `ModuleNotFoundError: No module named 'src'`
+- `tests/e2e/test_ledger.py::test_ledg_001_ex_001_add_prints_the_id_and_stores_the_entry` — requirement LEDG-001, acceptance example EX-001 in `docs/spec.md` — fails with `AssertionError` (`main.py` missing, exit code 2 vs 0)
+- `tests/e2e/test_ledger.py::test_ledg_001_add_without_note_defaults_to_empty` — LEDG-001 — fails with `AssertionError` (`main.py` missing, exit code 2 vs 0)
+- `tests/e2e/test_ledger.py::test_ledg_001_ex_004_largest_amount_is_stored` — LEDG-001, LEDG-002, EX-004 — fails with `AssertionError` (`main.py` missing, exit code 2 vs 0)
+- `tests/e2e/test_ledger.py::test_ledg_002_ex_002_cli_refuses_three_decimals` — LEDG-002, EX-002 — fails with `AssertionError` (`main.py` missing, exit code 2 vs 0)
+- `tests/e2e/test_ledger.py::test_ledg_002_ex_003_cli_refuses_zero` — LEDG-002, EX-003 — fails with `AssertionError` (stderr mismatch because `main.py` is missing)
+- `tests/e2e/test_ledger.py::test_ledg_003_ex_005_uppercase_category_is_refused` — requirement LEDG-003, acceptance example EX-005 in `docs/spec.md` — fails with `AssertionError` (stderr mismatch because `main.py` is missing)
+- `tests/e2e/test_ledger.py::test_ledg_003_valid_category_lengths_are_accepted` — LEDG-003 — fails with `AssertionError` (`main.py` missing, exit code 2 vs 0)
+- `tests/e2e/test_ledger.py::test_ledg_003_invalid_categories_are_refused` — LEDG-003 — fails with `AssertionError` (stderr mismatch because `main.py` is missing)
+- `tests/e2e/test_ledger.py::test_ledg_004_ex_006_total_and_total_of_a_category` — LEDG-004, acceptance example EX-006 in `docs/spec.md` — fails with `AssertionError` (`main.py` missing, exit code 2 vs 0)
+- `tests/e2e/test_ledger.py::test_ledg_004_ex_007_empty_total` — LEDG-004, acceptance example EX-007 in `docs/spec.md` — fails with `AssertionError` (`main.py` missing, exit code 2 vs 0)
+- `tests/e2e/test_ledger.py::test_ledg_004_exact_cents_and_unknown_category_total` — LEDG-004 — fails with `AssertionError` (`main.py` missing, exit code 2 vs 0)
+- `tests/e2e/test_ledger.py::test_ledg_005_ex_008_list_in_order_of_entry` — requirement LEDG-005, acceptance example EX-008 in `docs/spec.md` — fails with `AssertionError` (`main.py` missing, exit code 2 vs 0)
+- `tests/e2e/test_ledger.py::test_ledg_005_list_empty_ledger_prints_nothing` — LEDG-005 — fails with `AssertionError` (`main.py` missing, exit code 2 vs 0)
+- `tests/e2e/test_ledger.py::test_ledg_006_ex_009_add_makes_the_folder` — LEDG-006, acceptance example EX-009 in `docs/spec.md` — fails with `AssertionError` (`main.py` missing, exit code 2 vs 0)
+- `tests/e2e/test_ledger.py::test_ledg_006_default_data_file_path_when_env_unset` — LEDG-006 — fails with `AssertionError` (`main.py` missing, exit code 2 vs 0)
+- `tests/e2e/test_ledger.py::test_ledg_007_ex_010_invalid_data_file_exits_3` — LEDG-007, acceptance example EX-010 in `docs/spec.md` — fails with `AssertionError` (`main.py` missing, exit code 2 vs 3)
+- `tests/e2e/test_ledger.py::test_ledg_007_add_and_list_on_invalid_data_file_exit_3` — LEDG-007 — fails with `AssertionError` (`main.py` missing, exit code 2 vs 3)
+
+Requirements in Refs without a test: none.
+`live:` tests written and not run: none.
+
+### Report
+
+- **Files changed:** [tests/unit/test_store.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-5c5d38e32798/tests/unit/test_store.py), [tests/unit/test_money.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-5c5d38e32798/tests/unit/test_money.py), [tests/e2e/test_ledger.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-5c5d38e32798/tests/e2e/test_ledger.py).
+- **Tests added or updated:** updated type annotations on all test functions in `test_store.py`, `test_money.py`, and `test_ledger.py` (and `setattr` for the frozen check in `test_ledg_006_save_and_load_round_trip_and_stored_format`).
+- **Tests run:** 0 passed out of 25 e2e cases (all 25 fail on missing `main.py`), plus 2 unit test files failing collection on missing `src`; `mypy --ignore-missing-imports tests`, `ruff check tests`, and `ruff format --check tests` all passed with 0 errors.
+- **Assumptions and open questions:** none.
+- **TLDR: Fixed all 31 mypy annotation errors across the three M1 test files; mypy, ruff check, and ruff format now pass cleanly and all tests fail only on missing M1 implementation files.**
+The tests of milestone M1 in docs/plan.md are written and pass the checks.

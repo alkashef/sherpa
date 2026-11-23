@@ -1,0 +1,54 @@
+Ignoring 30 permissions.allow entries from .claude/settings.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-79c7c43a8b93"].hasTrustDialogAccepted: true in C:\Users\aa186095\.claude.json.
+I wrote the M1 tests: 9 unit tests for `make_slug`, 4 unit tests for `cli.main` and 8 end-to-end tests (34 cases with the parameter sets). All of them fail now, for the reasons the milestone expects: `src/slug.py`, `src/cli.py` and `main.py` do not exist yet. No older tests exist, so nothing else had to keep passing.
+
+Ruff and the format check pass. mypy gives exactly two errors, the two `src` modules it cannot find. `spec_coverage.py M1` shows all 7 requirements and all 10 examples as tested.
+
+**Unit tests, `tests/unit/test_slug.py`.** Each fails at import with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_001_slug_holds_only_safe_characters`: requirement SLUG-001 in `docs/spec.md`, a property test with Hypothesis (50 examples)
+- `test_slug_001_ex_001_hello_world`: SLUG-001, example EX-001 in `docs/spec.md`
+- `test_slug_001_uppercase_letters_become_lowercase`: SLUG-001
+- `test_slug_002_ex_002_accents_become_plain_letters`: SLUG-002, EX-002
+- `test_slug_002_ex_009_kelvin_sign_becomes_k`: SLUG-002, EX-009
+- `test_slug_002_ex_010_letters_without_ascii_form_are_dropped`: SLUG-002, EX-010
+- `test_slug_003_ex_003_runs_of_symbols_become_one_hyphen`: SLUG-003, EX-003
+- `test_slug_003_slug_has_no_edge_or_double_hyphens`: SLUG-003, a property test
+- `test_slug_004_ex_004_cut_keeps_whole_words`: SLUG-004, EX-004
+- `test_slug_004_ex_005_long_first_word_is_cut`: SLUG-004, EX-005
+- Limit tests for SLUG-004:
+  - maximum length 10, 11 and 12 on an 11-character slug
+  - no hyphen left at the end after a cut
+  - maximum length 1, maximum length 200
+  - default of 60 (61 characters are cut, 60 are kept)
+  - `test_slug_004_slug_fits_maximum_length`, a property test
+- `test_slug_006_empty_slug_raises_value_error`: SLUG-006, with `!!!`, an empty title, spaces only, and `日本`
+
+**Unit tests, `tests/unit/test_cli.py`.** `src.cli.main` is called in the process, through the interface that `docs/design.md` names. Each fails at import with `ModuleNotFoundError`.
+- `test_slug_005_main_prints_slug_and_returns_0`, `test_slug_005_main_uses_max_option`: SLUG-005
+- `test_slug_006_main_returns_2_for_title_without_letters`: SLUG-006
+- `test_slug_007_main_returns_2_for_max_out_of_range`: SLUG-007
+
+**End-to-end tests, `tests/e2e/test_main_cli.py`.** These run `python main.py` as a process. Each fails now with exit code 2 and Python's "can't open file `main.py`" error, not the expected output.
+- `test_slug_005_ex_006_prints_slug_and_exits_0`: SLUG-005, EX-006
+- `test_slug_005_max_option_cuts_slug`, `test_slug_005_default_maximum_length_is_60`: SLUG-005
+- `test_slug_005_max_at_limits_is_accepted`: SLUG-005, with `--max 1` and `--max 200`
+- `test_slug_005_second_run_gives_same_result`: SLUG-005
+- `test_slug_006_ex_007_title_without_letters_exits_2`: SLUG-006, EX-007
+- `test_slug_007_ex_008_max_out_of_range_exits_2`: SLUG-007, EX-008
+- `test_slug_007_invalid_max_exits_2`: SLUG-007, with `201`, `-1`, `abc`, `1.5` and an empty value
+
+**Requirements without a test:** none, so the block needs no `Manual:` entry.
+
+**Live tests written and not run:** none.
+
+At first, `test_slug_005_second_run_gives_same_result` passed without any code, because two failed runs gave the same output. It now also checks the expected slug `creme-brulee`, so it fails for the right reason.
+
+---
+
+- **Files changed:** `tests/unit/test_slug.py`, `tests/unit/test_cli.py`, `tests/e2e/test_main_cli.py` (all new).
+- **Tests added or updated:** the 21 tests above (34 cases). No existing test was changed.
+- **Tests run:** 0 passed out of 34. The 2 unit files stop at import (20 cases not collected), and all 14 end-to-end cases fail. These failures are expected before the build session.
+- **Assumptions and open questions:** mypy on `tests/` reports `import-not-found` for `src.slug` and `src.cli` until the build session creates them. pytest shows an "Unknown config option: asyncio_mode" warning, because `pytest-asyncio` is not installed. The warning does not affect these tests.
+- DECISION: Named the end-to-end file `tests/e2e/test_main_cli.py`, not `test_cli.py` | Two test files with the same name in folders without `__init__.py` clash under pytest's default import mode | none
+- DECISION: Added in-process unit tests of `src.cli.main` in addition to the plan's end-to-end tests | They use the `main(argv)` interface that the design names, and they count toward the 80% coverage floor even if coverage of child processes fails | none
+- DECISION: The tests treat an empty `--max` value and `-1` as invalid values that exit with 2 | Requirement SLUG-007 says any value that is not an integer from 1 to 200 is invalid | none
+- **TLDR: The M1 tests are ready: 21 tests (34 cases) that fail only because `src/slug.py`, `src/cli.py` and `main.py` do not exist, and every requirement and example of M1 has a test.**

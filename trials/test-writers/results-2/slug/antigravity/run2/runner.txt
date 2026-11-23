@@ -1,0 +1,31 @@
+- `test_slug_006_non_ascii_only_title_raises_value_error` — SLUG-006 — fails with `ModuleNotFoundError: No module named 'src'`.
+
+End-to-end tests in [test_cli.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/tests/e2e/test_cli.py) (all fail with `AssertionError` because `main.py` does not exist yet):
+
+- `test_slug_005_ex_006_prints_slug_and_exits_0` — requirement SLUG-005 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md), acceptance example EX-006 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md) — fails with `AssertionError: assert 2 == 0` (missing `main.py`).
+- `test_slug_005_default_max_length_is_60` — SLUG-005 — fails with `AssertionError: assert 2 == 0` (missing `main.py`).
+- `test_slug_005_max_option_cuts_slug` — SLUG-005 — fails with `AssertionError: assert 2 == 0` (missing `main.py`).
+- `test_slug_005_max_lower_bound_1_exits_0` — SLUG-005 — fails with `AssertionError: assert 2 == 0` (missing `main.py`).
+- `test_slug_005_max_upper_bound_200_exits_0` — SLUG-005 — fails with `AssertionError: assert 2 == 0` (missing `main.py`).
+- `test_slug_005_second_run_gives_same_result` — SLUG-005 — fails with `AssertionError: assert 2 == 0` (missing `main.py`).
+- `test_slug_006_ex_007_title_without_letters_exits_2` — SLUG-006, acceptance example EX-007 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md) — fails with `AssertionError` on `stderr` (missing `main.py` message instead of spec error).
+- `test_slug_006_empty_title_exits_2` — SLUG-006 — fails with `AssertionError` on `stderr` (missing `main.py`).
+- `test_slug_006_non_ascii_only_title_exits_2` — SLUG-006 — fails with `AssertionError` on `stderr` (missing `main.py`).
+- `test_slug_007_ex_008_max_out_of_range_exits_2` — requirement SLUG-007 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md), acceptance example EX-008 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md) — fails with `AssertionError` on `stderr` (missing `main.py`).
+- `test_slug_007_max_negative_exits_2` — SLUG-007 — fails with `AssertionError` on `stderr` (missing `main.py`).
+- `test_slug_007_max_above_200_exits_2` — SLUG-007 — fails with `AssertionError` on `stderr` (missing `main.py`).
+- `test_slug_007_max_non_integer_exits_2` — SLUG-007 — fails with `AssertionError` on `stderr` (missing `main.py`).
+- `test_slug_007_max_float_exits_2` — SLUG-007 — fails with `AssertionError` on `stderr` (missing `main.py`).
+
+Untested Refs: none (`python scripts/spec_coverage.py M1` reports all 7 requirements and all 10 acceptance examples tested).
+Live tests written and not run: none.
+Decisions: none.
+
+---
+
+- **Files changed:** [test_slug.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/tests/unit/test_slug.py), [test_cli.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/tests/e2e/test_cli.py).
+- **Tests added or updated:** 24 unit tests in [test_slug.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/tests/unit/test_slug.py) and 14 end-to-end tests in [test_cli.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/tests/e2e/test_cli.py).
+- **Tests run:** 0 passed out of 14 executed e2e tests (14 failed on missing `main.py`); unit suite (24 tests) errored during collection with `ModuleNotFoundError: No module named 'src'`. `ruff check`, `ruff format --check`, `mypy tests/e2e/test_cli.py`, `spec_coverage.py M1`, and `spec_coverage.py --consistency` all passed.
+- **Assumptions and open questions:** None; all interfaces and behaviors are fully specified in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md) and [design.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/design.md).
+- **TLDR: Added 38 failing unit and end-to-end tests covering all 7 requirements and 10 acceptance examples of M1, passing ruff, mypy, and spec coverage checks.**
+The tests of milestone M1 in docs/plan.md are written and pass the checks.

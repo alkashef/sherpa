@@ -1,0 +1,57 @@
+### Failing tests for M1 (Slug tool)
+
+Unit tests in [test_slug.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/tests/unit/test_slug.py) (all fail at collection with `ModuleNotFoundError: No module named 'src'` on `from src.slug import make_slug`):
+
+- `test_slug_001_slug_holds_only_safe_characters` — requirement SLUG-001 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md) (Hypothesis property test) — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_001_ex_001_hello_world` — SLUG-001, requirement SLUG-003 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md), acceptance example EX-001 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md) — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_001_keeps_digits_and_lowercases_letters` — SLUG-001 — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_002_ex_002_accents_become_plain_letters` — requirement SLUG-002 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md), acceptance example EX-002 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md) — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_002_ex_009_kelvin_sign_becomes_k` — SLUG-002, acceptance example EX-009 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md) — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_002_ex_010_letters_without_ascii_form_are_dropped` — SLUG-002, acceptance example EX-010 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md) — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_002_compatibility_ligature_and_umlaut_become_ascii` — SLUG-002 — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_003_ex_003_runs_of_symbols_become_one_hyphen` — SLUG-003, acceptance example EX-003 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md) — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_003_underscores_and_punctuation_become_one_hyphen` — SLUG-003 — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_003_slug_has_no_edge_or_repeated_hyphens` — SLUG-003 (Hypothesis property test) — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_004_ex_004_cut_keeps_whole_words` — requirement SLUG-004 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md), acceptance example EX-004 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md) — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_004_ex_005_long_first_word_is_cut` — SLUG-004, acceptance example EX-005 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md) — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_004_default_max_length_keeps_60_chars` — SLUG-004 — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_004_default_max_length_cuts_over_60_chars` — SLUG-004 — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_004_cut_one_below_word_boundary_drops_word` — SLUG-004 — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_004_cut_on_hyphen_boundary_keeps_preceding_words` — SLUG-004 — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_004_cut_mid_word_keeps_preceding_words` — SLUG-004 — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_004_long_first_word_with_following_words_is_cut` — SLUG-004 — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_004_min_max_length_of_one` — SLUG-004 — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_004_max_length_of_200` — SLUG-004 — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_004_slug_never_exceeds_max_length` — SLUG-004 (Hypothesis property test) — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_006_empty_slug_raises_value_error` — requirement SLUG-006 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md) — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_006_empty_title_raises_value_error` — SLUG-006 — fails with `ModuleNotFoundError: No module named 'src'`.
+- `test_slug_006_non_ascii_only_title_raises_value_error` — SLUG-006 — fails with `ModuleNotFoundError: No module named 'src'`.
+
+End-to-end tests in [test_cli.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/tests/e2e/test_cli.py) (all fail with `AssertionError` because `main.py` does not exist yet):
+
+- `test_slug_005_ex_006_prints_slug_and_exits_0` — requirement SLUG-005 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md), acceptance example EX-006 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md) — fails with `AssertionError: assert 2 == 0` (missing `main.py`).
+- `test_slug_005_default_max_length_is_60` — SLUG-005 — fails with `AssertionError: assert 2 == 0` (missing `main.py`).
+- `test_slug_005_max_option_cuts_slug` — SLUG-005 — fails with `AssertionError: assert 2 == 0` (missing `main.py`).
+- `test_slug_005_max_lower_bound_1_exits_0` — SLUG-005 — fails with `AssertionError: assert 2 == 0` (missing `main.py`).
+- `test_slug_005_max_upper_bound_200_exits_0` — SLUG-005 — fails with `AssertionError: assert 2 == 0` (missing `main.py`).
+- `test_slug_005_second_run_gives_same_result` — SLUG-005 — fails with `AssertionError: assert 2 == 0` (missing `main.py`).
+- `test_slug_006_ex_007_title_without_letters_exits_2` — SLUG-006, acceptance example EX-007 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md) — fails with `AssertionError` on `stderr` (missing `main.py` message instead of spec error).
+- `test_slug_006_empty_title_exits_2` — SLUG-006 — fails with `AssertionError` on `stderr` (missing `main.py`).
+- `test_slug_006_non_ascii_only_title_exits_2` — SLUG-006 — fails with `AssertionError` on `stderr` (missing `main.py`).
+- `test_slug_007_ex_008_max_out_of_range_exits_2` — requirement SLUG-007 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md), acceptance example EX-008 in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md) — fails with `AssertionError` on `stderr` (missing `main.py`).
+- `test_slug_007_max_negative_exits_2` — SLUG-007 — fails with `AssertionError` on `stderr` (missing `main.py`).
+- `test_slug_007_max_above_200_exits_2` — SLUG-007 — fails with `AssertionError` on `stderr` (missing `main.py`).
+- `test_slug_007_max_non_integer_exits_2` — SLUG-007 — fails with `AssertionError` on `stderr` (missing `main.py`).
+- `test_slug_007_max_float_exits_2` — SLUG-007 — fails with `AssertionError` on `stderr` (missing `main.py`).
+
+Untested Refs: none (`python scripts/spec_coverage.py M1` reports all 7 requirements and all 10 acceptance examples tested).
+Live tests written and not run: none.
+Decisions: none.
+
+---
+
+- **Files changed:** [test_slug.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/tests/unit/test_slug.py), [test_cli.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/tests/e2e/test_cli.py).
+- **Tests added or updated:** 24 unit tests in [test_slug.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/tests/unit/test_slug.py) and 14 end-to-end tests in [test_cli.py](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/tests/e2e/test_cli.py).
+- **Tests run:** 0 passed out of 14 executed e2e tests (14 failed on missing `main.py`); unit suite (24 tests) errored during collection with `ModuleNotFoundError: No module named 'src'`. `ruff check`, `ruff format --check`, `mypy tests/e2e/test_cli.py`, `spec_coverage.py M1`, and `spec_coverage.py --consistency` all passed.
+- **Assumptions and open questions:** None; all interfaces and behaviors are fully specified in [spec.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/spec.md) and [design.md](file:///C:/Users/aa186095/AppData/Local/Temp/sherpa-tests-83d6613724b6/docs/design.md).
+- **TLDR: Added 38 failing unit and end-to-end tests covering all 7 requirements and 10 acceptance examples of M1, passing ruff, mypy, and spec coverage checks.**

@@ -67,6 +67,7 @@ The approved changes are built. Their first text is in the git history of this f
 | 35 | Fixes that the second trial and the third real run found on November 23, 2026: a list item is its own paragraph in `ste_lint.py`, and the plan template drops a semicolon; the runner makes its folders with the usual permissions (`tempfile.mkdtemp` shut out the Codex sandbox); the build prompt asks for one commit; the check and test tools of a project are approved dependencies; a repair or rebuild session that finds a test wrong reports a `BLOCKED:` line, the runner keeps its work and blocks, and after the approval a test session gets the decision | Found while running the second trial and the third real run (open work) |
 | 36 | The third real run, November 23, 2026 (README, "Checked in real Claude Code sessions"): three milestones with real sessions, the test folder, findings about tests sent to test sessions, a block by the last review in each milestone, the approvals and the merges, `/sherpa` and the dashboard. No build session blocked, so that path is still checked by the suite only | Item of the open work, approved on November 22, 2026 |
 | 37 | `docs/v4/`: the report, the presentation and the demo of version 4. `docs/v3/` stays as the record of version 3, and sherpa's `CLAUDE.md` names `v4/` as current | Approved by the user on November 22, 2026 |
+| 38 | The second trial of the test writers (`trials/test-writers/`, results in `results-2/`): Claude, Codex and Antigravity, 3 runs on each of 2 kits through the runner. All three qualify, the medians of seeded bugs caught tie at 17.5, and Claude is the fastest (217 s), so by the rule Claude stays the default writer | USER-17, rule of the second trial approved on November 22, 2026 |
 
 One real run followed on November 21, 2026 (README, "Checked in real Claude Code sessions"). It
 proved the condition of the user's decision on rank 3: a `claude -p` session runs the built-in
@@ -93,14 +94,6 @@ the diagram one time.
    - **State on November 23, 2026:** the table is ready in `docs/audit-claude-golden.md` (180
      rows: 117 keep, 28 tool, 20 move, 15 delete). It waits for the user's approval; no rule
      changed.
-2. **The second trial of the test writers (USER-17, approved on November 21 and 22, 2026):** the
-    build of USER-17 is done (Built, stage 15). Run the trial of the three writers again, with
-    RUN-06 and RUN-07 in place, by the rule of the second trial: each writer runs 3 times on each
-    of 2 projects (the slug tool, and a new project that stores data), scored by
-    `trials/test-writers/evaluate.py`. A writer qualifies only if all gates pass in all 6 runs.
-    Of the qualified writers, the highest median of seeded bugs caught wins, and on a tie the
-    faster one. If no writer qualifies, Claude stays the default, and each failed gate becomes a
-    new idea. Then the user decides the default writer.
 
 ### Decided with no work
 

@@ -1,0 +1,31 @@
+
+**Tests added:** 17 test functions covering all 7 requirements and all 10 acceptance examples in `docs/spec.md`.
+
+| Test | Requirement | Example | Observed result |
+| --- | --- | --- | --- |
+| `test_slug_001_slug_holds_only_safe_characters` | SLUG-001 | — | Missing `src.slug` at collection |
+| `test_slug_001_ex_001_hello_world` | SLUG-001, SLUG-003 | EX-001 | Missing `src.slug` at collection |
+| `test_slug_002_ex_002_accents_become_plain_letters` | SLUG-002 | EX-002 | Missing `src.slug` at collection |
+| `test_slug_002_ex_009_kelvin_sign_becomes_k` | SLUG-002 | EX-009 | Missing `src.slug` at collection |
+| `test_slug_002_ex_010_letters_without_ascii_form_are_dropped` | SLUG-002 | EX-010 | Missing `src.slug` at collection |
+| `test_slug_002_drops_non_ascii_inside_a_word` | SLUG-002 | — | Missing `src.slug` at collection |
+| `test_slug_002_expands_compatibility_ligature` | SLUG-002 | — | Missing `src.slug` at collection |
+| `test_slug_003_ex_003_runs_of_symbols_become_one_hyphen` | SLUG-003 | EX-003 | Missing `src.slug` at collection |
+| `test_slug_004_ex_004_cut_keeps_whole_words` | SLUG-004 | EX-004 | Missing `src.slug` at collection |
+| `test_slug_004_ex_005_long_first_word_is_cut` | SLUG-004 | EX-005 | Missing `src.slug` at collection |
+| `test_slug_004_whole_word_boundary` | SLUG-004 | — | Missing `src.slug` at collection |
+| `test_slug_006_empty_slug_raises_value_error` | SLUG-006 | — | Missing `src.slug` at collection |
+| `test_slug_005_ex_006_prints_slug_and_exits_0` | SLUG-005 | EX-006 | Missing `main.py` |
+| `test_slug_005_default_maximum_length` | SLUG-005 | — | Missing `main.py` |
+| `test_slug_006_ex_007_title_without_letters_exits_2` | SLUG-006 | EX-007 | Missing `main.py` |
+| `test_slug_007_ex_008_max_out_of_range_exits_2` | SLUG-007 | EX-008 | Missing `main.py` |
+| `test_slug_007_accepts_valid_maximum_length` | SLUG-007 | — | Missing `main.py` |
+
+**Tests run:** 0 passed out of 13 executed CLI cases. The unit file stopped at collection with `ModuleNotFoundError: No module named 'src'`. There were no older tests.
+
+**Checks:** Ruff lint and formatting passed. Spec coverage confirmed every M1 requirement and example. Mypy reported only the missing `src.slug` import.
+
+**Assumptions and open questions:** None. No auto-decisions, manual checks, or live tests.
+
+**TLDR: M1’s tests are ready for the build session. Every observed failure traces to the intentionally absent implementation.**
+The tests of milestone M1 in docs/plan.md are written and pass the checks.

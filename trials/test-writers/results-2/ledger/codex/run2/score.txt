@@ -1,0 +1,28 @@
+test files: tests/e2e/test_cli.py, tests/unit/test_money.py, tests/unit/test_store.py
+passed  ruff check: All checks passed!
+passed  ruff format: 3 files already formatted
+passed  spec_coverage M1: M1: 10 acceptance example(s) cite them, all tested or manual.
+passed  pass on correct code: 71 passed, 1 warning in 16.01s
+passed  mypy with the code: Success: no issues found in 3 source files
+passed  coverage 80%: 71 passed, 1 warning in 40.70s
+passed  fail before the code
+passed  spec and plan unchanged
+   CAUGHT  three decimals accepted
+   CAUGHT  zero accepted
+   CAUGHT  upper limit one cent too high
+   CAUGHT  one decimal read as cents
+   CAUGHT  total without the leading zero of cents
+   CAUGHT  uppercase category accepted
+   CAUGHT  category of 21 letters accepted
+   CAUGHT  category error on stdout
+   CAUGHT  amount error exits 1
+   CAUGHT  invalid data file exits 2
+   CAUGHT  total ignores the category
+   CAUGHT  list newest first
+   CAUGHT  list without the note
+   CAUGHT  note dropped
+   CAUGHT  add keeps only the new entry
+   CAUGHT  default data file in the current folder
+   CAUGHT  missing data file raises
+   CAUGHT  folder of the data file not made
+seeded bugs caught: 18 of 18

@@ -1,0 +1,1612 @@
+OpenAI Codex v0.171.0-alpha.13
+--------
+workdir: C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+model: gpt-6.2-astra
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: high
+reasoning summaries: none
+session id: 01a20575-93be-7620-909a-8819686eaaee
+--------
+user
+Write the failing tests of milestone M1 (Slug tool) of docs/plan.md, as AGENTS.md says. This is the test session (docs/workflow.md, Execute); a build session writes the code afterwards and may not change your tests. This folder holds no src/ and no .git, on purpose: the tests come from the spec and the design. The runner copies tests/ back to the project and checks them. This is an unattended run: nobody can answer questions. Rules: (a) commit nothing, also not to block the milestone (d); (b) change only files under tests/, docs/design.md for an auto-decision (c), and docs/plan.md only to block the milestone (d). Never edit docs/spec.md, and never read the code in src/, also not through the shell; (c) for anything else that is open, such as a gap in docs/design.md, a Decided decision that the tests cannot follow, or a detail of a library, decide the most conservative option and carry on. When the decision changes the design, add a DEC-NNN (the next free number) to docs/design.md with the Status Proposed, and write 'auto-decided in M1, review' in its Why. When it replaces a Decided decision, set that one to Superseded. Never renumber an ID; (d) stop the milestone only if its tests need a new or changed requirement in docs/spec.md, an action that CLAUDE.md 'Git and destructive actions' forbids, real user data, or a dependency that docs/design.md does not name in a Decided decision (the check and test tools of the project, such as pytest, pytest-cov, hypothesis and Playwright, are approved), and no Approval entry in the block permits it. To stop: set its Status in the table to `blocked`, add a Blocked entry with the reason and the exact question to its block (template in docs/workflow.md), change nothing else and commit nothing. Do not undo your work: the runner keeps it in the milestone branch; (e) a tool call that a settings rule denies is not allowed: do not retry it or work around it; (f) never call a live external service and do not start the app for a person. A test uses a real local part where one exists (a database file in a temporary folder, a server that it starts on 127.0.0.1) and a fake only for an external service. A test of the level `live` goes to tests/live/: write it, but do not run it; (g) write and change files with the file tools (Edit and Write), not through the shell; (h) end with the report of /write-tests. In it, write each decision of (c) as its own line: `DECISION: <what> | <why> | <DEC-NNN or none>`.
+codex
+I’ll use the write-tests skill to check M1 against the spec and design, then run the new tests and the existing suite.
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -Raw docs/workflow.md' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "rg --files --hidden -g '"'!src/**'"' -g '"'!.git/**'"'" in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -Raw docs/plan.md' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+ succeeded in 662ms:
+# Plan â€” slugger
+
+Only unfinished milestones. Delete a milestone's row and block in the commit that finishes it; git
+history is the record. Template: `docs/workflow.md`.
+
+**Next milestone number: M2**
+
+## Milestones at a glance
+
+| Milestone | Description | Model | Effort | Human test | Status |
+| --- | --- | --- | --- | --- | --- |
+| **M1** Slug tool | Turns a title into a slug from the command line | sonnet | medium | no | open |
+
+## Milestones
+
+### M1 â€” Slug tool
+
+- **Refs:** SLUG-001, SLUG-002, SLUG-003, SLUG-004, SLUG-005, SLUG-006, SLUG-007, DEC-001, DEC-002, DEC-003.
+- **Owner:** `src/slug.py`, `src/cli.py`, `main.py`.
+- **Tests first:**
+  - unit: `test_slug_001_slug_holds_only_safe_characters`, `test_slug_001_ex_001_hello_world`,
+    `test_slug_002_ex_002_accents_become_plain_letters`, `test_slug_002_ex_009_kelvin_sign_becomes_k`,
+    `test_slug_002_ex_010_letters_without_ascii_form_are_dropped`,
+    `test_slug_003_ex_003_runs_of_symbols_become_one_hyphen`,
+    `test_slug_004_ex_004_cut_keeps_whole_words`, `test_slug_004_ex_005_long_first_word_is_cut`,
+    `test_slug_006_empty_slug_raises_value_error`.
+  - e2e: `test_slug_005_ex_006_prints_slug_and_exits_0`, `test_slug_006_ex_007_title_without_letters_exits_2`,
+    `test_slug_007_ex_008_max_out_of_range_exits_2`.
+- **Build:** `src/slug.py` with `make_slug`, `src/cli.py` with `main`, and `main.py`.
+- **Gate:** `python scripts/check.py` passes, and `python scripts/spec_coverage.py M1` shows every
+  requirement and example of the Refs as tested.
+
+
+ succeeded in 811ms:
+# Workflow
+
+The same in every project. Project-specific rules are in `CLAUDE.md`.
+
+## The files
+
+| File | Role | Who edits |
+| --- | --- | --- |
+| `docs/spec.md` | What to build: requirements with IDs | The user owns it. The AI edits it with `/write-spec` and the user's approval |
+| `docs/design.md` | How to build it: architecture, data, interfaces, settings, test design, decisions | AI, with `/write-design` |
+| `docs/plan.md` | What is left: only unfinished milestones, with their questions and approvals | AI, with `/write-plan`. The user adds approvals |
+| `docs/unapproved-ideas.md` | What may come later: ideas that nobody approved | The user, and the AI when the user asks it to note an idea |
+| `docs/releases.md` | What was released: one row for each release | `scripts/release.py`, when the user starts it |
+
+Each fact lives in one file. Finished work is recorded by git history, not by the docs. `python scripts/dashboard.py` shows these facts on one page in the browser: what needs you, the plan and the releases, the trace of each requirement to its design, milestone, tests and code, and a map of the code. It reads the files and git, writes nothing, and reads them again on Refresh.
+
+A requirement has an ID (`AREA-NNN`, or `NFR-NNN` for a non-functional one), an acceptance example has an `EX-NNN`, and a design decision has a `DEC-NNN`. Never renumber or reuse an ID. `/write-spec` gives a requirement its ID when it adds it.
+
+## The loop
+
+`/sherpa` is the way in: it reads the state of these files and what the user asks, names the step below that comes next, and starts that step's skill. It runs one step, then stops.
+
+1. **Spec.** For a new project or a change, the user runs `/write-spec`. The AI interviews the user, one question at a time, and writes the requirements into `spec.md` as a draft (`Status: Draft`). For a spec that is already approved, it proposes each change first. The spec gives each domain term one row in its glossary (Term, Meaning, Avoid), and the design and the code use the Term. The user approves the spec. Then `Status` is `Approved`. Each requirement is one EARS statement that a test can check without the design. The acceptance examples (`EX-NNN`) list the cases of each user scenario: first the most likely cases, in full, then the edge cases. For each external system, the spec says what the program does when that system fails. The requirements and these examples are the tests designed from the spec.
+2. **Design.** Once the spec is approved, the user runs `/write-design`. The AI updates `design.md` and asks only what it cannot decide. If the design needs a different requirement, it proposes the spec change. The user approves it. The design shows the components and their interfaces in one diagram, draws the data model as one Mermaid `erDiagram`, lists the module boundaries (the checks enforce them), gives each requirement a test level (`unit`, `e2e`, `ui` or `live`) and names every interface a test needs. The user approves the design: then no decision is `Proposed` and no design question is open.
+3. **Plan.** Once the design is approved, the user runs `/write-plan`. The AI turns the spec and design into milestones in `plan.md`: for each, a row in the table "Milestones at a glance" (at the top, so the status of every milestone is visible at a glance) and a block under "Milestones" (templates below). A milestone gets a human test only when it completes a user scenario that no tool can prove. The plan keeps the human tests few, and the table shows them. It shows the table first. The user approves it. It numbers the milestones from the counter at the top of `plan.md`, then advances the counter.
+4. **Execute.** Work one milestone at a time, in order, in its own branch and in separate sessions. In chat, `python scripts/milestones-runner.py --tests-only M<n>` is the test session and `python scripts/milestones-runner.py --review-only M<n>` is the review session, with the same guards as in an unattended run.
+   1. Make the branch with `git switch -c milestone/M<n>` from the base branch (the branch where the work starts), and work there.
+   2. **Test session** (`/write-tests`): write the tests from the spec's requirements and examples and from the design. Name each after the requirement ID it verifies, and after the example ID when it comes from an example. The session runs in a temporary folder without the code: it holds the docs, the rules, the tool configs and `tests/`, but no `src/` and no `.git`. The AI that `config/test-writer.json` names writes the tests: Claude (the default), Antigravity, Codex or GitHub Copilot.
+   3. The runner copies `tests/` back and checks it: ruff and mypy pass on `tests/`, each new test fails for a valid reason (a wrong value, or a missing module that the Owner names), and each older test passes. The exit code of the writer does not count. A problem goes back to the writer, with its error type and message and no line of the code, for one round of repair. Do not commit.
+   4. **Build session:** read the design sections that the Refs name, then implement the smallest change that passes. Do not change a file in `tests/`. A test that looks wrong is a blocker (step 5).
+   5. Run the checks: `python scripts/check.py` (the tests, and the type check and lint named in `CLAUDE.md`) and `python scripts/spec_coverage.py M<n>` (each requirement ID in its Refs, and each acceptance example of those requirements, has a test or a `Manual:` entry). If any fail, go back to step 4.4.
+   6. Update docs the change made inaccurate (README, design).
+   7. Delete the milestone's row and block from `plan.md`.
+   8. Commit only the files this milestone changed, with the message `M<n>: <title>`. The pre-commit hook runs the checks again. Do not push.
+   9. **Review session** (`/code-review-sherpa`): a fresh session reviews the diff of the branch in a temporary git worktree, first with the built-in `/code-review` if Claude Code has it, and reports each finding as a `FINDING:` line. The worktree is deleted after the review, so a change that the review makes cannot reach the branch. A finding names the file where the fix goes. A finding about `tests/` goes to a test session in the folder of step 2. If it changes a test, a build session makes the tests pass and commits as `M<n>: test repairs`. Any other finding goes to a repair session (it changes no file in `tests/`, passes the checks again and commits as `M<n>: review repairs`). Then a last review runs. A finding of the last review blocks the milestone (step 5) when its severity is `high` or its rule is a requirement ID. The other findings stay in the report. A repair or build session after the review that finds a test wrong reports a `BLOCKED:` line: the runner keeps its work in the branch and blocks the milestone, and after the approval a test session gets the decision before the build goes on.
+   10. Merge: `git switch main` (the base branch), `git merge --ff-only milestone/M<n>`, `git push`, and `git branch -d milestone/M<n>`. Do not start the next milestone until the push succeeds.
+   11. **Human test:** if the block has a **Human test** entry, tell the user what to test and wait for the answer. A fault that the user finds is a fix milestone.
+5. **Blocked.** If a milestone needs something it may not do on its own, stop it. These are the only reasons: a new or changed requirement in `spec.md`, an action `CLAUDE.md` forbids, a new flow of user data to an external service, real user data, a secret in a committed file, a dependency that `design.md` does not name in a `Decided` decision (the check and test tools of the project are approved), a test that the build session finds wrong, or a finding of the last review that blocks the merge (step 4.9). In `plan.md`, set its Status to `blocked` and add a **Blocked** entry to its block (template below). Change nothing else and commit nothing: the other changes stay in the milestone branch. In an unattended run, the runner commits them there as `M<n>: partial work`, commits `plan.md` alone on the base branch with the message `M<n>: blocked`, and pushes the base branch. In chat, ask the user and wait.
+6. **Approval.** The user answers in the milestone's block: an **Approval** entry with the decision, and Status `approved`. Then the user commits `plan.md` and the milestone runs again, from the work that its branch kept. The approval permits exactly what it says, even an action the rules otherwise forbid, and nothing more. A settings rule denies editing `spec.md` in an unattended run, so for a change to the spec the user makes the edit and the Approval says so. To refuse, the user rewrites or deletes the milestone instead.
+
+## Rules
+
+- Never edit `spec.md` without the user's approval, given in chat or in an **Approval** entry. Running `/write-spec` allows draft requirements only. The spec is final when the user approves it.
+- If the spec and the design disagree, the spec wins. In a milestone, in chat or unattended, fix the design and record it as a decision (below). Outside a milestone, stop and ask.
+- Stay in scope. When in doubt about the spec, ask. Only the spec is locked: a milestone never changes it. Everything else that step 5 does not name as a blocker may change in a milestone, in chat or unattended, without a question: a design decision (also a `Decided` one), a module, an interface, a setting. Decide it, record it and report it.
+- A decision in a milestone: pick the most conservative option and carry on. When it changes the design, add a `DEC-NNN` (the next free number) to `design.md` with the Status `Proposed`, and write "auto-decided in M<n>, review" in its Why. When it replaces a `Decided` decision, set that one to `Superseded`. The final report has one line per decision: `DECISION: <what> | <why> | <DEC-NNN or none>`. The user reviews these lines after the run and reverts or approves each.
+- A finding of a review: `FINDING: <high, medium or low> | <file>:<line> | <rule or smell> | <remedy>`. The file is the file where the fix goes: a missing test names a test file. A fault against a requirement that no test catches is a missing test, with the requirement ID as its rule. A review reports only a finding that it is sure of. The user reads the findings that a milestone kept after the run.
+- An idea in `unapproved-ideas.md` is not a requirement and not a decision. Never design, plan, test or build from it. It becomes work only through step 1, 2 or 3, with the approval that step needs. The skill that takes an idea up deletes its entry. To note an idea, add one line. Do not act on it.
+- Never report tests as passed unless they ran. Show failing output.
+- A milestone run calls no live external service (an LLM, a paid API, a production database) and uses no real user data. It does not start the app for a person. A test uses a real local part where one exists (a database file in a temporary folder, a server that the test starts on 127.0.0.1) and a fake only for an external service. Its Gate is the checks of step 4.
+- A live check is a test in `tests/live/` that calls a live external service with a test account. No milestone runs it. `python scripts/live_checks.py` runs the live checks after the milestones, and only when `plan.md` holds the user's approval with a budget ceiling under "## Live checks" (template below). The tests stop before they pass the ceiling.
+- Every fix, however small, is a milestone. A fix that changes no requirement and no design decision goes straight to `/write-plan`: one milestone whose Tests first holds a test that fails while the fault is there.
+- At each push, the GitHub Actions workflow "Checks" installs the project on a clean machine from its dependency files and runs `python scripts/check.py`.
+- Before a release, the user can run `/find-bugs`. It changes no code: it compares the code changed since the last release with the spec and the design, with most attention on the lines that no test runs, and reads the dependency audit and the surviving mutants of the workflow "Mutation tests" of GitHub Actions. Each bug becomes a fix milestone that the user approves. A finding that no requirement covers is a question about the spec.
+- A test of a rule for all inputs is also a property test (Hypothesis, at most 50 examples). Mutation tests run only on demand, on Linux, in GitHub Actions.
+- A release is a cut point. The user runs `python scripts/release.py M<n>`: the release holds every milestone up to M<n>, its version is the date (`YYYY.MM.DD`), and the script builds it into `dist/` with the installed versions (`pip freeze`, `npm ls --all`), tags the commit and adds a row to `docs/releases.md`. A version belongs to a release, not to a milestone. After the first release, a change that breaks the data or an interface of a released version needs a decision in `design.md` that records the transition.
+
+## Running milestones unattended
+
+`python scripts/milestones-runner.py [--start N] [--end N] [--retries N] [--resume]
+[--timeout-minutes N]`, run by the user from a terminal with the project's conda environment
+active, works through the table in order. Each milestone runs in its branch `milestone/M<n>`, in
+`claude -p` sessions with the model and effort of its row, following steps 4 to 6: a test session
+(by the test writer, in a folder without the code), a build session, a review session in a
+worktree and, when the review has findings, the sessions that repair them and a last review. The
+runner, not a session, merges the branch into the base branch, pushes and deletes the branch. A
+build or repair session that changed a test file counts as not finished, and so does a milestone
+whose sessions changed `docs/spec.md`. Each session gets the folders of the project's conda
+environment first on its PATH, and writes files with the Edit and Write tools.
+
+The runner stops at a `blocked` row, at a milestone that becomes blocked (and prints its
+question), at a human test that the user does not confirm, or at a milestone that did not finish
+(its row is still in the table, git is not clean, or a check of the runner failed) after its
+retries. A session that did not finish is tried again in a new session (`--retries`, default 1)
+that continues from the changes the first one left and gets the reason for the failure. A session
+that runs over `--timeout-minutes` (default 90) counts as not finished. After the last try the
+runner stops. `--resume` starts the next run on that dirty tree and continues from it. After you
+approve and commit, run it again: it continues with the approved milestone, from the work that its
+branch kept.
+
+When the milestones of the run are done, the runner runs `python scripts/live_checks.py` and
+prints its result: passed, failed or not run. The runner shows a table of the run, redrawn each
+second: the finished milestones, the one that runs now, and the planned ones in dark grey. Its
+Decisions column counts the `DECISION:` lines of a milestone and its Findings column counts the
+`FINDING:` lines of its last review, and you read the lines themselves in its logs. A Total row
+gives the total time, and the last row a progress bar of the milestones done.
+Logs and timings go to `.claude/logs/`. It needs a clean git tree (except with `--resume`) and a
+branch that pushes to a remote.
+
+Each session starts with permission prompts off. Its guard rails are the rules in
+`.claude/settings.json`: a `deny` rule always refuses, and an `ask` rule refuses when nobody can
+answer. The runner does not start without that file, while the commit hook is off, when
+`python scripts/spec_coverage.py --consistency` finds an ID that the spec, the design and the plan
+do not agree on, when `python` on the PATH of a session is not the project's environment, or when
+a test writer other than Claude does not answer one short prompt.
+
+Before a run, so that it does not stop for something known in advance:
+
+1. Commit every doc change.
+2. Approve and install the dependencies the plan needs. An `ask` rule denies `pip install` and
+   `npm install` in an unattended run.
+3. After a fresh clone, turn the commit hook on: `git config core.hooksPath .githooks`.
+4. Make sure that `claude -p --permission-mode bypassPermissions "say ok"` works. An organisation
+   policy can disable it.
+5. Make sure that `git push` works without a prompt. A session cannot answer a sign-in window.
+6. For live checks, write your approval and the budget ceiling under "## Live checks" in
+   `plan.md`.
+7. For a test writer other than Claude, sign in to its command line once: `codex login`, one
+   interactive `agy` session, or `COPILOT_GITHUB_TOKEN`. `--test-writer` overrides
+   `config/test-writer.json` for one run.
+
+A milestone's Gate must be one that a session can meet alone: offline, with real local parts and
+with fakes for the external services, in temporary folders, with no user data and no human step.
+What only a person can judge is the **Human test** of its milestone: the runner prints it after
+the merge and waits for your answer. What needs a live service is a live check.
+
+## Milestone templates
+
+The table "Milestones at a glance" has the columns Milestone, Description, Model, Effort, Human
+test and Status. Model: `haiku`, `sonnet` or `opus` (the latest model of that family), or a full
+model ID such as `claude-sonnet-5-5` to stay on one version. Effort: `low`, `medium`, `high`,
+`xhigh` or `max`. Human test: `yes` or `no`. Status: `open`, then `blocked` and `approved` if it
+needs the user (steps 5 and 6).
+
+```markdown
+| **M<n>** <title> | <one line: what it delivers> | <model> | <effort> | <yes or no> | open |
+```
+
+A block under "Milestones":
+
+```markdown
+### M<n> â€” <title>
+
+- **Refs:** <requirement IDs (AREA-NNN, NFR-NNN)>, <design decisions (DEC-NNN)>.
+- **Owner:** <module or file that owns the change>.
+- **Tests first:** <test names, at least one per requirement ID and one per acceptance example, grouped as unit:, e2e:, ui:, live:>.
+- **Build:** <the smallest change that passes them>.
+- **Gate:** <what must be true before commit>.
+- **Human test:** <only when the row says yes: what the user tests, step by step, and the result to expect>.
+```
+
+The entries a blocked milestone adds to the end of its block: **Blocked** by the AI (step 5), then
+**Approval** by the user (step 6).
+
+```markdown
+- **Blocked:** <One sentence: what the milestone needs, and why it may not do it.>
+  - <Each fact behind the stop, with its source: a spec row, a plan block, a rule, file and line.>
+  - The other changes are kept in the milestone branch. To continue, approve one of these:
+    1. <The narrowest permission that lets the milestone go on.>
+    2. <Another way, if there is one.>
+- **Approval:** <The user's decision, in the user's words.>
+```
+
+The section for the live checks, after the last milestone block. The user writes the first two
+entries.
+
+```markdown
+## Live checks
+
+- **Approval:** <The user's decision, in the user's words.>
+- **Budget ceiling:** <The most that one run of the live checks may cost.>
+- <requirement ID>: <test name in tests/live/>
+```
+
+
+ succeeded in 773ms:
+tests\unit\.gitkeep
+tests\e2e\.gitkeep
+scripts\spec_coverage.py
+scripts\run-check.sh
+scripts\check.py
+ruff.toml
+requirements.txt
+pytest.ini
+mypy.ini
+docs\workflow.md
+docs\spec.md
+docs\plan.md
+docs\design.md
+AGENTS.md
+.coveragerc
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -Raw -Encoding UTF8 docs/design.md' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -Raw -Encoding UTF8 ruff.toml' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -Raw -Encoding UTF8 docs/spec.md' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -Raw -Encoding UTF8 mypy.ini' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -Raw -Encoding UTF8 pytest.ini' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -Raw -Encoding UTF8 requirements.txt' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+ succeeded in 757ms:
+# Design — slugger
+
+How to build what `spec.md` says. If this file and the spec disagree, the spec wins.
+
+## 1. Decisions
+
+One current decision per topic. Status: `Decided` means the user chose or confirmed it. `Proposed`
+means the AI derived it and the user has not confirmed it. `Superseded` means a newer decision
+replaced it: keep its row, and name the replacement in Why. Never reuse or renumber an ID.
+
+| ID | Status | Decision | Why |
+| --- | --- | --- | --- |
+| DEC-001 | Decided | Python 3.12, standard library only: `argparse`, `unicodedata`, `re` | A small tool needs no dependency |
+| DEC-002 | Decided | `src/slug.py` makes the slug in four steps: NFKD, drop non-ASCII, lowercase, join the words with hyphens, then cut (SLUG-002, SLUG-003, SLUG-004). Lowercase comes after the ASCII step | The Kelvin sign is `K` only after NFKD |
+| DEC-003 | Decided | `src/cli.py` parses the arguments itself and prints the errors of SLUG-006 and SLUG-007, with exit code 2 | `argparse` messages do not match the spec |
+
+## 2. Architecture
+
+### 2.1 Components
+
+```mermaid
+flowchart LR
+    main["main.py"] -->|argv| cli["src/cli.py"]
+    cli -->|"title, max_length"| slug["src/slug.py"]
+    slug -->|"slug or ValueError"| cli
+    cli -->|"stdout, stderr, exit code"| main
+```
+
+- `main.py`: the entry point. It calls `src.cli.main()` and exits with its return value.
+- `src/cli.py`: reads the arguments, calls `make_slug`, prints the result or the error, and returns
+  the exit code. It owns no state.
+- `src/slug.py`: turns a title into a slug. Pure, no input or output.
+
+### 2.2 Directory structure
+
+Create a folder only when it is listed here, and update this table in the same change.
+
+| Path | Holds |
+| --- | --- |
+| `main.py` | The entry point. |
+| `src/` | `slug.py` and `cli.py`. |
+| `tests/` | `unit/` and `e2e/` tests. |
+| `docs/` | Workflow, spec, design, plan, unapproved ideas, and releases. |
+
+### 2.3 Settings
+
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `--max` | 60 | The maximum length of the slug (SLUG-004, SLUG-005, SLUG-007) |
+
+### 2.4 Module boundaries
+
+A module is a folder or a file under `src/`. `May import` lists the other modules of this table
+that it can import, or `none`. `scripts/check.py` fails when the code breaks a row.
+
+| Module | May import |
+| --- | --- |
+| `src/slug.py` | none |
+| `src/cli.py` | `src/slug.py` |
+
+## 3. Data model
+
+The tool stores no data.
+
+## 4. Interfaces
+
+Name every interface a test needs: entry points, inputs and outputs, stored records, and public
+functions. The tests are written from the spec and this file, without the code.
+
+- `src.slug.make_slug(title: str, max_length: int = 60) -> str`: returns the slug. Raises
+  `ValueError("the title has no letters or digits")` when the slug is empty. `max_length` is
+  from 1 to 200; the caller checks it.
+- `src.cli.main(argv: list[str] | None = None) -> int`: `argv` without the program name (default:
+  `sys.argv[1:]`). Prints the slug or the error and returns the exit code (0 or 2).
+- Command line: `python main.py TITLE [--max N]`, run from the project root. Output and exit codes:
+  SLUG-005, SLUG-006, SLUG-007.
+
+## 5. Test design
+
+The test level of each requirement (`unit`, `e2e`, `ui` or `live`), the test tool, and the real
+local part or the fake that the test uses. `CLAUDE.md` (Testing) owns the test rules.
+`scripts/spec_coverage.py --consistency` fails when a requirement has no row here.
+
+| Requirement | Level | Test tool | Real local part or fake |
+| --- | --- | --- | --- |
+| SLUG-001, SLUG-002, SLUG-003, SLUG-004 | unit | pytest, through `make_slug` | None needed |
+| SLUG-005, SLUG-006, SLUG-007 | e2e | pytest, runs `main.py` as a process with `sys.executable` and `subprocess.run` | The real program |
+
+## 6. Open design questions
+
+The design is approved when no decision is `Proposed` and this table is empty.
+
+| ID | Question | Who decides | Blocks what |
+| --- | --- | --- | --- |
+
+
+ succeeded in 805ms:
+# Ruff configuration (lint and format). It enforces the rules in CLAUDE.md.
+# Never disable a rule to make a change pass. Fix the code.
+
+line-length = 100
+target-version = "py312"
+src = ["."]
+
+[lint]
+preview = true
+explicit-preview-rules = true
+select = [
+    "E", "W", "F",   # pycodestyle and pyflakes: style, unused names, bare except (E722)
+    "I",             # import order
+    "N",             # naming
+    "D",             # docstrings on modules, classes, public functions
+    "ANN",           # type annotations, no Any (ANN401)
+    "UP",            # modern syntax (list[str], X | None)
+    "B",             # bugbear, including raise ... from err (B904)
+    "C90",           # complexity
+    "PLR",           # too many arguments and statements
+    "PLW",           # global statement, unspecified file encoding
+    "T20",           # no print
+    "BLE",           # no blind except
+    "TRY",           # exception handling style
+    "S",             # security checks
+    "PTH",           # pathlib instead of path strings
+    "ERA",           # no commented-out code
+    "SIM",           # simplifications
+    "TID",           # absolute imports only
+    "ASYNC",         # blocking calls inside async functions
+    "G",             # logging format
+    "PT",            # pytest style
+    "RUF",
+    "PLW1514",       # open text files with an explicit encoding (preview rule)
+    "PLC0415",       # imports at the top of the file, not inside a function
+]
+ignore = [
+    "TRY003",        # long messages in exceptions are fine (no custom exception classes)
+]
+
+[lint.pydocstyle]
+convention = "google"
+
+[lint.mccabe]
+max-complexity = 8
+
+[lint.pylint]
+max-args = 4
+max-positional-args = 4
+max-statements = 15   # proxy for "20 lines or fewer": ruff has no line-count rule
+
+[lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[lint.isort]
+# A test imports the code before the code exists. Without this line, ruff sorts
+# `from src.slug import x` as first-party only when `src/slug.py` exists, and its cache hides the
+# change of order until a checkout touches the file.
+known-first-party = ["src"]
+
+[lint.per-file-ignores]
+# Tests need no docstrings (see Naming). S603: an end-to-end test runs the program as a process,
+# and a test starts a real local server, each without a shell.
+"tests/**" = ["D", "ANN", "S101", "S603", "PLR2004", "PLR0913"]
+"scripts/**" = ["T20"]                                    # scripts print their output
+"scripts/check.py" = ["S603"]                             # runs the check tools, without a shell
+"scripts/milestones-runner.py" = ["S603", "S314"]         # runs git and claude, without a shell,
+                                                          # and reads the JUnit XML of pytest
+"scripts/live_checks.py" = ["S603"]                       # runs pytest and node, without a shell
+"scripts/release.py" = ["S603"]                           # runs git, without a shell
+"scripts/dashboard.py" = ["S603"]                         # runs git and spec_coverage.py, without a shell
+
+
+ succeeded in 750ms:
+# Spec — slugger
+
+Status: Approved
+
+What to build. Written with `/write-spec`. Change only with the user's approval. Each requirement is
+in EARS syntax and has an ID that tests cite.
+
+## 1. Purpose and scope
+
+A command-line tool that turns a title into a URL slug. A blog author pastes a title and copies
+the slug into the address of the post. In scope: one title per run, from the command line. Out of
+scope: files, batches, other languages' transliteration (for example Japanese to Latin letters).
+
+## 2. Roles and glossary
+
+Role: the author, who runs the tool in a terminal.
+
+| Term | Meaning | Avoid |
+| --- | --- | --- |
+| Title | The text that the author gives to the tool | name, input string |
+| Slug | The result: lowercase ASCII letters, digits and single hyphens | permalink, handle |
+| Word | A run of letters and digits in the slug, between hyphens | token |
+| Maximum length | The most characters that the slug may hold | limit, width |
+
+## 3. User scenarios
+
+### SCN-001 Make a slug
+
+- Actor and goal: the author wants a slug for a new post.
+- Trigger: the author runs `python main.py "<title>"`, with or without `--max N`.
+- Main success path: the tool prints the slug and exits with 0.
+- Failure paths: a title with no letters or digits; a `--max` value that is not valid.
+- Observable result: the slug on standard output, or an error on standard error.
+- Source: the author, confirmed.
+
+## 4. Functional requirements
+
+| ID | EARS requirement | Priority | Status | Business reason | Source | Scenarios | Examples |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| SLUG-001 | The tool shall make a slug that holds only the lowercase ASCII letters a to z, the digits 0 to 9 and hyphens. | Must | Confirmed | Safe in every URL | Author | SCN-001 | EX-001 |
+| SLUG-002 | When a letter of the title has an accent or a compatibility form, the tool shall use its plain ASCII letter (NFKD decomposition), and it shall drop each character that has no ASCII form. | Must | Confirmed | Readable slugs for French and German titles | Author | SCN-001 | EX-002, EX-009, EX-010 |
+| SLUG-003 | The tool shall replace each run of characters that are not letters or digits with one hyphen, and the slug shall not start or end with a hyphen. | Must | Confirmed | Clean addresses | Author | SCN-001 | EX-001, EX-003 |
+| SLUG-004 | When the slug is longer than the maximum length, the tool shall keep the longest run of whole words, from the start, that fits in the maximum length. If the first word alone is longer, the tool shall keep its first characters, up to the maximum length. | Must | Confirmed | Short addresses | Author | SCN-001 | EX-004, EX-005 |
+| SLUG-005 | When the author runs `python main.py TITLE [--max N]`, the tool shall print the slug and a newline to standard output and exit with 0. The default maximum length is 60. | Must | Confirmed | Use from a terminal | Author | SCN-001 | EX-006 |
+| SLUG-006 | If the title gives an empty slug, then the tool shall print `error: the title has no letters or digits` and a newline to standard error, print nothing to standard output, and exit with 2. | Must | Confirmed | A clear error | Author | SCN-001 | EX-007 |
+| SLUG-007 | If the value of `--max` is not an integer from 1 to 200, then the tool shall print `error: --max must be an integer from 1 to 200` and a newline to standard error, print nothing to standard output, and exit with 2. | Must | Confirmed | A clear error | Author | SCN-001 | EX-008 |
+
+## 5. Non-functional requirements
+
+| ID | EARS requirement | Priority | Status | Business reason | Source | Acceptance evidence |
+| --- | --- | --- | --- | --- | --- | --- |
+
+## 6. Acceptance examples
+
+| ID | Requirement IDs | Situation and input | Expected result | Reviewed by |
+| --- | --- | --- | --- | --- |
+| EX-001 | SLUG-001, SLUG-003 | Title `Hello, World!` | `hello-world` | Author |
+| EX-002 | SLUG-002 | Title `Crème Brûlée` | `creme-brulee` | Author |
+| EX-003 | SLUG-003 | Title `  --Rock & Roll--  ` | `rock-roll` | Author |
+| EX-004 | SLUG-004 | Title `The quick brown fox jumps`, maximum length 15 | `the-quick-brown` | Author |
+| EX-005 | SLUG-004 | Title `Supercalifragilistic`, maximum length 5 | `super` | Author |
+| EX-006 | SLUG-005 | `python main.py "Hello World"` | Standard output `hello-world` and a newline, exit code 0 | Author |
+| EX-007 | SLUG-006 | `python main.py "!!!"` | The error on standard error, nothing on standard output, exit code 2 | Author |
+| EX-008 | SLUG-007 | `python main.py "Hello" --max 0` | The error on standard error, nothing on standard output, exit code 2 | Author |
+| EX-009 | SLUG-002 | Title `50 K` (the last character is the Kelvin sign, U+212A) | `50-k` | Author |
+| EX-010 | SLUG-002 | Title `日本 Tokyo` | `tokyo` | Author |
+
+## 7. Assumptions and open questions
+
+| Item | Evidence or assumption | Consequence if wrong | Owner | Resolution or revisit condition |
+| --- | --- | --- | --- | --- |
+
+## 8. Review and approval
+
+Approved by the author on November 21, 2026, in full.
+
+
+ succeeded in 922ms:
+# mypy configuration. It enforces the type rules in CLAUDE.md.
+[mypy]
+python_version = 3.12
+strict = True
+warn_unreachable = True
+files = src
+mypy_path = .
+namespace_packages = True
+explicit_package_bases = True
+
+
+ succeeded in 756ms:
+# pytest configuration. Run with: python -m pytest --cov=src --cov-branch --cov-fail-under=80
+# .coveragerc makes the coverage count the processes that a test starts.
+# The normal run skips the live checks in tests/live/. Run them with: python scripts/live_checks.py
+[pytest]
+testpaths = tests
+norecursedirs = .* *.egg build dist node_modules venv tests/live
+asyncio_mode = auto
+
+
+ succeeded in 733ms:
+# Direct dependencies only, each pinned with == to the installed version.
+# Add when the environment is created: pytest, pytest-cov, hypothesis, mypy, ruff, python-dotenv
+# (and pytest-asyncio for async code).
+
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Command python,ruff,mypy | Select-Object Name,Source' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "python -B -c \"import sys, importlib.util as u; print(sys.executable); print({n: bool(u.find_spec(n)) for n in ('pytest','hypothesis','mypy','ruff','pytest_cov')})\"" in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+ succeeded in 574ms:
+
+Name       Source                                                                 
+----       ------                                                                 
+python.exe C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe      
+ruff.exe   C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Scripts\ruff.exe
+mypy.exe   C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Scripts\mypy.exe
+
+
+
+ succeeded in 652ms:
+C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\python.exe
+{'pytest': True, 'hypothesis': True, 'mypy': True, 'ruff': True, 'pytest_cov': True}
+
+codex
+`src/slug.py` owns slug generation. I’ll test `make_slug` directly and run `main.py` as a subprocess to check how `src/cli.py` handles output, errors, and exit codes.
+apply patch
+patch: completed
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9\tests\e2e\test_cli.py
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9\tests\unit\test_slug.py
+diff --git a/tests/e2e/test_cli.py b/tests/e2e/test_cli.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..6e0d6d829ebc3676051b34d19f38cd64fe6437d9
+--- /dev/null
++++ b/tests/e2e/test_cli.py
+@@ -0,0 +1,51 @@
++import subprocess
++import sys
++from pathlib import Path
++
++import pytest
++
++
++def _run_cli(*arguments: str) -> subprocess.CompletedProcess[str]:
++    return subprocess.run(
++        [sys.executable, "main.py", *arguments],
++        cwd=Path(__file__).resolve().parents[2],
++        capture_output=True,
++        text=True,
++        check=False,
++    )
++
++
++def test_slug_005_ex_006_prints_slug_and_exits_0() -> None:
++    for _ in range(2):
++        result = _run_cli("Hello World")
++        assert (result.returncode, result.stdout, result.stderr) == (0, "hello-world\n", "")
++
++
++def test_slug_005_default_maximum_length_is_60() -> None:
++    result = _run_cli("X" * 61)
++    assert (result.returncode, result.stdout, result.stderr) == (0, "x" * 60 + "\n", "")
++
++
++@pytest.mark.parametrize("max_length", [1, 2, 199, 200])
++def test_slug_005_accepts_valid_maximum_length(max_length: int) -> None:
++    result = _run_cli("X" * 201, "--max", str(max_length))
++    assert (result.returncode, result.stdout, result.stderr) == (0, "x" * max_length + "\n", "")
++
++
++def test_slug_006_ex_007_title_without_letters_exits_2() -> None:
++    result = _run_cli("!!!")
++    assert (result.returncode, result.stdout, result.stderr) == (
++        2,
++        "",
++        "error: the title has no letters or digits\n",
++    )
++
++
++@pytest.mark.parametrize("value", ["0", "201", "many", "1.5"])
++def test_slug_007_ex_008_max_out_of_range_exits_2(value: str) -> None:
++    result = _run_cli("Hello", "--max", value)
++    assert (result.returncode, result.stdout, result.stderr) == (
++        2,
++        "",
++        "error: --max must be an integer from 1 to 200\n",
++    )
+diff --git a/tests/unit/test_slug.py b/tests/unit/test_slug.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..f5a10ff6285118d37d2872acd378200c47f895c1
+--- /dev/null
++++ b/tests/unit/test_slug.py
+@@ -0,0 +1,65 @@
++import re
++
++import pytest
++from hypothesis import given, settings
++from hypothesis import strategies as st
++
++from src.slug import make_slug
++
++
++@settings(max_examples=50, derandomize=True)
++@given(prefix=st.text(), suffix=st.text(), max_length=st.integers(min_value=1, max_value=200))
++def test_slug_001_slug_holds_only_safe_characters(prefix: str, suffix: str, max_length: int) -> None:
++    slug = make_slug(f"{prefix}7{suffix}", max_length)
++
++    assert re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug)
++    assert len(slug) <= max_length
++
++
++def test_slug_001_ex_001_hello_world() -> None:
++    assert make_slug("Hello, World!") == "hello-world"
++
++
++def test_slug_002_ex_002_accents_become_plain_letters() -> None:
++    assert make_slug("Crème Brûlée") == "creme-brulee"
++
++
++def test_slug_002_ex_009_kelvin_sign_becomes_k() -> None:
++    assert make_slug("50 \N{KELVIN SIGN}") == "50-k"
++
++
++def test_slug_002_ex_010_letters_without_ascii_form_are_dropped() -> None:
++    assert make_slug("日本 Tokyo") == "tokyo"
++
++
++def test_slug_002_letters_without_ascii_form_inside_word_are_dropped() -> None:
++    assert make_slug("Go日本Now") == "gonow"
++
++
++def test_slug_003_ex_003_runs_of_symbols_become_one_hyphen() -> None:
++    assert make_slug("  --Rock & Roll--  ") == "rock-roll"
++
++
++@pytest.mark.parametrize(
++    ("max_length", "expected"),
++    [(14, "the-quick"), (15, "the-quick-brown"), (16, "the-quick-brown")],
++)
++def test_slug_004_ex_004_cut_keeps_whole_words(max_length: int, expected: str) -> None:
++    assert make_slug("The quick brown fox jumps", max_length) == expected
++
++
++def test_slug_004_ex_005_long_first_word_is_cut() -> None:
++    assert make_slug("Supercalifragilistic", 5) == "super"
++
++
++@pytest.mark.parametrize("length", [59, 60, 61])
++def test_slug_004_default_maximum_length(length: int) -> None:
++    expected = "a" * 60 if length == 61 else "a" * length
++
++    assert make_slug("A" * length) == expected
++
++
++@pytest.mark.parametrize("title", ["!!!", "", "日本"])
++def test_slug_006_empty_slug_raises_value_error(title: str) -> None:
++    with pytest.raises(ValueError, match=r"^the title has no letters or digits$"):
++        make_slug(title)
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'python -B -m mypy --cache-dir=nul tests' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'ruff format --check --no-cache tests' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -Raw -Encoding UTF8 scripts/spec_coverage.py' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'python -B -m pytest -p no:cacheprovider --continue-on-collection-errors --tb=line -q tests/unit/test_slug.py tests/e2e/test_cli.py' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'ruff check --no-cache tests' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+ succeeded in 854ms:
+"""List which requirement IDs and acceptance examples have a test, and check the documents.
+
+A requirement ID (AREA-NNN, such as PAY-001, or NFR-NNN) is the first cell of a table row of
+docs/spec.md. An acceptance example (EX-NNN) is also a row of docs/spec.md. Its second cell cites
+its requirement IDs. Scenarios (SCN-NNN), acceptance examples and design decisions (DEC-NNN) are
+not requirements. A row with a cell `Withdrawn` is skipped. Each requirement ID and each
+acceptance example has one state:
+
+- tested: a test under tests/ has the ID in its name. PAY-001 is `test_pay_001_...` in a
+  `test_*.py` file, or a title such as `test("PAY-001 ...")` in a `*.test.js` file. EX-003 is
+  `test_pay_001_ex_003_...`, or a title such as `test("PAY-001 EX-003 ...")`.
+- manual: a `Manual:` entry of a milestone block, or the section "Human checks" of docs/plan.md,
+  names the ID.
+- planned: the Refs of a milestone block in docs/plan.md name the requirement ID. An acceptance
+  example is planned when the Refs name a requirement ID that it cites.
+- missing: none of these.
+
+The script has three modes. It only reads files.
+
+- Without an argument, it lists every requirement ID and every acceptance example with its state.
+- With `M<n>`, it checks the requirement IDs in the Refs of that milestone's block. Each must be
+  in the spec, and be tested or manual (docs/workflow.md, Execute). Each acceptance example that
+  cites one of these requirement IDs must also be tested or manual.
+- With `--consistency`, it compares docs/spec.md, docs/design.md and docs/plan.md. It prints each
+  problem on its own line, and exits with 1 when it finds one. It checks an ID only in the places
+  below, so a text such as "SHA-256" in the design is not an ID. The problems:
+  - One of the three files is missing. The other checks then do not run.
+  - The Refs entry of a milestone block names a requirement ID that is not a row of the spec.
+  - The first cell of a row of the design's table "Test design" names such a requirement ID.
+  - The Refs entry of a milestone block names a design decision that is not a row of the design.
+  - The Tests first entry of a milestone block names an acceptance example (as `EX-003`, also in
+    a `Manual:` part) that is not a row of the spec. An example ID in a test name does not count.
+  - A requirement ID of the spec has no test level. The table in the design's section "Test
+    design" gives the level. The first cell of a row names the requirement IDs, and the second
+    cell names `unit`, `e2e`, `ui` or `live`. A withdrawn requirement needs no level.
+
+  For these checks, a withdrawn row of the spec is still a row.
+
+Run:
+    python scripts/spec_coverage.py [M<n> | --consistency] [--root FOLDER]
+"""
+
+import argparse
+import logging
+import re
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+logger = logging.getLogger("spec_coverage")
+
+ROOT = Path(__file__).resolve().parent.parent
+SPEC_PATH = Path("docs") / "spec.md"
+DESIGN_PATH = Path("docs") / "design.md"
+PLAN_PATH = Path("docs") / "plan.md"
+TESTS_DIR = "tests"
+PYTHON_TESTS = "test_*.py"
+WEB_TESTS = ("*.test.js", "*.test.mjs", "*.test.ts")
+
+# The IDs of docs/spec.md and docs/design.md that are not requirements: scenarios, acceptance
+# examples and design decisions. Every other ID that starts a table row of the spec is one.
+EXAMPLE_PREFIX = "EX"
+DECISION_PREFIX = "DEC"
+OTHER_PREFIXES = ("SCN", EXAMPLE_PREFIX, DECISION_PREFIX)
+ANY_ID = r"[A-Z][A-Z0-9]*-\d{3,}"
+SPEC_ID = re.compile(rf"\b{ANY_ID}\b")
+SPEC_ROW = re.compile(rf"^\|\s*({ANY_ID})\s*\|")
+PYTHON_TEST_NAME = re.compile(r"^\s*(?:async\s+)?def\s+(test_\w+)", re.MULTILINE)
+WEB_TEST_NAME = re.compile(r"""\b(?:test|it)\(\s*(["'`])(.*?)\1""")
+MANUAL_ENTRY = re.compile(rf"Manual:((?:[\s,`]|and|{ANY_ID})+)")
+MILESTONE_ARGUMENT = re.compile(r"M(\d+)", re.IGNORECASE)
+MILESTONE_HEADING = re.compile(r"^### M(\d+)\b")
+HUMAN_CHECKS_HEADING = re.compile(r"^## Human checks", re.IGNORECASE)
+ANY_HEADING = re.compile(r"^#{1,3} ")
+ENTRY_START = re.compile(r"^- \*\*")
+WITHDRAWN = "withdrawn"
+
+# The design's section "5. Test design" ends at the next heading of its level. Its table gives each
+# requirement a test level, in the second cell of a row.
+TEST_DESIGN_HEADING = re.compile(r"^## (?:\d+\.\s*)?Test design", re.IGNORECASE)
+SECTION_HEADING = re.compile(r"^#{1,2} ")
+TEST_LEVEL = re.compile(r"\b(?:unit|e2e|ui|live)\b", re.IGNORECASE)
+
+# What a named ID must be. Each text ends the message of a consistency problem.
+REQUIREMENT_ROW = "a requirement row of docs/spec.md"
+EXAMPLE_ROW = "an acceptance example row of docs/spec.md"
+DECISION_ROW = "a decision row of docs/design.md"
+
+STATE_TESTED = "tested"
+STATE_MANUAL = "manual"
+STATE_PLANNED = "planned"
+STATE_MISSING = "missing"
+STATE_UNKNOWN = "not in the spec"
+COVERED_STATES = (STATE_TESTED, STATE_MANUAL)
+
+EXIT_OK = 0
+EXIT_NOT_COVERED = 1
+EXIT_INCONSISTENT = 1
+EXIT_USAGE = 2
+
+
+@dataclass(frozen=True)
+class Coverage:
+    """Holds what the spec, the tests and the plan say about the requirements and the examples.
+
+    Attributes:
+        spec_ids: The requirement IDs of the spec, without withdrawn rows.
+        examples: The requirement IDs that each acceptance example cites, by example ID.
+        tested: The requirement and example IDs that a test name carries.
+        manual: The IDs that a `Manual:` entry or the section "Human checks" names.
+        planned: The requirement IDs in the Refs of the plan, and the examples that cite one.
+    """
+
+    spec_ids: list[str]
+    examples: dict[str, list[str]]
+    tested: set[str]
+    manual: set[str]
+    planned: set[str]
+
+    def state(self, spec_id: str) -> str:
+        """Return the state of one ID: tested, manual, planned, missing or not in the spec."""
+        if spec_id not in self.spec_ids and spec_id not in self.examples:
+            return STATE_UNKNOWN
+        if spec_id in self.tested:
+            return STATE_TESTED
+        if spec_id in self.manual:
+            return STATE_MANUAL
+        if spec_id in self.planned:
+            return STATE_PLANNED
+        return STATE_MISSING
+
+    def examples_citing(self, requirements: list[str]) -> list[str]:
+        """Return the acceptance examples that cite at least one of the requirement IDs."""
+        return [
+            example for example, cited in self.examples.items() if set(cited) & set(requirements)
+        ]
+
+
+def read_lines(path: Path) -> list[str]:
+    """Return the lines of a UTF-8 file, or no lines when the file does not exist."""
+    if not path.is_file():
+        return []
+    return path.read_text(encoding="utf-8-sig").splitlines()
+
+
+def unique(ids: list[str]) -> list[str]:
+    """Return the IDs in their order, without duplicates."""
+    return list(dict.fromkeys(ids))
+
+
+def prefix_of(spec_id: str) -> str:
+    """Return the part of an ID before its number: PAY for PAY-001."""
+    return spec_id.split("-")[0]
+
+
+def is_requirement(spec_id: str) -> bool:
+    """Tell whether an ID is a requirement: not a scenario, an example or a design decision."""
+    return prefix_of(spec_id) not in OTHER_PREFIXES
+
+
+def named_ids(text: str) -> list[str]:
+    """Return every ID that a text names, in their order, without duplicates."""
+    return unique(SPEC_ID.findall(text))
+
+
+def requirement_ids(text: str) -> list[str]:
+    """Return the requirement IDs that a text names, in their order, without duplicates."""
+    return [spec_id for spec_id in named_ids(text) if is_requirement(spec_id)]
+
+
+def ids_with_prefix(text: str, prefix: str) -> list[str]:
+    """Return the IDs with one prefix, such as EX or DEC, that a text names."""
+    return [spec_id for spec_id in named_ids(text) if prefix_of(spec_id) == prefix]
+
+
+def cells_of(line: str) -> list[str]:
+    """Return the cells of a table row that starts with `|`."""
+    return [cell.strip() for cell in line.split("|")[1:]]
+
+
+def id_rows(lines: list[str]) -> list[list[str]]:
+    """Return the cells of each table row whose first cell is an ID."""
+    return [cells_of(line) for line in lines if SPEC_ROW.match(line)]
+
+
+def is_withdrawn(cells: list[str]) -> bool:
+    """Tell whether one cell of a table row is `Withdrawn`."""
+    return WITHDRAWN in [cell.lower() for cell in cells]
+
+
+def spec_ids_of(spec_lines: list[str]) -> list[str]:
+    """Return the ID of each requirement row of the spec, without withdrawn rows."""
+    rows = [cells for cells in id_rows(spec_lines) if not is_withdrawn(cells)]
+    return unique([cells[0] for cells in rows if is_requirement(cells[0])])
+
+
+def examples_of(spec_lines: list[str]) -> dict[str, list[str]]:
+    """Return the requirement IDs that each acceptance example of the spec cites, by example ID.
+
+    An acceptance example is a table row whose first cell is an EX ID. Its second cell holds the
+    requirement IDs. A withdrawn row is skipped.
+    """
+    rows = [cells for cells in id_rows(spec_lines) if not is_withdrawn(cells)]
+    return {
+        cells[0]: requirement_ids(cells[1])
+        for cells in rows
+        if prefix_of(cells[0]) == EXAMPLE_PREFIX
+    }
+
+
+def section_lines(lines: list[str], start: re.Pattern[str], end: re.Pattern[str]) -> list[str]:
+    """Return the lines below each heading that matches start, up to the next end heading."""
+    section: list[str] = []
+    inside = False
+    for line in lines:
+        if end.match(line):
+            inside = start.match(line) is not None
+        elif inside:
+            section.append(line)
+    return section
+
+
+def test_names_in(tests_dir: Path) -> list[str]:
+    """Return the name of every Python test function and the title of every web test."""
+    names: list[str] = []
+    if not tests_dir.is_dir():
+        return names
+    for path in sorted(tests_dir.rglob(PYTHON_TESTS)):
+        names.extend(PYTHON_TEST_NAME.findall(path.read_text(encoding="utf-8-sig")))
+    for pattern in WEB_TESTS:
+        for path in sorted(tests_dir.rglob(pattern)):
+            titles = WEB_TEST_NAME.findall(path.read_text(encoding="utf-8-sig"))
+            names.extend(title for _, title in titles)
+    return names
+
+
+def name_has_id(name: str, spec_id: str) -> bool:
+    """Tell whether a test name carries the ID: PAY-001 is `pay_001`, and FR-001 is not `nfr_001`.
+
+    The name is compared in lower case with every other character as `_`, so `test_pay_001_x` and
+    the title "PAY-001: x" both carry PAY-001.
+    """
+    token = spec_id.lower().replace("-", "_")
+    plain = re.sub(r"[^a-z0-9]", "_", name.lower())
+    return re.search(rf"(?<![a-z0-9]){token}(?![0-9])", plain) is not None
+
+
+def tested_ids(spec_ids: list[str], test_names: list[str]) -> set[str]:
+    """Return the IDs, of requirements or examples, that at least one test name carries."""
+    return {
+        spec_id for spec_id in spec_ids if any(name_has_id(name, spec_id) for name in test_names)
+    }
+
+
+def milestone_blocks(plan_lines: list[str]) -> dict[int, list[str]]:
+    """Return the lines of each `### M<n>` block of the plan, by milestone number."""
+    blocks: dict[int, list[str]] = {}
+    current: list[str] | None = None
+    for line in plan_lines:
+        if ANY_HEADING.match(line):
+            match = MILESTONE_HEADING.match(line)
+            current = blocks.setdefault(int(match[1]), []) if match is not None else None
+        if current is not None:
+            current.append(line)
+    return blocks
+
+
+def entry_text(block: list[str], label: str) -> str:
+    """Return the text of the `- **<label>:**` entry of a block, with its continuation lines."""
+    start = f"- **{label}:**"
+    lines: list[str] = []
+    for line in block:
+        if line.startswith(start):
+            lines = [line]
+        elif lines and (ENTRY_START.match(line) or not line.strip()):
+            break
+        elif lines:
+            lines.append(line)
+    return " ".join(lines)
+
+
+def refs_ids(block: list[str]) -> list[str]:
+    """Return the requirement IDs in the Refs entry of a milestone block."""
+    return requirement_ids(entry_text(block, "Refs"))
+
+
+def manual_ids(block: list[str]) -> list[str]:
+    """Return the IDs that the `Manual:` parts of the Tests first entry name."""
+    parts = MANUAL_ENTRY.findall(entry_text(block, "Tests first"))
+    return named_ids(" ".join(parts))
+
+
+def human_check_ids(plan_lines: list[str]) -> list[str]:
+    """Return the IDs that the section "Human checks" of the plan names."""
+    lines = section_lines(plan_lines, HUMAN_CHECKS_HEADING, ANY_HEADING)
+    return named_ids(" ".join(lines))
+
+
+def read_coverage(root: Path, blocks: dict[int, list[str]], plan_lines: list[str]) -> Coverage:
+    """Read the spec and the tests under root, and join them with the plan's blocks."""
+    spec_lines = read_lines(root / SPEC_PATH)
+    spec_ids = spec_ids_of(spec_lines)
+    examples = examples_of(spec_lines)
+    manual = set(human_check_ids(plan_lines))
+    planned: set[str] = set()
+    for block in blocks.values():
+        manual.update(manual_ids(block))
+        planned.update(refs_ids(block))
+    planned.update([example for example, cited in examples.items() if planned & set(cited)])
+    tested = tested_ids([*spec_ids, *examples], test_names_in(root / TESTS_DIR))
+    return Coverage(spec_ids, examples, tested, manual, planned)
+
+
+def list_states(coverage: Coverage, ids: list[str], label: str) -> None:
+    """Log each ID with its state, then the count of each state under the label."""
+    counts: dict[str, int] = {}
+    for spec_id in ids:
+        state = coverage.state(spec_id)
+        counts[state] = counts.get(state, 0) + 1
+        logger.info("%-9s %s", spec_id, state)
+    summary = ", ".join(f"{count} {state}" for state, count in sorted(counts.items()))
+    logger.info("%d %s: %s.", len(ids), label, summary or "none")
+
+
+def list_all(coverage: Coverage) -> int:
+    """Log every requirement ID, then every acceptance example, with its state. It always passes."""
+    list_states(coverage, coverage.spec_ids, "requirement IDs")
+    list_states(coverage, list(coverage.examples), "acceptance examples")
+    return EXIT_OK
+
+
+def check_milestone(coverage: Coverage, milestone_id: int, block: list[str]) -> int:
+    """Log the state of each requirement ID in the block's Refs, and of each example that cites one.
+
+    Returns:
+        The exit code: 1 when a requirement ID or an example is not tested and not manual.
+    """
+    ids = refs_ids(block)
+    examples = coverage.examples_citing(ids)
+    failed = []
+    for spec_id in [*ids, *examples]:
+        state = coverage.state(spec_id)
+        logger.info("%-9s %s", spec_id, state)
+        if state not in COVERED_STATES:
+            failed.append(spec_id)
+    if failed:
+        logger.error("M%d: no test and no Manual entry for %s.", milestone_id, ", ".join(failed))
+        return EXIT_NOT_COVERED
+    logger.info("M%d: %d requirement ID(s) in Refs, all tested or manual.", milestone_id, len(ids))
+    logger.info(
+        "M%d: %d acceptance example(s) cite them, all tested or manual.",
+        milestone_id,
+        len(examples),
+    )
+    return EXIT_OK
+
+
+def missing_files(root: Path) -> list[str]:
+    """Return a problem for each of the spec, the design and the plan that root does not hold."""
+    paths = (SPEC_PATH, DESIGN_PATH, PLAN_PATH)
+    return [
+        f"{path.as_posix()} is missing in {root}." for path in paths if not (root / path).is_file()
+    ]
+
+
+def unknown_names(source: Path, named: list[str], rows: list[str], kind: str) -> list[str]:
+    """Return a problem for each named ID that is not the ID of a row.
+
+    Args:
+        source: The file that names the IDs.
+        named: The IDs that the file names.
+        rows: The ID of each table row that a named ID can be.
+        kind: What a named ID must be, for the message.
+    """
+    return [
+        f"{source.as_posix()} names {name}, which is not {kind}."
+        for name in named
+        if name not in rows
+    ]
+
+
+def entry_texts(blocks: dict[int, list[str]], label: str) -> str:
+    """Return the text of the `- **<label>:**` entry of every milestone block, as one text."""
+    return " ".join(entry_text(block, label) for block in blocks.values())
+
+
+def plan_problems(
+    blocks: dict[int, list[str]], spec_rows: list[str], design_rows: list[str]
+) -> list[str]:
+    """Return a problem for each ID in a fixed place of the plan that is not the ID of a row.
+
+    The Refs entry of a block names requirement IDs and design decisions. Its Tests first entry
+    names acceptance examples, as IDs such as EX-003. An example ID in a test name does not count.
+
+    Args:
+        blocks: The lines of each milestone block of the plan.
+        spec_rows: The ID of each table row of the spec.
+        design_rows: The ID of each table row of the design.
+    """
+    requirements = unique([spec_id for block in blocks.values() for spec_id in refs_ids(block)])
+    examples = ids_with_prefix(entry_texts(blocks, "Tests first"), EXAMPLE_PREFIX)
+    decisions = ids_with_prefix(entry_texts(blocks, "Refs"), DECISION_PREFIX)
+    problems = unknown_names(PLAN_PATH, requirements, spec_rows, REQUIREMENT_ROW)
+    problems += unknown_names(PLAN_PATH, examples, spec_rows, EXAMPLE_ROW)
+    return problems + unknown_names(PLAN_PATH, decisions, design_rows, DECISION_ROW)
+
+
+def level_rows(design_lines: list[str]) -> list[list[str]]:
+    """Return the cells of each table row in the design's section "Test design"."""
+    section = section_lines(design_lines, TEST_DESIGN_HEADING, SECTION_HEADING)
+    return [cells_of(line) for line in section if line.startswith("|")]
+
+
+def design_problems(levels: list[list[str]], spec_rows: list[str]) -> list[str]:
+    """Return a problem for each requirement ID of the Test design table that the spec lacks.
+
+    Args:
+        levels: The cells of each row of the Test design table. The first cell names the IDs.
+        spec_rows: The ID of each table row of the spec.
+    """
+    named = requirement_ids(" ".join(cells[0] for cells in levels))
+    return unknown_names(DESIGN_PATH, named, spec_rows, REQUIREMENT_ROW)
+
+
+def leveled_ids(levels: list[list[str]]) -> set[str]:
+    """Return the requirement IDs that a row of the Test design table gives a level."""
+    ids: set[str] = set()
+    for cells in levels:
+        if len(cells) > 1 and TEST_LEVEL.search(cells[1]):
+            ids.update(requirement_ids(cells[0]))
+    return ids
+
+
+def level_problems(spec_ids: list[str], levels: list[list[str]]) -> list[str]:
+    """Return a problem for each requirement ID of the spec that has no test level in the design."""
+    leveled = leveled_ids(levels)
+    return [
+        f"{spec_id} has no test level (unit, e2e, ui or live) in the Test design table "
+        f"of {DESIGN_PATH.as_posix()}."
+        for spec_id in spec_ids
+        if spec_id not in leveled
+    ]
+
+
+def consistency_problems(root: Path) -> list[str]:
+    """Return each problem between the spec, the design and the plan under root.
+
+    A missing file is the only problem that it returns, because the other checks need all three.
+    """
+    missing = missing_files(root)
+    if missing:
+        return missing
+    spec_lines = read_lines(root / SPEC_PATH)
+    design_lines = read_lines(root / DESIGN_PATH)
+    blocks = milestone_blocks(read_lines(root / PLAN_PATH))
+    spec_rows = [cells[0] for cells in id_rows(spec_lines)]
+    design_rows = [cells[0] for cells in id_rows(design_lines)]
+    levels = level_rows(design_lines)
+    problems = design_problems(levels, spec_rows)
+    problems += plan_problems(blocks, spec_rows, design_rows)
+    return problems + level_problems(spec_ids_of(spec_lines), levels)
+
+
+def check_consistency(root: Path) -> int:
+    """Log each problem between the spec, the design and the plan. Fail when there is one."""
+    problems = consistency_problems(root)
+    for problem in problems:
+        logger.error("%s", problem)
+    if problems:
+        return EXIT_INCONSISTENT
+    logger.info("The spec, the design and the plan are consistent.")
+    return EXIT_OK
+
+
+def parse_args(argv: list[str] | None) -> argparse.Namespace:
+    """Read the command line: a milestone (M<n>) or --consistency, and an optional root folder."""
+    parser = argparse.ArgumentParser(
+        description=(
+            "List which requirement IDs and acceptance examples have a test, check those of one "
+            "milestone, or compare the spec, the design and the plan."
+        )
+    )
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
+        "milestone", nargs="?", help="check only the Refs of this milestone, for example M3"
+    )
+    mode.add_argument(
+        "--consistency",
+        action="store_true",
+        help="check that the IDs of the spec, the design and the plan agree",
+    )
+    parser.add_argument(
+        "--root", type=Path, default=ROOT, help="the folder that holds docs/ and tests/"
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    """List every ID, check one milestone, or compare the documents. Return the exit code."""
+    arguments = parse_args(argv)
+    logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout)
+    root = arguments.root.resolve()
+    if arguments.consistency:
+        return check_consistency(root)
+    if not (root / SPEC_PATH).is_file():
+        logger.error("%s is missing in %s.", SPEC_PATH.as_posix(), root)
+        return EXIT_USAGE
+    plan_lines = read_lines(root / PLAN_PATH)
+    blocks = milestone_blocks(plan_lines)
+    coverage = read_coverage(root, blocks, plan_lines)
+    if arguments.milestone is None:
+        return list_all(coverage)
+    match = MILESTONE_ARGUMENT.fullmatch(arguments.milestone)
+    if match is None or int(match[1]) not in blocks:
+        logger.error("No block '### %s' in %s.", arguments.milestone, PLAN_PATH.as_posix())
+        return EXIT_USAGE
+    return check_milestone(coverage, int(match[1]), blocks[int(match[1])])
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+
+ exited 1 in 912ms:
+unformatted: File would be reformatted
+  --> tests\unit\test_slug.py:12:51
+   |
+11 | @given(prefix=st.text(), suffix=st.text(), max_length=st.integers(min_value=1, max_value=200))
+   - def test_slug_001_slug_holds_only_safe_characters(prefix: str, suffix: str, max_length: int) -> None:
+12 + def test_slug_001_slug_holds_only_safe_characters(
+13 +     prefix: str, suffix: str, max_length: int
+14 + ) -> None:
+15 |     slug = make_slug(f"{prefix}7{suffix}", max_length)
+   |
+
+1 file would be reformatted, 1 file already formatted
+
+ exited 1 in 905ms:
+line-too-long: Line too long (101 > 100)
+  --> tests\unit\test_slug.py:12:101
+   |
+10 | @settings(max_examples=50, derandomize=True)
+11 | @given(prefix=st.text(), suffix=st.text(), max_length=st.integers(min_value=1, max_value=200))
+12 | def test_slug_001_slug_holds_only_safe_characters(prefix: str, suffix: str, max_length: int) -> None:
+   |                                                                                                     ^
+13 |     slug = make_slug(f"{prefix}7{suffix}", max_length)
+   |
+
+Found 1 error.
+
+ exited 1 in 3534ms:
+FFFFFFFFFFF                                                              [100%]
+=================================== ERRORS ====================================
+__________________ ERROR collecting tests/unit/test_slug.py ___________________
+ImportError while importing test module 'C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9\tests\unit\test_slug.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\miniconda3\envs\sherpa\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\unit\test_slug.py:7: in <module>
+    from src.slug import make_slug
+E   ModuleNotFoundError: No module named 'src'
+================================== FAILURES ===================================
+E   AssertionError: assert (2, '', 'C:\\... directory\n') == (0, 'hello-world\n', '')
+      
+      At index 0 diff: 2 != 0
+      Use -v to get more diff
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9\tests\e2e\test_cli.py:21: AssertionError: assert (2, '', 'C:\\... directory\n') == (0, 'hello-world\n', '')
+E   AssertionError: assert (2, '', 'C:\\... directory\n') == (0, 'xxxxxxxx...xxxxxx\n', '')
+      
+      At index 0 diff: 2 != 0
+      Use -v to get more diff
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9\tests\e2e\test_cli.py:26: AssertionError: assert (2, '', 'C:\\... directory\n') == (0, 'xxxxxxxx...xxxxxx\n', '')
+E   AssertionError: assert (2, '', 'C:\\... directory\n') == (0, 'x\n', '')
+      
+      At index 0 diff: 2 != 0
+      Use -v to get more diff
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9\tests\e2e\test_cli.py:32: AssertionError: assert (2, '', 'C:\\... directory\n') == (0, 'x\n', '')
+E   AssertionError: assert (2, '', 'C:\\... directory\n') == (0, 'xx\n', '')
+      
+      At index 0 diff: 2 != 0
+      Use -v to get more diff
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9\tests\e2e\test_cli.py:32: AssertionError: assert (2, '', 'C:\\... directory\n') == (0, 'xx\n', '')
+E   AssertionError: assert (2, '', 'C:\\... directory\n') == (0, 'xxxxxxxx...xxxxxx\n', '')
+      
+      At index 0 diff: 2 != 0
+      Use -v to get more diff
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9\tests\e2e\test_cli.py:32: AssertionError: assert (2, '', 'C:\\... directory\n') == (0, 'xxxxxxxx...xxxxxx\n', '')
+E   AssertionError: assert (2, '', 'C:\\... directory\n') == (0, 'xxxxxxxx...xxxxxx\n', '')
+      
+      At index 0 diff: 2 != 0
+      Use -v to get more diff
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9\tests\e2e\test_cli.py:32: AssertionError: assert (2, '', 'C:\\... directory\n') == (0, 'xxxxxxxx...xxxxxx\n', '')
+E   assert (2, '', 'C:\\... directory\n') == (2, '', 'erro... or digits\n')
+      
+      At index 2 diff: "C:\\Users\\aa186095\\AppData\\Local\\miniconda3\\envs\\sherpa\\python.exe: can't open file 'C:\\\\Users\\\\aa186095\\\\AppData\\\\Local\\\\Temp\\\\sherpa-tests-44976403abd9\\\\main.py': [Errno 2] No such file or directory\n" != 'error: the title has no letters or digits\n'
+      Use -v to get more diff
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9\tests\e2e\test_cli.py:37: assert (2, '', 'C:\\... directory\n') == (2, '', 'erro... or digits\n')
+E   assert (2, '', 'C:\\... directory\n') == (2, '', 'erro...m 1 to 200\n')
+      
+      At index 2 diff: "C:\\Users\\aa186095\\AppData\\Local\\miniconda3\\envs\\sherpa\\python.exe: can't open file 'C:\\\\Users\\\\aa186095\\\\AppData\\\\Local\\\\Temp\\\\sherpa-tests-44976403abd9\\\\main.py': [Errno 2] No such file or directory\n" != 'error: --max must be an integer from 1 to 200\n'
+      Use -v to get more diff
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9\tests\e2e\test_cli.py:47: assert (2, '', 'C:\\... directory\n') == (2, '', 'erro...m 1 to 200\n')
+E   assert (2, '', 'C:\\... directory\n') == (2, '', 'erro...m 1 to 200\n')
+      
+      At index 2 diff: "C:\\Users\\aa186095\\AppData\\Local\\miniconda3\\envs\\sherpa\\python.exe: can't open file 'C:\\\\Users\\\\aa186095\\\\AppData\\\\Local\\\\Temp\\\\sherpa-tests-44976403abd9\\\\main.py': [Errno 2] No such file or directory\n" != 'error: --max must be an integer from 1 to 200\n'
+      Use -v to get more diff
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9\tests\e2e\test_cli.py:47: assert (2, '', 'C:\\... directory\n') == (2, '', 'erro...m 1 to 200\n')
+E   assert (2, '', 'C:\\... directory\n') == (2, '', 'erro...m 1 to 200\n')
+      
+      At index 2 diff: "C:\\Users\\aa186095\\AppData\\Local\\miniconda3\\envs\\sherpa\\python.exe: can't open file 'C:\\\\Users\\\\aa186095\\\\AppData\\\\Local\\\\Temp\\\\sherpa-tests-44976403abd9\\\\main.py': [Errno 2] No such file or directory\n" != 'error: --max must be an integer from 1 to 200\n'
+      Use -v to get more diff
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9\tests\e2e\test_cli.py:47: assert (2, '', 'C:\\... directory\n') == (2, '', 'erro...m 1 to 200\n')
+E   assert (2, '', 'C:\\... directory\n') == (2, '', 'erro...m 1 to 200\n')
+      
+      At index 2 diff: "C:\\Users\\aa186095\\AppData\\Local\\miniconda3\\envs\\sherpa\\python.exe: can't open file 'C:\\\\Users\\\\aa186095\\\\AppData\\\\Local\\\\Temp\\\\sherpa-tests-44976403abd9\\\\main.py': [Errno 2] No such file or directory\n" != 'error: --max must be an integer from 1 to 200\n'
+      Use -v to get more diff
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9\tests\e2e\test_cli.py:47: assert (2, '', 'C:\\... directory\n') == (2, '', 'erro...m 1 to 200\n')
+============================== warnings summary ===============================
+..\..\miniconda3\envs\sherpa\Lib\site-packages\_pytest\config\__init__.py:1464
+  C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\_pytest\config\__init__.py:1464: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_cli.py::test_slug_005_ex_006_prints_slug_and_exits_0 - ...
+FAILED tests/e2e/test_cli.py::test_slug_005_default_maximum_length_is_60 - As...
+FAILED tests/e2e/test_cli.py::test_slug_005_accepts_valid_maximum_length[1]
+FAILED tests/e2e/test_cli.py::test_slug_005_accepts_valid_maximum_length[2]
+FAILED tests/e2e/test_cli.py::test_slug_005_accepts_valid_maximum_length[199]
+FAILED tests/e2e/test_cli.py::test_slug_005_accepts_valid_maximum_length[200]
+FAILED tests/e2e/test_cli.py::test_slug_006_ex_007_title_without_letters_exits_2
+FAILED tests/e2e/test_cli.py::test_slug_007_ex_008_max_out_of_range_exits_2[0]
+FAILED tests/e2e/test_cli.py::test_slug_007_ex_008_max_out_of_range_exits_2[201]
+FAILED tests/e2e/test_cli.py::test_slug_007_ex_008_max_out_of_range_exits_2[many]
+FAILED tests/e2e/test_cli.py::test_slug_007_ex_008_max_out_of_range_exits_2[1.5]
+ERROR tests/unit/test_slug.py
+11 failed, 1 warning, 1 error in 1.59s
+
+ exited 1 in 4895ms:
+tests\unit\test_slug.py:7: error: Cannot find implementation or library stub for module named "src.slug"  [import-not-found]
+tests\unit\test_slug.py:7: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+Found 1 error in 1 file (checked 2 source files)
+
+apply patch
+patch: completed
+C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9\tests\unit\test_slug.py
+diff --git a/tests/e2e/test_cli.py b/tests/e2e/test_cli.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..6e0d6d829ebc3676051b34d19f38cd64fe6437d9
+--- /dev/null
++++ b/tests/e2e/test_cli.py
+@@ -0,0 +1,51 @@
++import subprocess
++import sys
++from pathlib import Path
++
++import pytest
++
++
++def _run_cli(*arguments: str) -> subprocess.CompletedProcess[str]:
++    return subprocess.run(
++        [sys.executable, "main.py", *arguments],
++        cwd=Path(__file__).resolve().parents[2],
++        capture_output=True,
++        text=True,
++        check=False,
++    )
++
++
++def test_slug_005_ex_006_prints_slug_and_exits_0() -> None:
++    for _ in range(2):
++        result = _run_cli("Hello World")
++        assert (result.returncode, result.stdout, result.stderr) == (0, "hello-world\n", "")
++
++
++def test_slug_005_default_maximum_length_is_60() -> None:
++    result = _run_cli("X" * 61)
++    assert (result.returncode, result.stdout, result.stderr) == (0, "x" * 60 + "\n", "")
++
++
++@pytest.mark.parametrize("max_length", [1, 2, 199, 200])
++def test_slug_005_accepts_valid_maximum_length(max_length: int) -> None:
++    result = _run_cli("X" * 201, "--max", str(max_length))
++    assert (result.returncode, result.stdout, result.stderr) == (0, "x" * max_length + "\n", "")
++
++
++def test_slug_006_ex_007_title_without_letters_exits_2() -> None:
++    result = _run_cli("!!!")
++    assert (result.returncode, result.stdout, result.stderr) == (
++        2,
++        "",
++        "error: the title has no letters or digits\n",
++    )
++
++
++@pytest.mark.parametrize("value", ["0", "201", "many", "1.5"])
++def test_slug_007_ex_008_max_out_of_range_exits_2(value: str) -> None:
++    result = _run_cli("Hello", "--max", value)
++    assert (result.returncode, result.stdout, result.stderr) == (
++        2,
++        "",
++        "error: --max must be an integer from 1 to 200\n",
++    )
+diff --git a/tests/unit/test_slug.py b/tests/unit/test_slug.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..5cc28f78fa15fe58bc3500954bc45ce2f3ead4eb
+--- /dev/null
++++ b/tests/unit/test_slug.py
+@@ -0,0 +1,65 @@
++import re
++
++import pytest
++from hypothesis import given, settings
++from hypothesis import strategies as st
++
++from src.slug import make_slug
++
++
++@settings(max_examples=50, derandomize=True)
++@given(prefix=st.text(), suffix=st.text(), max_length=st.integers(min_value=1, max_value=200))
++def test_slug_001_slug_holds_only_safe_characters(
++    prefix: str, suffix: str, max_length: int
++) -> None:
++    slug = make_slug(f"{prefix}7{suffix}", max_length)
++
++    assert re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug)
++    assert len(slug) <= max_length
++
++
++def test_slug_001_ex_001_hello_world() -> None:
++    assert make_slug("Hello, World!") == "hello-world"
++
++
++def test_slug_002_ex_002_accents_become_plain_letters() -> None:
++    assert make_slug("Crème Brûlée") == "creme-brulee"
++
++
++def test_slug_002_ex_009_kelvin_sign_becomes_k() -> None:
++    assert make_slug("50 \N{KELVIN SIGN}") == "50-k"
++
++
++def test_slug_002_ex_010_letters_without_ascii_form_are_dropped() -> None:
++    assert make_slug("日本 Tokyo") == "tokyo"
++
++
++def test_slug_002_letters_without_ascii_form_inside_word_are_dropped() -> None:
++    assert make_slug("Go日本Now") == "gonow"
++
++
++def test_slug_003_ex_003_runs_of_symbols_become_one_hyphen() -> None:
++    assert make_slug("  --Rock & Roll--  ") == "rock-roll"
++
++
++@pytest.mark.parametrize(
++    ("max_length", "expected"),
++    [(14, "the-quick"), (15, "the-quick-brown"), (16, "the-quick-brown")],
++)
++def test_slug_004_ex_004_cut_keeps_whole_words(max_length: int, expected: str) -> None:
++    assert make_slug("The quick brown fox jumps", max_length) == expected
++
++
++def test_slug_004_ex_005_long_first_word_is_cut() -> None:
++    assert make_slug("Supercalifragilistic", 5) == "super"
++
++
++@pytest.mark.parametrize(("length", "expected_length"), [(59, 59), (60, 60), (61, 60)])
++def test_slug_004_default_maximum_length(length: int, expected_length: int) -> None:
++    assert make_slug("A" * length) == "a" * expected_length
++
++
++@pytest.mark.parametrize("title", ["!!!", "", "日本"])
++def test_slug_006_empty_slug_raises_value_error(title: str) -> None:
++    with pytest.raises(ValueError, match=r"^the title has no letters or digits\Z"):
++        make_slug(title)
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'python -B scripts/spec_coverage.py M1' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'ruff check --no-cache tests' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'python -B -m pytest -p no:cacheprovider --continue-on-collection-errors --tb=no -q' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "rg --files --hidden -g '"'!src/**'"' -g '"'!.git/**'"'" in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'ruff format --check --no-cache tests' in C:\Users\aa186095\AppData\Local\Temp\sherpa-tests-44976403abd9
+ succeeded in 810ms:
+All checks passed!
+
+ succeeded in 782ms:
+2 files already formatted
+
+ succeeded in 898ms:
+tests\unit\test_slug.py
+tests\unit\.gitkeep
+pytest.ini
+mypy.ini
+tests\e2e\test_cli.py
+tests\e2e\.gitkeep
+scripts\spec_coverage.py
+scripts\run-check.sh
+scripts\check.py
+ruff.toml
+requirements.txt
+.coveragerc
+AGENTS.md
+docs\workflow.md
+docs\spec.md
+docs\plan.md
+docs\design.md
+
+ succeeded in 1125ms:
+SLUG-001  tested
+SLUG-002  tested
+SLUG-003  tested
+SLUG-004  tested
+SLUG-005  tested
+SLUG-006  tested
+SLUG-007  tested
+EX-001    tested
+EX-002    tested
+EX-003    tested
+EX-004    tested
+EX-005    tested
+EX-006    tested
+EX-007    tested
+EX-008    tested
+EX-009    tested
+EX-010    tested
+M1: 7 requirement ID(s) in Refs, all tested or manual.
+M1: 10 acceptance example(s) cite them, all tested or manual.
+
+ exited 1 in 3440ms:
+FFFFFFFFFFF                                                              [100%]
+============================== warnings summary ===============================
+..\..\miniconda3\envs\sherpa\Lib\site-packages\_pytest\config\__init__.py:1464
+  C:\Users\aa186095\AppData\Local\miniconda3\envs\sherpa\Lib\site-packages\_pytest\config\__init__.py:1464: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_cli.py::test_slug_005_ex_006_prints_slug_and_exits_0 - ...
+FAILED tests/e2e/test_cli.py::test_slug_005_default_maximum_length_is_60 - As...
+FAILED tests/e2e/test_cli.py::test_slug_005_accepts_valid_maximum_length[1]
+FAILED tests/e2e/test_cli.py::test_slug_005_accepts_valid_maximum_length[2]
+FAILED tests/e2e/test_cli.py::test_slug_005_accepts_valid_maximum_length[199]
+FAILED tests/e2e/test_cli.py::test_slug_005_accepts_valid_maximum_length[200]
+FAILED tests/e2e/test_cli.py::test_slug_006_ex_007_title_without_letters_exits_2
+FAILED tests/e2e/test_cli.py::test_slug_007_ex_008_max_out_of_range_exits_2[0]
+FAILED tests/e2e/test_cli.py::test_slug_007_ex_008_max_out_of_range_exits_2[201]
+FAILED tests/e2e/test_cli.py::test_slug_007_ex_008_max_out_of_range_exits_2[many]
+FAILED tests/e2e/test_cli.py::test_slug_007_ex_008_max_out_of_range_exits_2[1.5]
+ERROR tests/unit/test_slug.py
+11 failed, 1 warning, 1 error in 1.56s
+
+codex
+**Files changed:** [tests/unit/test_slug.py](tests/unit/test_slug.py) and [tests/e2e/test_cli.py](tests/e2e/test_cli.py). No commit was made.
+
+**Tests added:** 16 test functions covering all 7 requirements and all 10 acceptance examples in `docs/spec.md`. The M1 spec coverage check passed.
+
+| Test | Current result |
+|---|---|
+| `test_slug_001_slug_holds_only_safe_characters` | Missing `src.slug` at collection |
+| `test_slug_001_ex_001_hello_world` | Missing `src.slug` at collection |
+| `test_slug_002_ex_002_accents_become_plain_letters` | Missing `src.slug` at collection |
+| `test_slug_002_ex_009_kelvin_sign_becomes_k` | Missing `src.slug` at collection |
+| `test_slug_002_ex_010_letters_without_ascii_form_are_dropped` | Missing `src.slug` at collection |
+| `test_slug_002_letters_without_ascii_form_inside_word_are_dropped` | Missing `src.slug` at collection |
+| `test_slug_003_ex_003_runs_of_symbols_become_one_hyphen` | Missing `src.slug` at collection |
+| `test_slug_004_ex_004_cut_keeps_whole_words` | Missing `src.slug` at collection |
+| `test_slug_004_ex_005_long_first_word_is_cut` | Missing `src.slug` at collection |
+| `test_slug_004_default_maximum_length` | Missing `src.slug` at collection |
+| `test_slug_006_empty_slug_raises_value_error` | Missing `src.slug` at collection |
+| `test_slug_005_ex_006_prints_slug_and_exits_0` | Missing `main.py`, exit 2 |
+| `test_slug_005_default_maximum_length_is_60` | Missing `main.py`, exit 2 |
+| `test_slug_005_accepts_valid_maximum_length` | Missing `main.py`, exit 2 |
+| `test_slug_006_ex_007_title_without_letters_exits_2` | Missing `main.py`, wrong stderr |
+| `test_slug_007_ex_008_max_out_of_range_exits_2` | Missing `main.py`, wrong stderr |
+
+**Tests run:** 0 passed out of 11 executed CLI cases. The unit file stopped at collection with `ModuleNotFoundError: No module named 'src'`. There were no older tests.
+
+**Static checks:** Ruff lint and formatting passed. Mypy reported one error for the missing `src.slug` import.
+
+**Assumptions and open questions:** None. No design decisions, manual checks, or live tests were needed.
+
+**TLDR: M1 is ready for the build session. All requirements and examples have tests, and the observed failures come from the two missing implementation entry points.**
+tokens used
+36,664
+**Files changed:** [tests/unit/test_slug.py](tests/unit/test_slug.py) and [tests/e2e/test_cli.py](tests/e2e/test_cli.py). No commit was made.
+
+**Tests added:** 16 test functions covering all 7 requirements and all 10 acceptance examples in `docs/spec.md`. The M1 spec coverage check passed.
+
+| Test | Current result |
+|---|---|
+| `test_slug_001_slug_holds_only_safe_characters` | Missing `src.slug` at collection |
+| `test_slug_001_ex_001_hello_world` | Missing `src.slug` at collection |
+| `test_slug_002_ex_002_accents_become_plain_letters` | Missing `src.slug` at collection |
+| `test_slug_002_ex_009_kelvin_sign_becomes_k` | Missing `src.slug` at collection |
+| `test_slug_002_ex_010_letters_without_ascii_form_are_dropped` | Missing `src.slug` at collection |
+| `test_slug_002_letters_without_ascii_form_inside_word_are_dropped` | Missing `src.slug` at collection |
+| `test_slug_003_ex_003_runs_of_symbols_become_one_hyphen` | Missing `src.slug` at collection |
+| `test_slug_004_ex_004_cut_keeps_whole_words` | Missing `src.slug` at collection |
+| `test_slug_004_ex_005_long_first_word_is_cut` | Missing `src.slug` at collection |
+| `test_slug_004_default_maximum_length` | Missing `src.slug` at collection |
+| `test_slug_006_empty_slug_raises_value_error` | Missing `src.slug` at collection |
+| `test_slug_005_ex_006_prints_slug_and_exits_0` | Missing `main.py`, exit 2 |
+| `test_slug_005_default_maximum_length_is_60` | Missing `main.py`, exit 2 |
+| `test_slug_005_accepts_valid_maximum_length` | Missing `main.py`, exit 2 |
+| `test_slug_006_ex_007_title_without_letters_exits_2` | Missing `main.py`, wrong stderr |
+| `test_slug_007_ex_008_max_out_of_range_exits_2` | Missing `main.py`, wrong stderr |
+
+**Tests run:** 0 passed out of 11 executed CLI cases. The unit file stopped at collection with `ModuleNotFoundError: No module named 'src'`. There were no older tests.
+
+**Static checks:** Ruff lint and formatting passed. Mypy reported one error for the missing `src.slug` import.
+
+**Assumptions and open questions:** None. No design decisions, manual checks, or live tests were needed.
+
+**TLDR: M1 is ready for the build session. All requirements and examples have tests, and the observed failures come from the two missing implementation entry points.**
