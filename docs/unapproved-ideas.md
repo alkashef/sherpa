@@ -153,7 +153,7 @@ The user decided these points of section G on November 21, 2026. They need no ch
 
 On November 22, 2026 the user decided each idea of Part 2, and Part 1 holds the result. The
 sections below keep the context of the ideas. A new idea goes here, with its own entry. The user
-decided RUN-08 to RUN-11 on November 23, 2026 (Part 1). No idea is open.
+decided RUN-08 to RUN-11 on November 23, 2026 (Part 1). Open: RUN-12 (section E).
 
 ### A. Open decisions of the approved changes
 
@@ -235,6 +235,22 @@ RUN-10 with option B and RUN-11 with its proposal (Part 1).
   name a `Proposed` decision: the design is not approved, and the workflow needs an approved design
   before the plan. An auto-decision of an earlier milestone is `Proposed` too, so the check names
   the decision and says how to approve it.
+
+New idea from the fifth real run (November 23, 2026). Nobody approved it.
+
+- **RUN-12: after the approval of a wrong test that a build session found, no test session runs,
+  so the milestone cannot go on.** In M1 the test session wrote a wrong test (`--max 1` expects
+  `hello`, but SLUG-004 cuts it to `h`), and the build session blocked with partial work, as it
+  must. After the approval, the runner put the work back and started a build session, with no test
+  session: the build session may not change a test, so it stopped again, and M1 cannot finish. The
+  runner gives a decision to a test session only after a `BLOCKED:` line of a repair or rebuild
+  session. Options: (A) the build prompt reports a wrong test with a `BLOCKED:` line, as the repair
+  and rebuild prompts do, and the runner writes the Blocked entry; (B) after the approval of any
+  block that a session made (not the last review), the runner gives the decision to a test session
+  before the build goes on, and the test session changes a test only when the decision says so;
+  (C) no change: the user corrects the test by hand. Recommendation: B. The runner decides, not a
+  session that can pick the wrong way to block, and the paused M1 of the fifth run can go on with
+  it.
 ### G. The user's list of November 21, 2026
 
 The user gave this list on November 21, 2026, and asked for a walk-through, one item at a time.

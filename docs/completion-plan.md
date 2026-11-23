@@ -94,7 +94,13 @@ effort `medium` unless the step says otherwise.
   - Risk: the test session of M2 can see the wrong test and correct it itself. Then the run shows
     another path, and B1 stays open.
   - Estimate: 1 hour for the kit, 1 hour of runs.
-  - Status: in progress since November 23, 2026.
+  - Status: in progress since November 23, 2026. In M1 a build session blocked on its own,
+    before the planted test: the test session wrote a wrong test (`--max 1` expects `hello`, but
+    SLUG-004 cuts it to `h`). The runner kept `M1: partial work` and committed `M1: blocked`. The
+    approval (Claude in the role of the user, as in runs 3 and 4) is committed. The run after
+    the approval found a fault of sherpa (C1, RUN-12): no test session got the decision, so the
+    build session stopped again. The run waits for the user's decision on RUN-12, with the work
+    of M1 kept on its branch.
   - Done on: ____ README record in commit: ____
 - [ ] **B2. Sixth real run: a web project (`python`, `javascript`, `html-css`, `ui-design`,
   `http-apis`).** A small app with a page, an API and a `ui` test in Playwright. The project starts
@@ -151,6 +157,7 @@ effort `medium` unless the step says otherwise.
 
   | Run | Fault | Commit |
   | --- | --- | --- |
+  | 5 (B1) | After the approval of a wrong test that a build session found, no test session ran, and M1 could not go on. RUN-12 waits for the user | ____ |
   | ____ | ____ | ____ |
 
 ## D. Make sherpa itself ready for a release
@@ -168,8 +175,8 @@ effort `medium` unless the step says otherwise.
   - Estimate: 1 hour.
   - Done on: ____ Commit (if the README changed): ____
 - [ ] **D3. Correct the old text that this plan found.**
-  - `docs/unapproved-ideas.md`: the last line still says that Part 2 holds RUN-08 and RUN-09 (it
-    holds none), and a blank line is missing before section G.
+  - `docs/unapproved-ideas.md`: the last line still says that Part 2 holds RUN-08 and RUN-09,
+    which are decided, and a blank line is missing before section G.
   - README, "File structure": the tree does not show `find-bugs`, `.github/workflows/`,
     `.coveragerc`, `.prettierrc.json`, `.stylelintrc.json`, `docs/audit-claude-golden.md` or
     `tests/test_dashboard.py`.
