@@ -1026,6 +1026,8 @@ REVIEW_RULES: Final = (
     "<file> is the file where the fix goes: a finding about a test, or a missing test, names a",
     "file in tests/. A fault against a requirement that no test catches is a missing test:",
     "name the test file that must catch it, and write the requirement ID as the rule.",
+    "Wrong behavior against a requirement is high, never low: also as a missing test, and",
+    "also for a rare input.",
     "Write `NO FINDINGS` when there is none.",
 )
 REPAIR_INTRO: Final = (

@@ -32,8 +32,10 @@ code must read. Report the findings only: another session repairs them.
    `scripts/check.py` pass on every commit.
 5. Give each finding a severity:
    - `high`: wrong behavior, a broken requirement, a broken design decision or module boundary.
+     Wrong behavior against a requirement is `high` also when you report it as a missing test,
+     and also when its input is rare (for example, a very long number or an extra argument).
    - `medium`: a smell of the checklist, or code that a reader will misunderstand.
-   - `low`: a small loss of readability.
+   - `low`: a small loss of readability. Wrong behavior is never `low`.
 6. Give each finding the simplest remedy that removes its cause. A remedy does not change behavior
    that the spec states. It does not change a test. It does not add a design pattern.
 

@@ -242,6 +242,15 @@ def test_every_card_of_the_workflow_page_has_its_panel() -> None:
     assert sorted(cards) == sorted(panels)
 
 
+def test_the_review_rates_wrong_behavior_against_a_requirement_high() -> None:
+    # RUN-10: in the fourth real run the last review rated two faults of a requirement low, and a
+    # low finding never blocks (RUN-09), so the milestone merged with them.
+    review = skill_text("code-review-sherpa")
+    assert "Wrong behavior against a requirement is `high` also when you report it" in review
+    assert "Wrong behavior is never `low`." in review
+    assert "The review rates wrong behavior against a requirement `high`" in workflow_text()
+
+
 def test_a_milestone_has_a_test_a_build_and_a_review_session() -> None:
     workflow = workflow_text()
     assert "**Test session** (`/write-tests`)" in workflow

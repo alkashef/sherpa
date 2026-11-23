@@ -253,6 +253,7 @@ def test_review_prompt_names_the_diff_and_the_two_reviews(built: Path) -> None:
     assert "Change no file and commit nothing." in prompt
     assert "nobody can answer" in prompt
     assert "`FINDING: <high|medium|low> | <file>:<line> | <rule or smell> | <remedy>`" in prompt
+    assert "Wrong behavior against a requirement is high, never low" in prompt
     assert "`NO FINDINGS`" in prompt
 
 

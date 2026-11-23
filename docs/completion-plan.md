@@ -2,12 +2,13 @@
 
 This file is the plan from the state of sherpa today to its first release. The steps are in the
 order of the work. Each step has a "Done when" test and a record line. When a step is done, mark
-its box `[x]` and fill in its record, in the commit that finishes the step. Do not delete a
-finished step: this file is the record of the finish.
+its box `[x]` and fill in its record, in the commit that finishes the step. The record names that
+commit by its subject line, because a commit cannot hold its own hash. Do not delete a finished
+step: this file is the record of the finish.
 
 - Written: November 23, 2026, at commit `aa7331a` (337 tests pass, no open work in Part 1 of
   `docs/unapproved-ideas.md`).
-- Approved by the user: ____ (date)
+- Approved by the user: November 23, 2026
 
 Two rules apply to each step:
 
@@ -54,12 +55,14 @@ the suite.
 Both ideas change the review or the runner, so they come first: the runs of part B then check the
 final behavior.
 
-- [ ] **A1. RUN-10: the review rates a fault of a requirement too low.** Needs approval. The
+- [x] **A1. RUN-10: the review rates a fault of a requirement too low.** Needs approval. The
   options are in `docs/unapproved-ideas.md`, Part 2, section E. Recommendation: option B.
   - Done when: the user decided. If built: the review skill (and the runner, for option A),
     `workflow.md`, `workflow.html` and the tests change in one commit, and the suite passes.
   - Estimate: 30 minutes for option B, 1 hour for option A.
-  - Decided on: ____ (option ____). Built in commit: ____
+  - Decided on: November 23, 2026 (option B). Built in commit: "The review rates wrong behavior
+    against a requirement high, never low (RUN-10)". The review prompt of the runner says it too,
+    because it also rates the findings of the built-in `/code-review`.
 - [ ] **A2. RUN-11: a start check refuses a milestone whose Refs name a `Proposed` decision.**
   Needs approval.
   - Done when: as for A1.
@@ -156,7 +159,7 @@ effort `medium` unless the step says otherwise.
   - Done on: ____ Commit (if the README changed): ____
 - [ ] **D3. Correct the old text that this plan found.**
   - `docs/unapproved-ideas.md`: the last line still says that Part 2 holds RUN-08 and RUN-09 (it
-    holds RUN-10 and RUN-11), and a blank line is missing before section G.
+    holds RUN-11), and a blank line is missing before section G.
   - README, "File structure": the tree does not show `find-bugs`, `.github/workflows/`,
     `.coveragerc`, `.prettierrc.json`, `.stylelintrc.json`, `docs/audit-claude-golden.md` or
     `tests/test_dashboard.py`.
