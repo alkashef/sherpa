@@ -99,8 +99,8 @@ effort `medium` unless the step says otherwise.
     SLUG-004 cuts it to `h`). The runner kept `M1: partial work` and committed `M1: blocked`. The
     approval (Claude in the role of the user, as in runs 3 and 4) is committed. The run after
     the approval found a fault of sherpa (C1, RUN-12): no test session got the decision, so the
-    build session stopped again. The run waits for the user's decision on RUN-12, with the work
-    of M1 kept on its branch.
+    build session stopped again. The user approved RUN-12 with option B, and it is built. The run
+    goes on from the kept work of M1, with the repaired runner.
   - Done on: ____ README record in commit: ____
 - [ ] **B2. Sixth real run: a web project (`python`, `javascript`, `html-css`, `ui-design`,
   `http-apis`).** A small app with a page, an API and a `ui` test in Playwright. The project starts
@@ -157,7 +157,7 @@ effort `medium` unless the step says otherwise.
 
   | Run | Fault | Commit |
   | --- | --- | --- |
-  | 5 (B1) | After the approval of a wrong test that a build session found, no test session ran, and M1 could not go on. RUN-12 waits for the user | ____ |
+  | 5 (B1) | After the approval of a wrong test that a build session found, no test session ran, and M1 could not go on. RUN-12, option B, approved on November 23, 2026 | "After the approval of a block by a session, a test session gets the decision first (RUN-12)" |
   | ____ | ____ | ____ |
 
 ## D. Make sherpa itself ready for a release

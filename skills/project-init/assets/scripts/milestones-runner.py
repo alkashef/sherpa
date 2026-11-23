@@ -54,7 +54,9 @@ alone on the base branch as `M<n>: blocked` (through the hook), pushes, and prin
 its question. A milestone that the last review blocks keeps its commits in its branch; the runner
 writes the Blocked entry with the findings into the plan of the base branch, and commits and
 pushes it in the same way. The user adds an Approval entry, sets the Status to `approved`,
-commits, and runs again.
+commits, and runs again. After the approval of a block that a session made (not the last
+review), a test session gets the decision first: only a test session may change a test, and it
+changes one only when the decision says so. Then the build goes on from the kept work.
 
 A branch `milestone/M<n>` that exists when its milestone starts is left from an earlier run. The
 runner handles these states:
@@ -173,6 +175,7 @@ SESSION_REVIEW_LAST: Final = "review-last"  # the second review, after the repai
 SESSION_TEST_FIX: Final = "test-fix"  # the round of repair of a test session, after the checks
 SESSION_REVIEW_TESTS: Final = "review-tests"  # a test session for the review findings on tests
 SESSION_REBUILD: Final = "rebuild"  # a build session after the review-tests session changed tests
+SESSION_RETEST: Final = "retest"  # a test session with the user's decision on a block by a session
 # A test session may not read the code: its tests come from the spec and the design. A Read rule
 # with a path also covers Grep and Glob, and an Edit rule with a path also covers Write: claude
 # warns about a Grep, Glob or Write rule with a path, because it matches nothing.
@@ -188,9 +191,10 @@ DENIED_TOOLS: Final = {
     SESSION_TEST_FIX: TEST_SESSION_DENIED,
     SESSION_REVIEW_TESTS: TEST_SESSION_DENIED,
     SESSION_REBUILD: BUILD_SESSION_DENIED,
+    SESSION_RETEST: TEST_SESSION_DENIED,
 }
 # The sessions that the test writer runs, in a folder without the code (docs/workflow.md).
-WRITER_SESSIONS: Final = (SESSION_TEST, SESSION_TEST_FIX, SESSION_REVIEW_TESTS)
+WRITER_SESSIONS: Final = (SESSION_TEST, SESSION_TEST_FIX, SESSION_REVIEW_TESTS, SESSION_RETEST)
 WRITER_CLAUDE: Final = "claude"
 WRITER_CODEX: Final = "codex"
 WRITER_ANTIGRAVITY: Final = "antigravity"
@@ -537,8 +541,8 @@ class Running:
     findings counts the findings that its last review kept. block is the milestone's block as
     the plan had it before the test session. decision is the Approval entry of the user, when an
     earlier review blocked the milestone. blocking holds the findings of the last review that
-    block the merge. retest is True when the user approved a block about a test that looked
-    wrong: a test session gets the decision before the build goes on. approved holds the
+    block the merge. retest is True when the user approved a block that a session made, not the
+    last review: a test session gets the decision before the build goes on. approved holds the
     findings of a block by the last review that the user approved: they go to the repairs with
     the decision, and only a change after the approval gets a review (RUN-08).
     """
@@ -987,6 +991,21 @@ REVIEW_TESTS_RULES: Final = (
     "(e) end with one line for each finding: `REPAIRED: <finding>`, or",
     "`REJECTED: <finding> | <why>` for a finding that is wrong.",
 )
+RETEST_INTRO: Final = (
+    "Change the tests of milestone M<n> (<title>) as the user decided.",
+    "A session blocked the milestone, and the user approved a way on. A build session goes on",
+    "after you, and it may not change a test: only you can make a change of a test.",
+    "Change a test only as the decision says. When the decision asks for no change of a test,",
+    "change nothing.",
+    "This folder holds no src/ and no .git, on purpose: the tests come from the spec and the",
+    "design. The runner copies tests/ back to the project and checks them.",
+    "This is an unattended run: nobody can answer questions.",
+)
+RETEST_RULES: Final = (
+    *REVIEW_TESTS_RULES[:-2],
+    "(e) end with one line for each test that you changed: `CHANGED: <test>`, or with",
+    "`NO CHANGE` when the decision asks for no change of a test.",
+)
 WRONG_TEST_RULE: Final = (
     "(<x>) a test in tests/ that looks wrong is a blocker: do not change it, do not edit "
     "docs/plan.md, commit nothing, and end the report with one line "
@@ -1115,6 +1134,13 @@ def review_tests_prompt(
     notes = retry_notes(TEST_RESUME_NOTE, resume, reason)
     intro = " ".join((_fill(REVIEW_TESTS_INTRO, row), *notes, "The findings:"))
     return "\n".join((intro, *findings, _fill(REVIEW_TESTS_RULES, row)))
+
+
+def retest_prompt(row: Row, decision: Sequence[str], resume: bool = False, reason: str = "") -> str:
+    """Return the text of the test session that gets the user's decision on a block."""
+    notes = retry_notes(TEST_RESUME_NOTE, resume, reason)
+    intro = " ".join((_fill(RETEST_INTRO, row), *notes, "The decision:"))
+    return "\n".join((intro, *decision, _fill(RETEST_RULES, row)))
 
 
 def rebuild_prompt(row: Row, resume: bool = False, reason: str = "") -> str:
@@ -3003,6 +3029,13 @@ def review_decision(session: Session, row: Row) -> tuple[str, ...]:
     blocked = approved_block(session, row)
     if not any("FINDING:" in line or "BLOCKED:" in line for line in blocked):
         return ()
+    return approval_entry(session, row)
+
+
+def approval_entry(session: Session, row: Row) -> tuple[str, ...]:
+    """Return the last Approval entry of an approved milestone in the base plan; none if none."""
+    if row.status != STATUS_APPROVED:
+        return ()
     block = milestone_block(base_plan_lines(session.paths.root, session.base), row.id)
     return tuple(last_block_entry(block, "Approval"))
 
@@ -3015,9 +3048,15 @@ def approved_block(session: Session, row: Row) -> list[str]:
     return last_block_entry(block, "Blocked")
 
 
-def retests(session: Session, row: Row, decision: Sequence[str]) -> bool:
-    """Tell whether an approved block came from a session that found a test that looks wrong."""
-    return bool(decision) and any("BLOCKED:" in line for line in approved_block(session, row))
+def retests(session: Session, row: Row) -> bool:
+    """Tell whether an approved block came from a session, not from the last review (RUN-12).
+
+    Only a test session may change a test, so the decision on such a block goes to a test session
+    before the build goes on. A test session that blocked runs again anyway: its tests are not
+    saved yet.
+    """
+    blocked = approved_block(session, row)
+    return bool(blocked) and not any("FINDING:" in line for line in blocked)
 
 
 def approved_findings(session: Session, row: Row, decision: Sequence[str]) -> tuple[str, ...]:
@@ -3138,16 +3177,16 @@ def tests_before_build(
 
 
 def retest(session: Session, running: Running) -> tuple[ClaudeRun, Verdict]:
-    """Give the user's decision on a test that looked wrong to a test session, before the build.
+    """Give the user's decision on a block by a session to a test session, before the build.
 
-    The milestone was blocked after its review because a session found a test that looks wrong,
-    and the user approved a way on. Only a test session may change tests/, so it gets the
-    decision, then the runner saves the new hashes of tests/.
+    A build, repair or rebuild session blocked the milestone, for example because a test looks
+    wrong, and the user approved a way on. Only a test session may change tests/, so it gets the
+    decision and changes a test only when the decision says so. Then the runner saves the new
+    hashes of tests/.
     """
     root, row = session.paths.root, running.row
-    decision = [f"The user's decision on the test that looked wrong: {' '.join(running.decision)}"]
-    prompt = partial(review_tests_prompt, row, decision)
-    task = WriterTask(SESSION_REVIEW_TESTS, prompt, session.base, blocks=False)
+    prompt = partial(retest_prompt, row, approval_entry(session, row))
+    task = WriterTask(SESSION_RETEST, prompt, session.base, blocks=False)
     run, verdict = run_attempts(session, running, partial(writer_try, session, running, task))
     if verdict.outcome == OUTCOME_DONE:
         running.saved = SavedTests(running.block, snapshot_tests(root))
@@ -3350,7 +3389,7 @@ def run_milestone(session: Session, row: Row) -> None:
         row,
         Stopwatch(),
         decision=decision,
-        retest=retests(session, row, decision),
+        retest=retests(session, row),
         approved=approved_findings(session, row, decision),
     )
     session.state.running = running

@@ -3,7 +3,8 @@
 `claude.cmd` (written by the tests, first on PATH) runs this file, and so can `codex.cmd`,
 `agy.cmd` and `copilot.cmd`: the fake also plays the other test writers. It reads the runner's
 prompt on stdin, or after `-p` when that is not an option, finds the session (test, test-fix,
-build, review, repair, review-tests or rebuild), the milestone number and the title, and acts by
+build, review, repair, review-tests, rebuild or retest), the milestone number and the title, and
+acts by
 FAKE_CLAUDE_STATE. It answers the start check of a test writer with `ok`. No session pushes. A
 test session works in the folder of the test writer, which has no git.
 
@@ -29,8 +30,8 @@ test session works in the folder of the test writer, which has no git.
                      changes the code and commits `M<n>: review repairs` only when the user's
                      decision asks for a repair; any other repair session rejects the finding
     "wrong-test"     as "review-tests", but the first rebuild session finds the new test wrong:
-                     it changes the code, commits nothing, and reports a `BLOCKED:` line; a later
-                     review-tests session (the retest) adds nothing new
+                     it changes the code, commits nothing, and reports a `BLOCKED:` line; the
+                     retest session after the approval changes nothing
     "retry"          the first build session of a milestone does nothing; a later one finishes it
     "tamper"         the build session also changes the test that the test session wrote
     "spec"           the build session also changes docs/spec.md
@@ -72,6 +73,7 @@ PROMPTS = {
     "repair": r"Repair the findings of the review of milestone M(\d+) \((.*?)\)\.",
     "review-tests": r"Repair the review findings about the tests of milestone M(\d+) \((.*?)\)\.",
     "rebuild": r"The tests of milestone M(\d+) \((.*?)\) changed after the review",
+    "retest": r"Change the tests of milestone M(\d+) \((.*?)\) as the user decided\.",
 }
 START_CHECK = "Reply with the single word ok."
 TEST_FINDING = "FINDING: medium | tests/unit/test_m<n>.py:4 | Weak Test | Also check the type."
@@ -218,10 +220,14 @@ def write_bad_test(number: int) -> None:
 
 
 def add_second_test(number: int) -> None:
-    """Add a second test of src/m<n>.py to the test file of the milestone, once."""
+    """Add a second test of src/m<n>.py to the test file of the milestone, once.
+
+    The new lines keep the line ends of the file: a file that git checked out has LF.
+    """
     if "value_is_an_int" in test_path(number).read_text("utf-8"):
         return
-    with test_path(number).open("a", encoding="utf-8") as test:
+    newline = "\r\n" if b"\r\n" in test_path(number).read_bytes() else "\n"
+    with test_path(number).open("a", encoding="utf-8", newline=newline) as test:
         test.write(f"\n\ndef test_m{number}_value_is_an_int() -> None:\n")
         test.write("    assert isinstance(value(), int)\n")
 
@@ -264,6 +270,16 @@ def act_review_tests(call: Call) -> int:
     """Do the test session for the review findings about the tests: add a second test."""
     add_second_test(call.number)
     sys.stdout.write(f"REPAIRED: {TEST_FINDING.replace('<n>', str(call.number))}\n")
+    return 0
+
+
+def act_retest(call: Call) -> int:
+    """Do the test session with the user's decision: add a second test only when it says so."""
+    if "Add the type test" in call.prompt:
+        add_second_test(call.number)
+        sys.stdout.write(f"CHANGED: tests/unit/test_m{call.number}.py\n")
+    else:
+        sys.stdout.write("NO CHANGE\n")
     return 0
 
 
@@ -360,6 +376,7 @@ ACTIONS = {
     "repair": act_repair,
     "review-tests": act_review_tests,
     "rebuild": act_rebuild,
+    "retest": act_retest,
 }
 
 

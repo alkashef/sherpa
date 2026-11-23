@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="The sherpa spec-driven development workflow: who does each step, what it produces, and what enforces it.">
 <!-- The SHA-256 of docs/workflow.md when this page was last made to agree with it. -->
-<meta name="workflow-md-sha256" content="10b049caae7117a3711efb9ab0d509e0143d0d03ca726190e0d7d97d94ddc9f4">
+<meta name="workflow-md-sha256" content="6b0108c02a6088293d8f45d7564842f432bb65c0fe15e98f01455145e4a9f0fa">
 <title>Sherpa SDD Workflow</title>
 <style>
   /* Layout: a slim /sherpa bar, then two rows of four cards that snake. Top row left to right (setup
@@ -825,7 +825,7 @@
             'Adds an Approval entry.',
             'Sets the status to approved.',
             'Commits.',
-            'Runs the runner again. The milestone continues from its partial work.'
+            'Runs the runner again. When a session made the block, a test session gets the decision first, and it changes a test only when the decision says so. Then the milestone continues from its partial work.'
           ]),
           p('The approval permits exactly what it says.')],
         ['After the last milestone',

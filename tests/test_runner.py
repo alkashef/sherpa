@@ -301,6 +301,7 @@ def test_each_session_is_denied_the_tools_of_its_kind(built: Path) -> None:
         runner.SESSION_TEST_FIX: DENIED_TO_TEST,
         runner.SESSION_REVIEW_TESTS: DENIED_TO_TEST,
         runner.SESSION_REBUILD: DENIED_TO_BUILD,
+        runner.SESSION_RETEST: DENIED_TO_TEST,
     }
 
 
@@ -317,6 +318,7 @@ def test_each_session_kind_has_its_log(built: Path) -> None:
         "M3-test-fix.log",
         "M3-review-tests.log",
         "M3-rebuild.log",
+        "M3-retest.log",
     ]
     assert runner.log_file_name(row, runner.SESSION_BUILD, 2) == "M3-2.log"
     assert runner.log_file_name(row, runner.SESSION_REVIEW_LAST, 2) == "M3-review-last-2.log"
@@ -529,9 +531,11 @@ def test_an_approved_milestone_continues_from_its_partial_work(planned: Sandbox)
     planned.env["FAKE_CLAUDE_STATE"] = ""
     code, output = run_runner(planned, "--end", "1")
     assert code == 0, output
-    # The test session had finished, so the second run started with the build session.
-    assert kinds(planned) == ["test M1", "build M1", "build M1", "review M1"]
-    assert "A previous session worked on this milestone" in sessions(planned)[2]["prompt"]
+    # The test session had finished. A test session got the decision first (RUN-12), and it
+    # changed nothing, because the decision asks for no change of a test.
+    assert kinds(planned) == ["test M1", "build M1", "retest M1", "build M1", "review M1"]
+    assert "The decision:\nUse SQLite.\nRules:" in sessions(planned)[2]["prompt"]
+    assert "A previous session worked on this milestone" in sessions(planned)[3]["prompt"]
     # The partial work went into the commit of the milestone, on top of the approval.
     assert subjects(planned, "-3") == ["M1: First", "Approve M1", "M1: blocked"]
     assert "M1: partial work" not in subjects(planned)
@@ -539,6 +543,34 @@ def test_an_approved_milestone_continues_from_its_partial_work(planned: Sandbox)
     assert {"src/m1.py", "tests/unit/test_m1.py", "docs/plan.md"} <= set(changed)
     assert planned.remote_head() == planned.git("rev-parse", "HEAD")
     assert branches(planned) == ["main"]
+
+
+def test_an_approved_build_block_about_a_test_changes_the_test_first(planned: Sandbox) -> None:
+    # RUN-12: in the fifth real run the build session found a wrong test and blocked. After the
+    # approval only a build session ran, and it may not change a test, so it stopped again.
+    planned.env["FAKE_CLAUDE_STATE"] = "blocked-build"
+    run_runner(planned)
+    approve(planned, "Add the type test.")
+    planned.env["FAKE_CLAUDE_STATE"] = ""
+    code, output = run_runner(planned, "--end", "1")
+    assert code == 0, output
+    assert kinds(planned) == ["test M1", "build M1", "retest M1", "build M1", "review M1"]
+    tests = planned.git("show", "HEAD:tests/unit/test_m1.py")
+    assert "test_m1_value_is_an_int" in tests
+    assert branches(planned) == ["main"]
+
+
+def test_the_retest_prompt_changes_a_test_only_as_the_decision_says(built: Path) -> None:
+    runner = load_runner(built)
+    row = runner.Row(3, "Login", "sonnet", "low", "approved")
+    prompt = runner.retest_prompt(row, ["Use SQLite."])
+    assert prompt.startswith("Change the tests of milestone M3 (Login) as the user decided.")
+    assert "When the decision asks for no change of a test,\nchange nothing." not in prompt
+    assert "When the decision asks for no change of a test, change nothing." in prompt
+    assert "The decision:\nUse SQLite.\nRules:" in prompt
+    assert "`NO CHANGE`" in prompt
+    assert "Never read the code in src/" in prompt
+    assert "<n>" not in prompt
 
 
 def test_runner_stops_when_a_milestone_does_not_finish(planned: Sandbox) -> None:
@@ -1237,7 +1269,7 @@ def test_after_an_approved_wrong_test_the_last_review_blocks_as_usual(planned: S
     assert "Milestone M1 in docs/plan.md waits for your approval." in output
     assert "FINDING: high | src/m1.py:7 | Error Handling" in output
     assert kinds(planned)[5:] == [
-        "review-tests M1",
+        "retest M1",
         "build M1",
         "review M1",
         "repair M1",
@@ -1448,11 +1480,8 @@ def test_an_approved_wrong_test_goes_to_a_test_session_then_the_build(planned: S
     code, output = run_runner(planned, "--end", "1")
     assert code == 0, output
     # The decision went to a test session first, then the build went on from the partial work.
-    assert kinds(planned)[5:] == ["review-tests M1", "build M1", "review M1"]
-    assert (
-        "The user's decision on the test that looked wrong: Keep the test."
-        in (sessions(planned)[5]["prompt"])
-    )
+    assert kinds(planned)[5:] == ["retest M1", "build M1", "review M1"]
+    assert "The decision:\nKeep the test.\nRules:" in sessions(planned)[5]["prompt"]
     assert subjects(planned, "-2") == ["M1: First", "Approve M1"]
     assert "**M1**" not in (planned.folder / "docs" / "plan.md").read_text("utf-8")
     assert branches(planned) == ["main"]
