@@ -86,8 +86,9 @@ For a status request, give only those lines, the number of unapproved ideas, and
      Repair the findings about the code. For the findings about tests, run
      `python scripts/milestones-runner.py --tests-only M<n> --review-findings`; if it changed a
      test, make the tests pass and commit as `M<n>: test repairs`. Then run `--review-only M<n>`
-     one more time. A finding of that last review that is `high`, or whose rule is a requirement
-     ID, blocks the milestone: ask the user. Report each other finding as a `FINDING:` line.
+     one more time. A finding of that last review that is `high`, or `medium` with a requirement
+     ID as its rule, blocks the milestone: ask the user. Report each other finding as a `FINDING:`
+     line.
   5. Merge: `git switch main` (the base branch), `git merge --ff-only milestone/M<n>`, `git push`
      and `git branch -d milestone/M<n>`.
   6. If the block has a **Human test** entry, tell the user what to test, and wait for the answer.

@@ -27,7 +27,8 @@ base branch, and records the base branch in the git setting `branch.milestone/M<
    test session in the folder of the test writer; if it changed a test, a build session makes the
    tests pass and commits `M<n>: test repairs`. Any other finding goes to a repair session (it may
    not edit tests/ and commits `M<n>: review repairs`). Then a last review runs. A finding of the
-   last review blocks the milestone when its severity is high or its rule is a requirement ID.
+   last review blocks the milestone when its severity is high, or medium with a requirement ID
+   as its rule.
    The other findings stay: the table counts them. A milestone has at most two reviews in one
    run. After the user approves a block of the last review, the next run gives the decision and
    the findings of the block to the repairs, and no new review runs: when the repairs change
@@ -252,9 +253,10 @@ EXCEPTION_LINE: Final = re.compile(r"^E\s+([A-Za-z_][\w.]*(?:Error|Exception|Exi
 RAISED_AT: Final = re.compile(r"^(\S+):\d+: ([A-Za-z_][\w.]*)$")  # pytest: `path:line: Error`
 MISSING_FIXTURE: Final = re.compile(r"fixture '(\w+)' not found")
 OWNER_PATH: Final = re.compile(r"\b((?:src|main)[\w/.\-]*)")
-# A finding blocks the merge when its severity is high, or when its rule names a requirement.
+# A finding blocks the merge when its severity is high, or medium with a requirement as its rule.
 REQUIREMENT_RULE: Final = re.compile(r"^(?!DEC-|EX-|SCN-)[A-Z][A-Z0-9]*-\d{3,}\b")
 SEVERITY_HIGH: Final = "high"
+SEVERITY_MEDIUM: Final = "medium"
 FILE_CELL: Final = 1  # the cells of a FINDING line: severity, file and line, rule, remedy
 RULE_CELL: Final = 2
 STATUS_APPROVED: Final = "approved"
@@ -2826,11 +2828,16 @@ def is_test_finding(finding: str) -> bool:
 
 
 def blocks_merge(finding: str) -> bool:
-    """Tell whether a finding of the last review blocks the merge: high, or on a requirement."""
+    """Tell whether a finding of the last review blocks the merge (RUN-09).
+
+    A high finding blocks, and so does a medium finding whose rule is a requirement ID. A low
+    finding never blocks: the review skill gives low to a small loss of readability only.
+    """
     cells = finding_cells(finding)
     severity = cells[0].lower() if cells else ""
     rule = cells[RULE_CELL] if len(cells) > RULE_CELL else ""
-    return severity == SEVERITY_HIGH or REQUIREMENT_RULE.match(rule) is not None
+    on_requirement = REQUIREMENT_RULE.match(rule) is not None
+    return severity == SEVERITY_HIGH or (severity == SEVERITY_MEDIUM and on_requirement)
 
 
 def requirement_note(finding: str) -> str:

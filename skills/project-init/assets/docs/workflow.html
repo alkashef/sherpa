@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="The sherpa spec-driven development workflow: who does each step, what it produces, and what enforces it.">
 <!-- The SHA-256 of docs/workflow.md when this page was last made to agree with it. -->
-<meta name="workflow-md-sha256" content="41cd24132257ef34f7bb4162ce1295c0ce51b30773b718dbb104d4e7caaca0fd">
+<meta name="workflow-md-sha256" content="463b8daab1fe5f1538bd0f5d4a8b890566084d27baf177d91fac7c7a84be9ca2">
 <title>Sherpa SDD Workflow</title>
 <style>
   /* Layout: a slim /sherpa bar, then two rows of four cards that snake. Top row left to right (setup
@@ -723,7 +723,7 @@
           ]),
           ul([
             'A milestone gets at most two reviews.',
-            'A finding of the last review blocks the milestone when its severity is `high`, or its rule is a requirement ID. The finding is the question of the block.',
+            'A finding of the last review blocks the milestone when its severity is `high`, or `medium` with a requirement ID as its rule. The finding is the question of the block. A `low` finding never blocks.',
             'After the approval, the decision and the findings go to the repair sessions, and no new review runs. If the repairs change nothing, the runner merges. If they commit a change, the last review checks it, and its findings block as usual.',
             'The other findings stay in the log, and the human reads them after the run.',
             'A repair or build session after the review that finds a test wrong reports a BLOCKED line. The runner blocks the milestone and keeps the work. After the approval, a test session gets the decision first. That approval covers only the test.'
@@ -810,7 +810,7 @@
             'A secret in a committed file',
             'A dependency that no `Decided` decision names (the check and test tools of the project are approved)',
             'A change to a test',
-            'A finding of the last review that is `high` or names a requirement'
+            'A finding of the last review that is `high`, or `medium` and names a requirement'
           ]),
           p('After the review, the runner itself blocks the milestone: it adds the Blocked entry with the findings to the plan on the base branch. Once approved, the next run gives the decision and the findings to a repair session. If it changes nothing, the runner merges. If it commits a change, the last review checks the change.'),
           p('The session sets the status of the milestone to blocked, adds a Blocked entry, and commits nothing. Then the runner does these steps:'),

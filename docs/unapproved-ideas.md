@@ -70,6 +70,7 @@ The approved changes are built. Their first text is in the git history of this f
 | 38 | The second trial of the test writers (`trials/test-writers/`, results in `results-2/`): Claude, Codex and Antigravity, 3 runs on each of 2 kits through the runner. All three qualify, the medians of seeded bugs caught tie at 17.5, and Claude is the fastest (217 s), so by the rule Claude stays the default writer | USER-17, rule of the second trial approved on November 22, 2026 |
 | 39 | The audit of `CLAUDE_GOLDEN.md` (`docs/audit-claude-golden.md`): the built `CLAUDE.md` drops from 199 to 138 lines. Architecture, Configuration and the test-code rules move to `code-quality`, the dependency list to the language files, the README rule to a new `readme` rules file; 15 rules go; ruff `FIX`, ESLint `no-warning-comments`, and Stylelint (no color outside `theme.css`, BEM class names) take over four rules. Five rows marked Tool keep their prose, because no tool checks them yet | Rank 17 (USER-06), table approved on November 23, 2026 |
 | 40 | After the user approves a block by the last review, the decision and the findings of the block go to the repairs, and no new review runs: when the repairs change nothing the runner merges, and when they commit a change the last review checks it and can block again. The runner reads the last Blocked and Approval entries of a milestone. The approval of a test that looks wrong no longer turns off the blocks of the review | RUN-08 (option C), approved on November 23, 2026 |
+| 41 | A finding of the last review blocks when it is `high`, or `medium` with a requirement ID as its rule. A `low` finding never blocks | RUN-09 (option B), approved on November 23, 2026 |
 
 One real run followed on November 21, 2026 (README, "Checked in real Claude Code sessions"). It
 proved the condition of the user's decision on rank 3: a `claude -p` session runs the built-in
@@ -84,9 +85,7 @@ after the walk-through of section G ends. Several of them change the same files 
 `/write-tests`, `assets/docs/workflow.md` and `workflow.html`), so one pass changes each file and
 the diagram one time.
 
-1. **RUN-09 (option B), approved on November 23, 2026:** a finding of the last review blocks when
-   it is `high`, or `medium` with a requirement ID as its rule. A `low` finding never blocks.
-2. **A fourth real run (option B), approved on November 23, 2026,** after item 1: one
+1. **A fourth real run (option B), approved on November 23, 2026,** after RUN-08 and RUN-09: one
    project, two milestones, with real sessions. One milestone sends the user's name and email
    address to an outside mailing-list service that only a `Proposed` decision names, so its build
    session must block. The run checks a build session that blocks with partial work, the approval

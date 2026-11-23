@@ -1235,12 +1235,15 @@ def test_after_an_approved_wrong_test_the_last_review_blocks_as_usual(planned: S
     [
         ("FINDING: high | src/a.py:3 | Dead Code | Delete it.", True),
         ("FINDING: medium | src/a.py:3 | PAY-001 | Refuse the refund.", True),
-        ("- **FINDING: low | tests/a.py:9 | NFR-002 | Add the test.**", True),
+        ("- **FINDING: medium | tests/a.py:9 | NFR-002 | Add the test.**", True),
+        ("- **FINDING: low | tests/a.py:9 | NFR-002 | Add the test.**", False),
+        ("FINDING: low | src/a.py:3 | SLUG-005 | Name the case.", False),
         ("FINDING: medium | src/a.py:3 | DEC-004 | Follow the decision.", False),
+        ("FINDING: medium | src/a.py:3 | Comments | Say why.", False),
         ("FINDING: low | src/a.py:3 | Comments | Delete the comment.", False),
     ],
 )
-def test_a_finding_blocks_when_it_is_high_or_names_a_requirement(
+def test_a_finding_blocks_when_it_is_high_or_medium_on_a_requirement(
     built: Path, finding: str, blocks: bool
 ) -> None:
     runner = load_runner(built)
