@@ -78,6 +78,7 @@ The approved changes are built. Their first text is in the git history of this f
 | 46 | After a build, repair or rebuild session, the runner compares the `Decided` rows of `docs/design.md` with the base branch. A row may change only its Status, and only to `Superseded`, and no session makes a row `Decided`. Any other change means that the session did not finish, and its retry gets the reason. The repair and rebuild prompts now hold the rule too. `workflow.md`, the page and the README say it | RUN-13 (option A), approved on November 23, 2026 |
 | 47 | The runner starts each Claude session with `--setting-sources project,local`, so the plugins and the hooks of the user's own settings stay out of a run, and the settings, hooks and permissions of the project apply. A real session showed it: no plugin and no hook of the user loaded, and the edit hook of the project still ran. `workflow.md`, the page and the README say it | RUN-15 (option A), approved on November 23, 2026 |
 | 48 | `eslint-plugin-jsdoc` 63.3.3 in `package.json` and `eslint.config.js`: each named function in `src/` has JSDoc with `@param {Type}` and `@returns {Type}` (also `void`), and each file starts with an `@module` block. An inline callback needs none. 63.3.3 is the newest version for Node 22.13; later versions need Node 22.22.2. On the page of the sixth run, ESLint reports 13 errors, and `--fix` adds only a stub that still fails. The rule of the header and the footer stays prose | RUN-14 (option A), approved on November 23, 2026 |
+| 49 | The runner starts each Claude session with `--strict-mcp-config`, so no MCP server of the user's account loads (the claude.ai connectors, such as Gmail and Slack). When the folder of the session holds the project's `.mcp.json`, `--mcp-config` loads its servers; the folder of a test session has none. A real session showed it: 15 connectors without the flag, none with it, and only the project's server with `--mcp-config`. `workflow.md`, the page and the README say it | RUN-16 (option A), approved on November 23, 2026 |
 
 One real run followed on November 21, 2026 (README, "Checked in real Claude Code sessions"). It
 proved the condition of the user's decision on rank 3: a `claude -p` session runs the built-in
@@ -157,7 +158,7 @@ The user decided these points of section G on November 21, 2026. They need no ch
 
 On November 22, 2026 the user decided each idea of Part 2, and Part 1 holds the result. The
 sections below keep the context of the ideas. A new idea goes here, with its own entry. The user
-decided RUN-08 to RUN-15 on November 23, 2026 (Part 1). No idea is open.
+decided RUN-08 to RUN-16 on November 23, 2026 (Part 1). No idea is open.
 
 ### A. Open decisions of the approved changes
 
@@ -294,6 +295,15 @@ New ideas from the sixth real run (November 23, 2026). Nobody approved them.
   or a plugin; (C) no change. Recommendation: A, after a real session shows that the plugin hook
   no longer runs. The project's settings carry the hooks and the permissions of the workflow, so
   a session loses nothing that the project needs.
+- **RUN-16: the unattended sessions load the MCP servers of the user's account.** Found while
+  RUN-15 was checked in a real session, on November 23, 2026, and approved by the user on the same
+  day with option A (Part 1). With RUN-15, a session still loaded the claude.ai connectors of the
+  account (Gmail, Slack, Google Drive, Calendar and others), because they come from the account,
+  not from a settings file. The sessions run with permission prompts off, so a session could send
+  a mail or a message. Options: (A) the runner adds `--strict-mcp-config` to each session, and
+  `--mcp-config .mcp.json` when the folder of the session holds the project's file; (B) deny rules
+  for MCP tools in the project's `settings.json`, which a new connector can miss; (C) no change.
+  Recommendation: A.
 
 ### G. The user's list of November 21, 2026
 

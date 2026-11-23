@@ -110,7 +110,8 @@ each commit of a session. Each session starts with permission prompts off, so it
 the rules in .claude/settings.json, plus the --disallowedTools of its kind: the runner refuses to
 start without that file. Each Claude session loads only the settings of the project
 (`--setting-sources project,local`), so the plugins and the hooks of the user's own settings stay
-out of a run (RUN-15).
+out of a run (RUN-15). It loads no MCP server of the user's account either (`--strict-mcp-config`):
+only the servers of the project's .mcp.json, when its folder holds one (RUN-16).
 
 One step of a milestone in chat (docs/workflow.md, Execute) uses the same guards:
 `--tests-only M<n>` runs the test session in the current branch and commits nothing, and
@@ -218,6 +219,8 @@ WRITER_SIGN_IN: Final = {  # what the user does once, so that the writer runs wi
 }
 WRITER_FILE: Final = "config/test-writer.json"  # the writer that /project-init recorded
 SETTING_SOURCES: Final = "project,local"  # a Claude session loads no settings of the user
+STRICT_MCP: Final = "--strict-mcp-config"  # and no MCP server of the user's account (RUN-16)
+MCP_CONFIG_FILE: Final = ".mcp.json"  # the project's own MCP servers, which a session may load
 START_CHECK_PROMPT: Final = "Reply with the single word ok."
 START_CHECK_SECONDS: Final = 300
 # What the folder of a test session holds: no src/ and no .git. tests/ is copied too.
@@ -1192,7 +1195,8 @@ def session_command(row: Row, kind: str) -> list[str]:
     Returns:
         The command; --disallowedTools comes last, because it takes every argument after it.
         Its program is a name: run_claude finds it on the PATH of the session. The session loads
-        only the settings of the project, not the plugins and hooks of the user (RUN-15).
+        only the settings of the project, not the plugins and hooks of the user (RUN-15), and no
+        MCP server of the user's account, such as a mail or chat connector (RUN-16).
     """
     return [
         "claude",
@@ -1205,9 +1209,25 @@ def session_command(row: Row, kind: str) -> list[str]:
         "bypassPermissions",
         "--setting-sources",
         SETTING_SOURCES,
+        STRICT_MCP,
         "--disallowedTools",
         *DENIED_TOOLS[kind],
     ]
+
+
+def with_project_mcp(command: list[str], folder: Path) -> list[str]:
+    """Return a claude command that also loads the MCP servers file of its folder, if any.
+
+    session_command passes --strict-mcp-config, so a session loads only the MCP servers that
+    --mcp-config names (RUN-16). When the folder of the session holds the project's .mcp.json,
+    its servers load. The folder of a test session has none. A command of another test writer
+    stays as it is.
+    """
+    config = folder / MCP_CONFIG_FILE
+    if STRICT_MCP not in command or not config.is_file():
+        return command
+    after = command.index(STRICT_MCP) + 1
+    return [*command[:after], "--mcp-config", str(config), *command[after:]]
 
 
 def writer_command(writer: Writer, row: Row, kind: str, prompt: str) -> tuple[list[str], str]:
@@ -2423,7 +2443,8 @@ def run_claude(session: Session, row: Row, attempt: Attempt, job: Job) -> Claude
         command, stdin = session_command(row, job.kind), prompt
     else:
         command, stdin = writer_command(job.writer, row, job.kind, prompt)
-    launch = Launch(command, job.folder or session.paths.root, stdin, session.environment or None)
+    folder = job.folder or session.paths.root
+    launch = Launch(with_project_mcp(command, folder), folder, stdin, session.environment or None)
     run = _claude_process(launch, attempt.timeout_seconds)
     log_name = log_file_name(row, job.kind, attempt.number)
     write_log(session.paths, log_name, run.lines)

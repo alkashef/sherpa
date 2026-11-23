@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="The sherpa spec-driven development workflow: who does each step, what it produces, and what enforces it.">
 <!-- The SHA-256 of docs/workflow.md when this page was last made to agree with it. -->
-<meta name="workflow-md-sha256" content="cb7a94a0d8e48347d6958d192c4ce40629febd4916ea4017a381efede6c47935">
+<meta name="workflow-md-sha256" content="29e92a145c7b11cc753837068ed3c33048a7e6837d00b15cb256dfdb6cecba95">
 <title>Sherpa SDD Workflow</title>
 <style>
   /* Layout: a slim /sherpa bar, then two rows of four cards that snake. Top row left to right (setup
@@ -626,7 +626,7 @@
             'The branch has an upstream.',
             '`python scripts/spec_coverage.py --consistency` passes: the spec, the design and the plan agree on each ID, and no milestone names a `Proposed` decision in its Refs.'
           ]),
-          p('Sessions run with `bypassPermissions`. Their guard rails are the deny and ask rules of `settings.json`. A session loads only the settings of the project (`--setting-sources project,local`): the plugins and hooks of the user stay out.')],
+          p('Sessions run with `bypassPermissions`. Their guard rails are the deny and ask rules of `settings.json`. A session loads only the settings of the project (`--setting-sources project,local`): the plugins and hooks of the user stay out. It loads no MCP server of the account of the user (`--strict-mcp-config`), only those of the `.mcp.json` of the project.')],
         ['In chat',
           p('When `/sherpa` builds one milestone in chat, `python scripts/milestones-runner.py --tests-only M&lt;n&gt;` is the test session, with the same folder, checks and round of repair.')]
       ]

@@ -314,6 +314,22 @@ def test_each_claude_session_loads_only_the_settings_of_the_project(built: Path)
         index = command.index("--setting-sources")
         assert command[index + 1] == "project,local", kind
         assert index < command.index("--disallowedTools"), kind
+        # RUN-16: no MCP server of the user's account, such as a mail or chat connector.
+        assert command.index("--strict-mcp-config") < command.index("--disallowedTools"), kind
+
+
+def test_a_session_loads_the_mcp_servers_of_its_folder_only(built: Path, tmp_path: Path) -> None:
+    runner = load_runner(built)
+    command = runner.session_command(runner.Row(3, "Login", "sonnet", "low", "open"), "build")
+    assert runner.with_project_mcp(command, tmp_path) == command
+    (tmp_path / ".mcp.json").write_text('{"mcpServers": {}}\n', encoding="utf-8")
+    loaded = runner.with_project_mcp(command, tmp_path)
+    strict = loaded.index("--strict-mcp-config")
+    assert loaded[strict + 1 : strict + 3] == ["--mcp-config", str(tmp_path / ".mcp.json")]
+    assert loaded.index("--mcp-config") < loaded.index("--disallowedTools")
+    # The command of another test writer has no --strict-mcp-config, and stays as it is.
+    other = ["codex", "exec", "-"]
+    assert runner.with_project_mcp(other, tmp_path) == other
 
 
 def test_each_session_kind_has_its_log(built: Path) -> None:
