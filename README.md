@@ -68,7 +68,7 @@ the permissions, the hooks and the milestone runner use its features.
    project's name (Python 3.12) and, for a Python project, installs the Python tools into it and
    pins them, then commits, turns on the pre-commit hook, runs `gh repo create`, and pushes.
 2. `scripts/build_instance.py` splits the master `assets/CLAUDE_GOLDEN.md` into a `CLAUDE.md` of about
-   190 lines that always loads, plus `.claude/rules/*.md` files that load only when Claude touches
+   140 lines that always loads, plus `.claude/rules/*.md` files that load only when Claude touches
    matching files. It copies or fills in the other files from `assets/`. Rules a tool can enforce
    (ruff, mypy, ESLint, `tsc`, permissions) are in the configs, not in prose.
 3. `SKILL.md` tells Claude how to run it: what to ask, the command, how to handle failures.
@@ -90,8 +90,8 @@ tool's config, where it is enforced on every run, and `CLAUDE.md` keeps only wha
 
 | File | What it is | Why |
 | --- | --- | --- |
-| `CLAUDE.md` | The rules Claude always loads: workflow, project facts, how to work. About 190 lines. | Claude Code reads it at the start of every session. Anthropic advises keeping it under 200 lines: a longer file uses more context and is followed less reliably. |
-| `.claude/rules/*.md` | The other rules, one file per topic, each with `paths:` globs. Which files you get depends on the modules. | A rule file loads only when Claude touches a matching file, so the Python rules cost nothing while Claude edits CSS. |
+| `CLAUDE.md` | The rules Claude always loads: workflow, project facts, how to work. About 140 lines. | Claude Code reads it at the start of every session. Anthropic advises keeping it under 200 lines: a longer file uses more context and is followed less reliably. |
+| `.claude/rules/*.md` | The other rules, one file per topic, each with `paths:` globs. `code-quality.md` (code smells, architecture, naming, configuration, test code, errors) loads for `src/`, `tests/`, `scripts/` and `main.py`, and `readme.md` for `README.md`. The other files depend on the modules. | A rule file loads only when Claude touches a matching file, so the Python rules cost nothing while Claude edits CSS. |
 | `.claude/settings.json` | Claude Code permissions. Allowed without asking: git status, diff, log, add, commit, push, `check.py`, `spec_coverage.py` and `cleanup.py`, and the steps of a milestone in chat: `git switch -c milestone/*`, `git switch main`, `git merge --ff-only milestone/*`, `git branch -d milestone/*`, and `milestones-runner.py --tests-only` and `--review-only`. Asks first: editing `CLAUDE.md`, the spec, the workflow and this file; editing the check configs (`ruff.toml`, `mypy.ini`, `pytest.ini`, `.coveragerc`, `package.json`, `tsconfig.json`, `eslint.config.js`, `.prettierrc.json`, `.stylelintrc.json`) and the hook files (`.githooks/`, `scripts/check.py`, `scripts/spec_coverage.py`, `scripts/run-check.sh`), so a check cannot be loosened to make it pass; installing packages; deleting folders; killing processes. Denied: force push, `git reset --hard`, `git clean`, `git restore`, deleting Docker volumes, skipping the git hooks (`--no-verify`, `commit -n`, `core.hooksPath`), and the PowerShell cmdlets `Set-Content`, `Out-File` and `Add-Content`, which write in the ANSI code page on Windows PowerShell 5.1. Each rule is written twice, as `Bash(...)` and `PowerShell(...)`. Also the edit hook: after every `Edit` or `Write`, it runs `scripts/check.py --edited` on that file. | Routine steps run without prompts, and commands that destroy work cannot run at all, even in bypass mode. A rule here is enforced; a rule in `CLAUDE.md` is only advice. An `ask` rule refuses when nobody can answer, so an unattended milestone cannot edit the spec or the workflow. On Windows, Claude Code may run commands with its PowerShell tool, which `Bash(...)` rules do not cover. The edit hook makes Claude fix lint errors as it writes, not at the end. |
 | `scripts/check.py`, `scripts/run-check.sh` | The checks: `ruff check`, `ruff format --check` and `mypy` (with `ruff.toml`); `npm run lint`, `typecheck`, `format:check` (Prettier) and `lint:css` (Stylelint) with `package.json`, each once there are files for it to check; four checks that the script does itself: each staged text file is UTF-8, the docs a person reads (`README.md`, `CLAUDE.md`, `docs/*.md`) are plain English by `scripts/ste_lint.py` (at most 2.5 marks for each 100 words, and no sentence of 12 words or more in two docs), one class per file in `src/`, and the module boundaries of `docs/design.md` (the imports of the Python and the JavaScript files in `src/`); and the tests: pytest with the 80% branch-coverage floor, and `npm test`. It prints one line for each check (`passed`, `failed`, or `skipped` with the reason), and `No check applied.` when the project has none. Code in `src/` with no test fails, and a test under `tests/live/` does not count as a test. When every staged file is under `docs/`, the tests are skipped and the other checks still run: a commit of the plan alone (a blocked milestone, an approval) cannot change a test result. With `--edited` it checks one file: ruff, ESLint, Stylelint and Prettier fix what they can, and the rest goes back to Claude, also a second class in the file. `run-check.sh` finds the project's conda Python (the active environment, or `envs/<name>` under conda's folder) and runs `check.py` with it. | One command runs every check the extensions show in the editor, and both hooks use it. The line for each check shows which checks ran, so a check that did not run never counts as a pass. `python` alone is not reliable in hooks: on Windows it can be the Microsoft Store stub, and Claude Code's shell may not have the environment active. |
 | `.githooks/pre-commit` | Runs `scripts/run-check.sh`. A failing check or test refuses the commit. `init_project.py` turns it on with `git config core.hooksPath .githooks` after the first commit; after a fresh clone, the new README says to run that once. | Lint errors, type errors and failing tests cannot reach the history, from Claude or from you. The workflow already tells Claude to run the tests before a commit; the hook makes sure, for every commit. If a tool is missing (before `npm install`, for example), it refuses the commit and names the tool. |
@@ -119,7 +119,7 @@ tool's config, where it is enforced on every run, and `CLAUDE.md` keeps only wha
 
 | File | What it is | Why |
 | --- | --- | --- |
-| `ruff.toml` | Linter and formatter config: line length 100, docstrings, type annotations, import order (`src` is first-party, whether or not its files exist yet), imports only at the top of a file, naming, security checks, no `print` outside `scripts/`, pathlib, and limits on complexity (8), arguments (4) and statements per function (15). | Ruff checks style, common bugs and code smells in well under a second, so Claude can run it after every change. The limits keep functions small. |
+| `ruff.toml` | Linter and formatter config: line length 100, docstrings, type annotations, import order (`src` is first-party, whether or not its files exist yet), imports only at the top of a file, naming, security checks, no `print` outside `scripts/`, no TODO comments, pathlib, and limits on complexity (8), arguments (4) and statements per function (15). | Ruff checks style, common bugs and code smells in well under a second, so Claude can run it after every change. The limits keep functions small. |
 | `mypy.ini` | Type checker config: `strict = True` on `src/`. | Strict typing finds wrong types and missing `None` checks before the code runs, and typed code is easier for Claude to change safely. |
 | `pytest.ini` | Test config: tests live in `tests/`, async tests run without decorators, and a normal run skips `tests/live/`. The test command requires 80% branch coverage. | Tests prove a change works. The coverage floor stops untested code from growing. |
 | `.coveragerc` | Coverage config: `patch = subprocess` also measures the Python processes that a test starts. | An end-to-end test that runs `main.py` as a process counts for the coverage floor. Without it, a correct project with such tests failed the floor in the trial of the test writers. |
@@ -130,9 +130,9 @@ tool's config, where it is enforced on every run, and `CLAUDE.md` keeps only wha
 | File | What it is | Why |
 | --- | --- | --- |
 | `package.json` | Dev-only tools, pinned: ESLint, TypeScript, Node types, Prettier, Stylelint. Scripts: `typecheck`, `lint`, `lint:css`, `format:check`, `test` (it skips `tests/live/`). Also with `html-css` and `ui-design`. | The app itself has no dependencies and no build step. These tools only check the code. |
-| `.prettierrc.json`, `.stylelintrc.json` | Prettier formats JavaScript, CSS and HTML at line length 100 (as ruff does). Stylelint checks CSS with its standard rules. Also with `html-css` and `ui-design`. | The formatting and CSS the editor extensions show are checked by the hooks too, so they cannot drift. |
+| `.prettierrc.json`, `.stylelintrc.json` | Prettier formats JavaScript, CSS and HTML at line length 100 (as ruff does). Stylelint checks CSS with its standard rules, BEM class names, and no color value outside `theme.css`. Also with `html-css` and `ui-design`. | The formatting and CSS the editor extensions show are checked by the hooks too, so they cannot drift. |
 | `tsconfig.json` | Type-checks plain JavaScript (`checkJs`, `strict`) without compiling. | Type errors are found in `.js` files without switching to TypeScript. |
-| `eslint.config.js` | ESLint rules: the same size limits as ruff, one class per file, `const` over `let`, `===`, no `console` outside `log.js`, no `fetch` outside `api.js`, no `innerHTML`. | It enforces the JavaScript rules from `CLAUDE.md`, including the ones that keep unsafe HTML out. |
+| `eslint.config.js` | ESLint rules: the same size limits as ruff, one class per file, `const` over `let`, `===`, no TODO comments, no `console` outside `log.js`, no `fetch` outside `api.js`, no `innerHTML`. | It enforces the JavaScript rules from `CLAUDE.md`, including the ones that keep unsafe HTML out. |
 
 ### With other modules
 
@@ -418,7 +418,7 @@ config files in `assets/`. Add one only when a project needs it.
 ### The line budget
 
 The built `CLAUDE.md` must have fewer than 200 lines, counting every line, blank lines included. It
-is about 190 now. The test suite checks this on a build with every module.
+is about 140 now, after the audit of its rules (`docs/audit-claude-golden.md`). The test suite checks this on a build with every module.
 
 - *Why every line:* Anthropic's advice to keep `CLAUDE.md` under 200 lines counts the file as it
   is. Skipping blank lines would let the file pass the test at well over 200 real lines.
@@ -439,7 +439,7 @@ conda run -n sherpa python -m pytest
 ```
 
 It runs in about 20 minutes and needs only git. With `pytest-xdist` in the environment,
-`python -m pytest -n 12` runs it in about 3 minutes: each test works in its own folder. Each test works in its own temporary folder, with
+`python -m pytest -n 12` runs it in about 3 minutes. Each test works in its own temporary folder, with
 its own git config, a fake `gh` (`tests/fake_gh.py`) that answers the three calls the skill makes
 and adds a local bare repository as `origin`, so every push is a real git push, and a fake conda
 (`tests/fake_conda.py`) that lists and "creates" environments without touching conda. Your own git

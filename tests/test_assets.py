@@ -320,7 +320,7 @@ def test_a_rule_for_all_inputs_gets_a_property_test_and_mutants_run_on_demand() 
 
 def test_each_module_names_what_its_tests_prove() -> None:
     sections = {s.section_id: s for s in bi.read_sections(bi.assets_dir() / "CLAUDE_GOLDEN.md")}
-    for section_id in ("B6", "B5", "B4", "B3", "B3a", "A18", "A14"):
+    for section_id in ("B8", "B6", "B5", "B4", "B3", "A18", "A14"):
         assert any(line.startswith("- Tests prove:") for line in sections[section_id].body), (
             section_id
         )

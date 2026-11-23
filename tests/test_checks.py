@@ -5,6 +5,7 @@ These run the real ruff and mypy from this repository's environment against a bu
 
 import importlib.util
 import json
+import re
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -304,6 +305,62 @@ def test_javascript_with_no_test_fails(tmp_path: Path) -> None:
 def test_eslint_allows_one_class_per_file() -> None:
     config = (bi.assets_dir() / "eslint.config.js").read_text(encoding="utf-8")
     assert '"max-classes-per-file": ["error", 1]' in config
+
+
+def test_a_todo_comment_fails(project: Sandbox) -> None:
+    todo = '"""A module."""\n\n# TODO: finish the module.\n'
+    (project.folder / "src" / "todo.py").write_text(todo, encoding="utf-8")
+    code, output = check(project.folder)
+    assert code == 2
+    assert "FIX002" in output or "line-contains-todo" in output
+
+
+def test_eslint_refuses_a_todo_comment() -> None:
+    config = (bi.assets_dir() / "eslint.config.js").read_text(encoding="utf-8")
+    terms = '"no-warning-comments": ["error", { terms: ["todo", "fixme", "xxx", "hack"]'
+    assert terms in config
+
+
+def stylelint_config() -> dict[str, object]:
+    """Return the Stylelint config that new projects get."""
+    text = (bi.assets_dir() / ".stylelintrc.json").read_text(encoding="utf-8")
+    config: dict[str, object] = json.loads(text)
+    return config
+
+
+def test_stylelint_refuses_a_color_outside_the_theme() -> None:
+    config = stylelint_config()
+    rules = config["rules"]
+    assert isinstance(rules, dict)
+    assert rules["color-no-hex"] is True
+    assert rules["color-named"] == "never"
+    assert {"rgb", "hsl", "oklch"} <= set(rules["function-disallowed-list"])
+    overrides = config["overrides"]
+    assert isinstance(overrides, list)
+    theme = next(o for o in overrides if o["files"] == ["**/theme.css"])
+    assert set(theme["rules"]) == {"color-no-hex", "color-named", "function-disallowed-list"}
+    assert all(value is None for value in theme["rules"].values())
+
+
+@pytest.mark.parametrize(
+    ("name", "valid"),
+    [
+        ("sidebar", True),
+        ("sidebar__toggle", True),
+        ("sidebar__toggle--open", True),
+        ("main-view__search-box--wide", True),
+        ("card--active", True),
+        ("blueBox", False),
+        ("sidebar_toggle", False),
+        ("sidebar__toggle__icon", False),
+        ("Sidebar", False),
+    ],
+)
+def test_stylelint_checks_the_bem_form_of_a_class(name: str, valid: bool) -> None:
+    rules = stylelint_config()["rules"]
+    assert isinstance(rules, dict)
+    pattern = rules["selector-class-pattern"][0]
+    assert (re.fullmatch(pattern, name) is not None) is valid
 
 
 def test_a_new_project_ignores_the_release_folder(tmp_path: Path) -> None:

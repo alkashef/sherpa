@@ -25,6 +25,7 @@ select = [
     "S",             # security checks
     "PTH",           # pathlib instead of path strings
     "ERA",           # no commented-out code
+    "FIX",           # no TODO, FIXME, XXX or HACK comments (see Naming)
     "SIM",           # simplifications
     "TID",           # absolute imports only
     "ASYNC",         # blocking calls inside async functions

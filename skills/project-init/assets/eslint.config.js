@@ -24,6 +24,8 @@ export default [
       "no-var": "error",
       "prefer-const": "error",
       eqeqeq: "error",
+      // No TODO comments (see Naming): report the finding instead.
+      "no-warning-comments": ["error", { terms: ["todo", "fixme", "xxx", "hack"], location: "start" }],
       // Only log.js uses console, and only api.js calls fetch.
       "no-console": "error",
       "no-restricted-globals": ["error", { name: "fetch", message: "Only api.js calls fetch." }],

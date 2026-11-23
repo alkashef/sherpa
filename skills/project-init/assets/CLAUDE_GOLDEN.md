@@ -8,8 +8,8 @@ Or, for a new project, use the project-init skill (this file is in its assets/ f
 It runs the script, then commits, creates the GitHub repository, and pushes.
 
 The script (scripts/build_instance.py, next to this assets/ folder) writes CLAUDE.md
-(the always-loaded sections, about 190 lines), the path-scoped .claude/rules/*.md files
-(code-quality, llm, and one per language or stack), and the starting folders.
+(the always-loaded sections, about 150 lines), the path-scoped .claude/rules/*.md files
+(code-quality, readme, llm, and one per language or stack), and the starting folders.
 Everything else comes from this folder: README.md, docs/ (including workflow.md),
 scripts/cleanup.py, and the tool configs. The script holds the section-to-file map and
 the path globs. Adjust the globs in the generated rules files to the project's layout
@@ -39,8 +39,6 @@ by AI. Follow every rule in this file exactly.
   would write one of them to another place writes to these files instead.
 - Requirements live only in `docs/spec.md`. Never implement one that exists only in chat, code, or
   memory. If a request is not covered by the spec or contradicts it, stop and ask.
-- Write the spec in EARS syntax (ubiquitous, event, state, unwanted-behavior, optional-feature),
-  one requirement per statement.
 - Every requirement has a stable ID `AREA-NNN` (`NFR-NNN` for non-functional). Every design decision
   has a `DEC-NNN` in `docs/design.md`. Never renumber or reuse an ID. Mark a retired requirement
   "withdrawn".
@@ -52,6 +50,10 @@ by AI. Follow every rule in this file exactly.
 Follow the workflow in @docs/workflow.md exactly.
 
 Do not refactor, rename, or move anything outside the current milestone.
+
+Changing a layer, a module boundary, the data model, the public API, or the tech stack needs a
+`DEC-NNN` in `docs/design.md`. Outside a milestone it also needs the user's approval; in a
+milestone, `docs/workflow.md` (Rules) applies.
 
 ## Communication and reporting
 <!-- A3. Applies when: always. -->
@@ -80,32 +82,28 @@ End every task that changes files with this report, one line per item:
 ## Code smells
 <!-- A5. Applies when: always. Needs ruff.toml, mypy.ini, and eslint.config.js (see assets/). -->
 
-Ruff, mypy, and ESLint enforce the limits below (`ruff.toml`, `mypy.ini`, `eslint.config.js`).
-Never weaken their configuration, and never add `noqa`, `type: ignore`, or `eslint-disable` to make
-a change pass. Fix the code.
+Ruff, mypy, ESLint, and `scripts/check.py` enforce the limits of size and complexity, one class per
+file, every import at the top, and the table "Module boundaries" of `docs/design.md`. Never weaken
+their configuration, and never add `noqa`, `type: ignore`, or `eslint-disable` to make a change
+pass. Fix the code.
 
 Two hooks run `scripts/check.py`. After each edit, ruff or ESLint fixes the file and reports what is
 left: fix it before moving on. Before each commit, every check and test runs, and a failure
-refuses the commit. Never bypass the hooks (`--no-verify`, `core.hooksPath`). Editing the check configs or
-the hook files asks the user first; ask only to change a rule on purpose, never to pass a check.
+refuses the commit. `.claude/settings.json` denies a way around the hooks.
 
 - Each function, class, and module does one thing. If its name needs two verbs, or describing it
-  needs "and", split it. Keep functions near 20 lines (15 statements), 4 parameters, and complexity
-  8. When a file passes about 300 lines, check it for a second responsibility and split it only if
-  you find one.
+  needs "and", split it. When a file passes about 300 lines, check it for a second responsibility
+  and split it only if you find one.
 - Prefer composition to inheritance. Group values that always travel together into one typed
   object. Inject long-lived collaborators through the constructor, not through every call.
 - Do not write: duplicated logic (search for a helper first; extract on the second use); dead code;
   abstractions the task does not need; a design pattern that no `Decided` decision in
   `docs/design.md` names; pass-through wrappers or classes too small to justify themselves (the
   single owner of an external system is not one); mutable global state.
-- Write code a beginner-to-intermediate programmer can read. Readable code comes before clever
-  code: prefer plain constructs.
-- One class per file, and every import at the top of the file. Import only what the table "Module
-  boundaries" of `docs/design.md` permits. `scripts/check.py`, ruff, and ESLint enforce these.
+- Write code a beginner-to-intermediate programmer can read.
 
 ## Architecture and layers
-<!-- A6. Applies when: always. -->
+<!-- A6. Applies when: code changes. A change of a layer or a boundary needs a decision (Workflow). -->
 
 - `docs/design.md` defines the layers and their import rules. Follow them. Before writing code,
   name the module that owns the change. Before creating a module, state its name, layer, and single
@@ -118,9 +116,6 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
   LLM). A module exposes only what others need and never reaches into another module's internals.
 - Pass anything that touches an external system (repository, API client, file writer, LLM client)
   into the code that uses it, so tests can use fakes. Do not use a dependency-injection framework.
-- Changing a layer, a module boundary, the data model, the public API, or the tech stack needs a
-  `DEC-NNN` in `docs/design.md`. Outside a milestone it also needs the user's approval; in a
-  milestone, `docs/workflow.md` (Rules) applies.
 
 ## Directory structure
 <!-- A7. Applies when: always. A host that needs files at the repo root (for example GitHub Pages) lists the exception in docs/design.md. -->
@@ -142,26 +137,25 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 - All source code lives under `src/`, except the entry point `main.py`. Create a folder only when
   the layout in `docs/design.md` lists it, and update the layout in the same change.
 - Never edit a generated file by hand. Regenerate it with the script that makes it.
-- `scripts/cleanup.py` removes caches and generated artifacts by name (for example `__pycache__`,
-  tool caches, logs). It never deletes source, tests, docs, config, input data, or dependencies.
 
 ## Naming and code documentation
 <!-- A8. Applies when: always. Name formats and docstring syntax are in the language sections. -->
 
 - Name things for their purpose, not for how they look or are built. Use one term per concept:
   the Term of the glossary in `docs/spec.md`, never a word of its Avoid column.
-- Every module, class, and function has a docstring. Tests are exempt: their names carry the
-  requirement ID.
+- Every module, class, and function has a docstring (ruff `D` checks the public ones). Tests are
+  exempt: their names carry the requirement ID.
   - Module: what it does, what it does not do (and which module does), and the requirement or
     decision IDs it implements.
   - Class: its single responsibility, stated explicitly, and the state it owns, if any.
   - Public function: a summary, then parameters, return value, and errors raised. A private or
     trivial function gets a one-line summary.
 - Comment only where the behavior is not obvious. Do not narrate the code.
-- Leave no TODO comments. Report out-of-scope findings under "Assumptions and open questions".
+- Ruff and ESLint refuse a TODO comment. Report an out-of-scope finding under "Assumptions and open
+  questions".
 
 ## Configuration and constants
-<!-- A9. Applies when: the project has configurable values. Secrets: see Security and privacy. -->
+<!-- A9. Applies when: code reads a configurable value. Secrets: see Security and privacy. -->
 
 - Settings live in `config/.env`, which is never committed. `config/.env.example` is committed and
   lists every key: non-secret keys carry their default, secret keys are empty. `config.py` is the
@@ -185,34 +179,30 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
   not enough. One that `docs/design.md` names in a `Decided` decision is approved, and so are the
   check and test tools of the project (pytest, pytest-cov, hypothesis, Playwright). Install only into
   the project's isolated environment, never into the global interpreter or a base environment.
-- The dependency file (`requirements.txt`; `package.json` for JavaScript) is the only list. Add a
-  library in the same change that first imports it, never import an unlisted library, and remove it
-  when its last import goes.
-- List direct dependencies only, pinned to the version installed when added (`==` in
-  `requirements.txt`, exact versions in `package.json`). Do not use `pip freeze`. Use only APIs that
-  exist in the pinned version.
+  The language sections say how to list a dependency.
 
 ## Testing
 <!-- A11. Applies when: the project has automated tests. Test tools and naming syntax are in the language sections. Needs pytest.ini (see assets/). -->
 
 - Every requirement ID and every acceptance example has a test at the lowest level that proves it,
   named after its ID. Every new public function in the business-logic layer also has a unit test.
+- Layout: `tests/unit/` (one test file per source module), `tests/e2e/`, and `tests/live/` (live
+  checks: no milestone runs them). `scripts/check.py` enforces a coverage floor of 80% on `src/`.
+- Never weaken or edit an existing test, baseline, or fixture to make it pass. Change one only when
+  its requirement changed, and say so in the report.
+
+## Test code
+<!-- A11a. Applies when: a test changes. The rules of Testing (CLAUDE.md) apply too. -->
+
 - Every user workflow (an event-driven requirement, `When <trigger>, ...`) has an end-to-end test
   through the outermost non-browser entry point (HTTP API, CLI, or service). The UI is AI-built and
   never read by the user, so every UI workflow requirement also gets one Playwright test in
   `tests/e2e/ui/`. `docs/design.md` names the Playwright package; the user approves it under
   Dependencies.
-- A test uses a real local part where one exists (a database file in a temporary folder, a server
-  it starts on 127.0.0.1) and a fake only for an external service.
-- Layout: `tests/unit/` (one test file per source module), `tests/e2e/`, and `tests/live/` (live
-  checks: no milestone runs them). Requirement coverage is the primary measure. Line and branch
-  coverage on `src/` has a floor of 80%.
 - Test public behavior, not private implementation: one behavior per test, and every test asserts
   something. Tests are deterministic (seed randomness; no real clock, external network, or sleeps;
   exact outputs). They use temporary folders and invented data, and never touch real config, data,
   or user files. Outside `tests/live/`, no test needs a live LLM or external server.
-- Never weaken or edit an existing test, baseline, or fixture to make it pass. Change one only when
-  its requirement changed, and say so in the report.
 
 ## Error handling
 <!-- A12. Applies when: always. Exception syntax is in the language sections. -->
@@ -269,16 +259,11 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 
 - Work on `main` unless told otherwise. Never commit `config/.env`, secrets, user data, model
   weights, exports, logs, or caches. Before the first commit, check that `.gitignore` covers them.
-- `.claude/settings.json` blocks force-push, `reset --hard`, `git clean`, `git restore`, and Docker
-  volume deletion. It asks before recursive deletes, installs, killing processes, and edits to the
-  spec, the workflow, `CLAUDE.md`, or the settings. Never work around a block with a different
-  command.
+- `.claude/settings.json` blocks or asks before destructive commands. Never work around a block
+  with a different command.
 - Delete recursively only a scratch folder you made in this milestone, and clear caches with
   `scripts/cleanup.py`. Never touch files outside this repo (except scratch folders you make and
   delete), the paths listed as protected under Project rules, or another program's process.
-- If a milestone needs something that `docs/workflow.md` (Blocked) names, such as a forbidden
-  action, a spec change, or a dependency no `Decided` decision names, stop it as that step says.
-  An **Approval** entry in its block permits exactly what it says, and nothing more.
 
 ## Security and privacy
 <!-- A16. Applies when: always. -->
@@ -307,32 +292,27 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
   | Behavior or a requirement | `docs/spec.md`, with the user's approval |
   | Architecture, data model, settings, directory layout, rules, thresholds | `docs/design.md` |
   | Setup, how to run, user-visible changes | `README.md` |
-  | A library added or removed | `requirements.txt`, in the same change as the import |
   | New generated files, caches, secrets | `.gitignore` |
 
 - Docs that a person reads use ASD-STE100 Simplified Technical English (flavored): top-down, short
   sections, tables and lists before prose, one fact in one place. `scripts/check.py` lints them.
-- `README.md` always has: What it does, Stack (with versions), File structure (top-level folders,
-  one line each), Setup, How to run, How to test. Setup explains how to install dependencies,
-  configure `config/.env`, and set up and check every external dependency (the LLM server, models,
-  API keys) before the first run.
 - Never edit `CLAUDE.md` without the user's approval. When a fact in it goes stale (stack, test
   command, run command) or a rule needs to change, flag it, propose the exact change, and edit only
   after approval.
 
+## README
+<!-- A17a. Applies when: README.md changes. -->
+
+- `README.md` always has: What it does, Stack (with versions), File structure (top-level folders,
+  one line each), Setup, How to run, How to test. Setup explains how to install dependencies,
+  configure `config/.env`, and set up and check every external dependency (the LLM server, models,
+  API keys) before the first run.
+
 ## Long-running work
-<!-- A18. Applies when: the project has tasks that can run long (network or LLM calls, large files, pipelines). -->
+<!-- A18. Applies when: the project has tasks that can run long (network or LLM calls, large files, pipelines). The language and HTTP API sections say how. -->
 
 - Long-running work never blocks the UI or the request path. Use async I/O for waits, and keep
   blocking or CPU-heavy work off the main loop.
-- Python: `async def` and `await` for I/O at the boundaries (API handlers, LLM and network
-  clients). Pure business logic stays synchronous. Ruff flags blocking calls inside `async def`;
-  run them with `asyncio.to_thread`. Async tests use `pytest-asyncio`.
-- JavaScript: `async`/`await` with `fetch`. Move heavy computation to a Web Worker. Never freeze the
-  main thread.
-- An API request that can run long starts the task and returns `202` with a job ID at once. The
-  task runs in the background as an async task. `GET /api/jobs/<id>` reports status and progress,
-  and the UI polls it. One object created in `main.py` holds the job state.
 - Tests prove: a stop in the middle, and a run that continues after it.
 
 ## Input validation
@@ -344,13 +324,7 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 - The component checks type, required fields, length or range, format, and allowed values. It
   reports every problem at once, naming the field and the rule, never the rejected value. Valid
   input leaves as a typed object. Invalid input is rejected with a clear message about what to fix;
-  it is not an error.
-- The server-side component is the authority. The browser may give fast feedback with native HTML
-  constraint attributes (`required`, `type`, `min`, `max`, `pattern`), and a small validation-view
-  module in JavaScript shows the server's field errors next to the fields. It does not copy the
-  rules.
-- Python: a Pydantic model for API bodies and a validator class for other inputs. Each rule has a
-  test.
+  it is not an error. Each rule has a test.
 
 ## Python
 <!-- B1. Applies when: the project uses Python. Needs ruff.toml, mypy.ini, pytest.ini, and .coveragerc (see assets/). -->
@@ -360,13 +334,15 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
   `raise ... from err`, and no `print`. Fix findings and never weaken the configuration.
 - Test files are `test_<module>.py`. Test functions are `test_<requirement id>_<behavior>`, for
   example `test_tri_024_unsure_duplicate_creates_item`.
-- Annotate every parameter, return value, and class attribute, using built-in generics and `|`. No
-  `Any` unless a library forces it; then add a comment saying why.
 - Use dataclasses for typed records. Settings are frozen dataclasses. Use f-strings, and `with` for
-  resources. Do not write your own decorators, metaclasses, context managers, or descriptors.
-  Library decorators such as `@dataclass` and `@pytest.fixture` are fine. Prefix internal names with
-  `_`. Every folder under `src/` has an `__init__.py`, and imports read
+  resources. Do not write your own metaclasses or descriptors. Prefix internal names with `_`.
+  Every folder under `src/` has an `__init__.py`, and imports read
   `from src.<module> import <name>`.
+- `async def` and `await` for I/O at the boundaries (API handlers, LLM and network clients). Pure
+  business logic stays synchronous. Run a blocking call inside `async def` with
+  `asyncio.to_thread`. Async tests use `pytest-asyncio`.
+- User input: a Pydantic model for an API body, a validator class for other input (Input
+  validation).
 - A module may define `logger = logging.getLogger(__name__)`. It is the only module-level object
   besides enums.
 - `main.py` at the repo root is the entry point. It loads config, sets up logging, creates the
@@ -375,22 +351,23 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 - Use the project's conda environment (its name and Python version are in the README Stack). Conda
   supplies Python only. Install packages with `pip install -r requirements.txt`, never
   `conda install`.
-- Checks. Run all of them and fix every failure: `mypy src`, `ruff check .`,
-  `ruff format --check .`, and `python -m pytest --cov=src --cov-branch --cov-fail-under=80`.
-  `python scripts/check.py` runs all of them.
-  `requirements.txt` lists `pytest`, `pytest-cov`, `hypothesis`, `mypy`, `ruff`, and
-  `python-dotenv`, plus `pytest-asyncio` for async code.
+- `requirements.txt` is the only list of dependencies: direct ones only, each pinned with `==` to
+  the version installed when added. Add a library in the same change that first imports it, and
+  remove it when its last import goes. Never import an unlisted library, never write the list with
+  `pip freeze`, and use only APIs that exist in the pinned version.
+- Checks: `python scripts/check.py` runs mypy, ruff, the format check, and pytest with the coverage
+  floor. Fix every failure.
 
 ## JavaScript and TypeScript
 <!-- B2. Applies when: the project has JavaScript or TypeScript. Needs package.json, tsconfig.json, and eslint.config.js (see assets/). -->
 
 - No front-end framework (React, Vue, Angular, and the like) and no UI library, unless
   `docs/design.md` chooses one. HTML, CSS, and JavaScript stay in separate files.
-- Plain JavaScript as ES modules, typed with JSDoc and checked by the TypeScript compiler
-  (`tsconfig.json` sets `checkJs` and `strict`). Start every file with `// @ts-check`. Write
-  TypeScript source only if `docs/design.md` chooses a build toolchain. Write no `any`. The runtime
-  has no dependencies and no build step. A dev-only `package.json` holds the check tools. Unit tests
-  use `node --test`.
+- Plain JavaScript as ES modules, typed with JSDoc; `tsc` checks it (`checkJs`, `strict`). Write no
+  `any`. The runtime has no dependencies and no build step: TypeScript source only if
+  `docs/design.md` chooses a build toolchain. Unit tests use `node --test`.
+- `package.json` is the only list of the check tools, each pinned to an exact version, in the same
+  change that first uses it. Never use an unlisted package.
 - ESLint (`eslint.config.js`) and `tsc` enforce the 20-line, 4-parameter, and complexity limits, the
   300-line file warning, typed parameters, `fetch` only in `api.js`, `console` only in `log.js`, no
   module-level `let`, and no `innerHTML`. Fix findings and never weaken the configuration.
@@ -405,6 +382,8 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
   pass it in.
 - Behavior-affecting values (URLs, timeouts, limits) live in one `config.js` that exports a frozen
   object. Fixed vocabularies are frozen objects in the module that owns them.
+- `async`/`await` with `fetch`. Move heavy computation to a Web Worker. Never freeze the main
+  thread.
 - Errors: `try/catch` only in `api.js`, adding context and rethrowing with
   `new Error(message, { cause })`. Unexpected errors reach a top-level handler in `main.js` (the
   `error` and `unhandledrejection` events) that shows the raw error and stack trace on screen and
@@ -413,10 +392,8 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
   from the HTML or use `createElement`, and toggle CSS classes. Insert dynamic text with
   `textContent`. Never keep app data in `localStorage` or `sessionStorage`; the API is the only
   source of data. UI preferences may use `localStorage`.
-- Checks. Run all of them and fix every failure: `npm run typecheck`, `npm run lint`, `npm test`,
-  and the Playwright tests (the command is in the README under How to test).
-- The UI is built and maintained entirely by AI. Report front-end changes by their behavior in plain
-  language, and prove correctness with the checks.
+- Checks: `python scripts/check.py` runs tsc, ESLint, Prettier, Stylelint, and `node --test`. Run
+  the Playwright tests as the README says (How to test). Fix every failure.
 
 ## HTML and CSS
 <!-- B3. Applies when: the project has a browser front end. -->
@@ -434,17 +411,19 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
   HTML, not in JavaScript strings.
 - Nothing loads from the network: no CDN, no Google Fonts. Store third-party files in the repo. A
   required external script is listed in `docs/design.md`.
-- Colors, spacing, and fonts come only from custom properties in `theme.css`. Never write a color
-  value in any other file.
+- Colors, spacing, and fonts come only from custom properties in `theme.css`. Stylelint refuses a
+  color value in any other CSS file.
 - Keep shared sheets (`theme.css`, base, layout) and add one sheet per view or component only for
   styles specific to it. Every CSS file starts with a header comment that says what it styles and
   what it does not.
-- Name CSS classes with BEM, `block__element--modifier`, and by purpose, not appearance
-  (`sidebar__toggle`, not `blue-box`).
+- Stylelint checks the BEM form of class names, `block__element--modifier`. Name a class by
+  purpose, not appearance (`sidebar__toggle`, not `blue-box`).
 - Avoid duplicate rules, unused classes, excessive specificity, and layout hacks.
 - Use meaningful link text and `alt` text on images. Keep text contrast readable. Do not rely on
   color alone to convey meaning.
-- Mockups in `docs/` are a visual reference, not code to copy.
+- The server's validation is the authority. The browser may give fast feedback with native HTML
+  constraint attributes (`required`, `type`, `min`, `max`, `pattern`), and a small validation-view
+  module shows the server's field errors next to the fields. It does not copy the rules.
 - Tests prove: each user scenario in Playwright. The main flows work with the keyboard only.
 
 ## UI design
@@ -465,7 +444,6 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
   it. Download it with `scripts/download_assets.py` into `src/assets/fonts/` or
   `src/assets/images/`, and commit the files. Never link to a font or an image online. The script
   records each source URL and license, and only assets whose license allows redistribution are used.
-- Tests prove: each user scenario in Playwright. The main flows work with the keyboard only.
 
 ## HTTP APIs
 <!-- B4. Applies when: the project exposes an HTTP API. -->
@@ -483,6 +461,9 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 - Authentication goes through one shared dependency or decorator, used by every protected endpoint.
   `docs/design.md` lists the public endpoints.
 - Allowed CORS origins come from config. The default is none.
+- An API request that can run long starts the task and returns `202` with a job ID at once. The
+  task runs in the background as an async task. `GET /api/jobs/<id>` reports status and progress,
+  and the UI polls it. One object created in `main.py` holds the job state.
 - End-to-end tests call the API through the framework's test client against temporary data. They do
   not start a server.
 - Tests prove: the status code and the body of each case. A slow or failed outside service (a
@@ -494,11 +475,6 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 - `data/` holds input and runtime data. Code never lives in `data/`, and data never lives in `src/`.
 - Raw input is read-only. Never modify or overwrite an input file. Generated output goes to a
   separate folder under `data/`, and a script can regenerate it. Caches are disposable.
-- Exactly one module reads and writes each data store or file format. It parses and validates at
-  that boundary and hands typed objects to the rest of the code. No other module parses raw fields.
-- The data folder and file paths come from config. Tests use temporary folders.
-- Document the data model in `docs/design.md`, and update it in the same change that changes the
-  data.
 - Use UUID strings for IDs and ISO 8601 UTC strings for timestamps.
 - Before a change rewrites stored data in place (a migration, an import), copy the data to
   `<name>.before-<change>`. Never delete these backups.
@@ -533,7 +509,6 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
 - The site works without JavaScript for basic reading and navigation.
 - Static files only: no server-side routing, and no environment variables or secrets in browser
   code.
-- The README explains how to add content, build, preview locally, and publish.
 
 ## MCP servers and hosts
 <!-- B8. Applies when: the project is an MCP server or an MCP host. -->
@@ -546,17 +521,15 @@ the hook files asks the user first; ask only to change a rule on purpose, never 
   inside a server.
 - A host checks that the target tool exists, and handles connection and tool-call failures with
   explicit errors. The model never executes a tool. The MCP client does (see LLMs and prompts).
-- The MCP client and server calls are async (see Long-running work).
-- End-to-end tests cover server startup, session initialization, tool discovery, tool invocation,
-  and the side effects of each call.
+- Tests prove: server startup, session initialization, tool discovery, tool invocation, and the
+  side effects of each call, end to end.
 
 ## Docker
 <!-- B9. Applies when: the project uses Docker. -->
 
 - Docker runs the services the app depends on (a database, a vector store) and is used for
   deployment. During development the app runs from its conda environment.
-- `.claude/settings.json` blocks `docker compose down -v` and volume and system prunes. Docker
-  volumes are protected data. Never work around the block.
+- Docker volumes are protected data.
 - Published ports bind to `127.0.0.1`, for example `127.0.0.1:8000:8000`. Pin the base image tag;
   never use `latest`. Turn off telemetry in containers (for example `DISABLE_TELEMETRY=true`).
 - Never bake secrets or data into an image. They arrive at run time through environment variables

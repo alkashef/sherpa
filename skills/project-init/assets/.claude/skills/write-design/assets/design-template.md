@@ -61,7 +61,8 @@ TBD
 ## 5. Test design
 
 The test level of each requirement (`unit`, `e2e`, `ui` or `live`), the test tool, and the real
-local part or the fake that the test uses. `CLAUDE.md` (Testing) owns the test rules.
+local part or the fake that the test uses. `CLAUDE.md` (Testing) and `.claude/rules/code-quality.md`
+(Test code) own the test rules.
 `scripts/spec_coverage.py --consistency` fails when a requirement has no row here.
 
 | Requirement | Level | Test tool | Real local part or fake |

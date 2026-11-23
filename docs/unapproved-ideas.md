@@ -68,6 +68,7 @@ The approved changes are built. Their first text is in the git history of this f
 | 36 | The third real run, November 23, 2026 (README, "Checked in real Claude Code sessions"): three milestones with real sessions, the test folder, findings about tests sent to test sessions, a block by the last review in each milestone, the approvals and the merges, `/sherpa` and the dashboard. No build session blocked, so that path is still checked by the suite only | Item of the open work, approved on November 22, 2026 |
 | 37 | `docs/v4/`: the report, the presentation and the demo of version 4. `docs/v3/` stays as the record of version 3, and sherpa's `CLAUDE.md` names `v4/` as current | Approved by the user on November 22, 2026 |
 | 38 | The second trial of the test writers (`trials/test-writers/`, results in `results-2/`): Claude, Codex and Antigravity, 3 runs on each of 2 kits through the runner. All three qualify, the medians of seeded bugs caught tie at 17.5, and Claude is the fastest (217 s), so by the rule Claude stays the default writer | USER-17, rule of the second trial approved on November 22, 2026 |
+| 39 | The audit of `CLAUDE_GOLDEN.md` (`docs/audit-claude-golden.md`): the built `CLAUDE.md` drops from 199 to 138 lines. Architecture, Configuration and the test-code rules move to `code-quality`, the dependency list to the language files, the README rule to a new `readme` rules file; 15 rules go; ruff `FIX`, ESLint `no-warning-comments`, and Stylelint (no color outside `theme.css`, BEM class names) take over four rules. Five rows marked Tool keep their prose, because no tool checks them yet | Rank 17 (USER-06), table approved on November 23, 2026 |
 
 One real run followed on November 21, 2026 (README, "Checked in real Claude Code sessions"). It
 proved the condition of the user's decision on rank 3: a `claude -p` session runs the built-in
@@ -82,18 +83,21 @@ after the walk-through of section G ends. Several of them change the same files 
 `/write-tests`, `assets/docs/workflow.md` and `workflow.html`), so one pass changes each file and
 the diagram one time.
 
-1. **Rank 17 (USER-06), approved on November 22, 2026:** one audit of `CLAUDE_GOLDEN.md` for rules
-    that are too rigid.
-   - Do it after the build adds its new rules, so that the audit sees all of them.
-   - One row for each rule (about 155): keep it with its reason, move it into a tool, move it
-     into a rules file or a skill, or delete it.
-   - The user approves the table before any rule changes.
-   - A rule that a real run later proves necessary comes back.
-   - Examples to question: "Do not write your own ... context managers", "One class per file",
-     and "a design pattern that no `Decided` decision names".
-   - **State on November 23, 2026:** the table is ready in `docs/audit-claude-golden.md` (180
-     rows: 117 keep, 28 tool, 20 move, 15 delete). It waits for the user's approval; no rule
-     changed.
+1. **RUN-08 (option C), approved on November 23, 2026: an approval covers the code that the user
+   saw.**
+   - After the approval of a block by the last review, a repair session gets the decision and the
+     findings of the Blocked entry. No new first review runs.
+   - When the session changes nothing, the runner runs its checks and merges.
+   - When it commits a change, the last review runs, and its blocking findings block as usual.
+   - The approval of a test that looks wrong (a `BLOCKED:` line) covers only that test: later
+     reviews block as usual.
+2. **RUN-09 (option B), approved on November 23, 2026:** a finding of the last review blocks when
+   it is `high`, or `medium` with a requirement ID as its rule. A `low` finding never blocks.
+3. **A fourth real run (option B), approved on November 23, 2026,** after items 1 and 2: one
+   project, two milestones, with real sessions. One milestone sends the user's name and email
+   address to an outside mailing-list service that only a `Proposed` decision names, so its build
+   session must block. The run checks a build session that blocks with partial work, the approval
+   path of RUN-08, and the audited rules.
 
 ### Decided with no work
 
@@ -157,8 +161,8 @@ The user decided these points of section G on November 21, 2026. They need no ch
 ## Part 2: ideas that nobody approved
 
 On November 22, 2026 the user decided each idea of Part 2, and Part 1 holds the result. The
-sections below keep the context of the ideas. A new idea goes here, with its own entry. Open on
-November 23, 2026: RUN-08 and RUN-09 (section E).
+sections below keep the context of the ideas. A new idea goes here, with its own entry. The user
+decided RUN-08 and RUN-09 on November 23, 2026 (Part 1).
 
 ### A. Open decisions of the approved changes
 
@@ -209,7 +213,9 @@ The runs are in the README, "Checked in real Claude Code sessions". An idea from
 RUN-NN and no rank. RUN-06 and RUN-07 came from the trial of three test writers. RUN-01 to RUN-07
 are decided and built.
 
-New ideas from the third real run and the second trial (November 23, 2026). Nobody approved them.
+Ideas from the third real run and the second trial (November 23, 2026). On the same day the user
+approved RUN-08 with option C (an approval covers the code that the user saw), not its proposal
+below, and RUN-09 with its proposal: Part 1.
 
 - **RUN-08: an approval covers only the findings that it answers.** After the user approves a
   milestone that the last review blocked, no finding of a later review blocks it again. In the

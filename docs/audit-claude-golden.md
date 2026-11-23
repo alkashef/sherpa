@@ -1,8 +1,9 @@
 # Audit of the rules in `CLAUDE_GOLDEN.md`
 
 Rank 17 (USER-06) of `docs/unapproved-ideas.md`, approved on November 22, 2026. The audit runs
-after the build adds its new rules, so it sees all of them. **No rule changes until the user
-approves this table.** A rule that a real run later proves necessary comes back.
+after the build adds its new rules, so it sees all of them. **The user approved the table on
+November 23, 2026, and it is applied** (see "What the approval changed"). A rule that a real run
+later proves necessary comes back.
 
 ## How to read it
 
@@ -227,16 +228,28 @@ The three examples that the user named:
 | 179 | Docker | docker | No secrets or data in an image; `.dockerignore` | Keep | Security. |
 | 180 | Living docs | CLAUDE.md | (row 91, the table) "A library added or removed" goes to `requirements.txt` | Delete | Row 60 says it; the table keeps four rows. |
 
-## What the approval changes
+## What the approval changed
 
-When the user approves the table, one commit does this:
+One commit on November 23, 2026 did this:
 
-1. Moves rows 37 to 41, 54 to 58, 63 and 66 to `code-quality`, rows 60 and 61 to the language
-   rules files, and row 93 to a rules file for `README.md`. The built `CLAUDE.md` drops to about
-   150 lines.
-2. Deletes the rows marked Delete, and shortens each row marked Tool to its pointer.
-3. Adds the tool rules that rows 53 and 128 to 130 name, each with a test in the suite.
-4. Runs the suite and the STE lint, and records the result in Part 1 of
-   `docs/unapproved-ideas.md`.
+1. Moved rows 37 to 41 (Architecture), 54 to 58 (Configuration), and 63 and 66 (a new section,
+   "Test code") to `code-quality`. Row 42 went to Workflow, so it stays in `CLAUDE.md`. Rows 60
+   and 61 went to the Python and JavaScript sections, and rows 96 to 98, 102 and 103 to the
+   Python, JavaScript, HTTP APIs and HTML and CSS sections. Row 93 went to a new rules file,
+   `readme`, with the glob `README.md`.
+2. Deleted the rows marked Delete, and shortened the rows marked Tool to a pointer.
+3. Added the tool rules of rows 53 (ruff `FIX`) and 128 to 130 (Stylelint: `color-no-hex`,
+   `color-named` and the color functions, off in `theme.css`; `selector-class-pattern` for BEM),
+   each with a test. Row 53 also got ESLint `no-warning-comments`, because the rule covers
+   JavaScript too. A real run of Stylelint and ESLint on good and bad files checked the rules once.
+4. The built `CLAUDE.md` has 138 lines, down from 199.
 
-The user can approve the table as it is, approve some rows, or change a proposal.
+Where the commit differs from the table, because a check of the tool showed that the Reason was
+wrong:
+
+- Row 48: ruff `D` checks only the public modules, classes and functions. The rule stays, with
+  that pointer.
+- Row 51: ruff `D` with the Google convention does not require the parts of a docstring (the
+  arguments, the return value, the errors). The rule stays as it was.
+- Rows 115, 124, 125 and 139 name a tool that the project does not have yet (ESLint `jsdoc`,
+  html-validate, axe). Their rules stay as they were until the tool comes in.

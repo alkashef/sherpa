@@ -45,7 +45,7 @@ def assets_dir() -> Path:
 
 def always_loaded() -> list[str]:
     """Return the IDs of the sections that go into CLAUDE.md."""
-    return ["C1", "A1", "A2", "A3", "A6", "A7", "A9", "A10", "A11", "A15", "A16", "A17"]
+    return ["C1", "A1", "A2", "A3", "A7", "A10", "A11", "A15", "A16", "A17"]
 
 
 def rule_files() -> dict[str, tuple[list[str], list[str]]]:
@@ -53,8 +53,9 @@ def rule_files() -> dict[str, tuple[list[str], list[str]]]:
     return {
         "code-quality": (
             ["src/**", "tests/**", "scripts/**", "main.py"],
-            ["A5", "A8", "A12", "A13", "A18", "A19"],
+            ["A5", "A6", "A8", "A9", "A11a", "A12", "A13", "A18", "A19"],
         ),
+        "readme": (["README.md"], ["A17a"]),
         "llm": (["prompts/**", "src/**/llm*"], ["A14"]),
         "python": (["**/*.py"], ["B1"]),
         "javascript": (["**/*.js", "**/*.mjs", "**/*.ts"], ["B2"]),
@@ -102,7 +103,7 @@ def module_details() -> dict[str, str]:
         "on each control, and the system fonts.",
         "http-apis": "FastAPI handlers that call one service function, plural paths under `/api/`, "
         "Pydantic bodies, and end-to-end tests through the test client.",
-        "data": "One module for each data store, read-only raw input, UUID IDs and UTC "
+        "data": "Data in `data/` and code in `src/`, read-only raw input, UUID IDs and UTC "
         "timestamps, and a backup before a change rewrites stored data.",
         "cli": "argparse in `main.py`, only the intended output on stdout, and exit codes.",
         "llm": "One provider, prompts in files under `prompts/`, LLM output checked against a "
