@@ -115,6 +115,12 @@ effort `medium` unless the step says otherwise.
   - Done when: each milestone merges, the sessions get the feedback of ESLint, Prettier,
     Stylelint and `tsc` through the edit hook, and the `ui` test passes in `check.py`.
   - Estimate: 2 hours for the kit, 2 to 3 hours of runs.
+  - Status: in progress since November 23, 2026. The kit is a page that counts the words and
+    characters of a note (M1: a server of the standard library and the page, with no API). M2
+    adds an API that saves notes, after `build_instance.py --add http-apis`, and replaces the
+    server with FastAPI. The skill built the project with its own conda environment, `notecount`.
+    Its pip install failed on a slow network (no version of ruff found), and the skill reported it
+    with the command to finish by hand, as its step 3 says. M1 runs.
   - Done on: ____ README record in commit: ____
 - [ ] **B3. A real interview, from an empty folder to merged milestones.** The user is the
   developer: the user answers `/write-spec`, `/write-design` and `/write-plan` in chat for a small
