@@ -25,6 +25,9 @@ test session works in the folder of the test writer, which has no git.
                      `M<n>: test repairs`; a later review reports no finding
     "blocking"       each review reports one high finding about the code; the repair session
                      changes the code and commits `M<n>: review repairs`
+    "blocking-repair" each review reports one high finding about the code; a repair session
+                     changes the code and commits `M<n>: review repairs` only when the user's
+                     decision asks for a repair; any other repair session rejects the finding
     "wrong-test"     as "review-tests", but the first rebuild session finds the new test wrong:
                      it changes the code, commits nothing, and reports a `BLOCKED:` line; a later
                      review-tests session (the retest) adds nothing new
@@ -314,7 +317,7 @@ def reported_findings(call: Call) -> list[str]:
         return findings
     if call.state in ("review-tests", "wrong-test"):
         return [TEST_FINDING.replace("<n>", str(call.number))] if call.earlier == 0 else []
-    if call.state == "blocking":
+    if call.state in ("blocking", "blocking-repair"):
         return [HIGH_FINDING.replace("<n>", str(call.number))]
     if call.state in REPAIR_STATES:
         return findings if call.earlier == 0 else findings[:1]
@@ -336,6 +339,9 @@ def act_review(call: Call) -> int:
 
 def act_repair(call: Call) -> int:
     """Do the repair session: reject every finding, or change the code and commit the repair."""
+    if call.state == "blocking-repair" and "decision on an earlier review: Repair" in call.prompt:
+        write_code(call.number, note=f", repaired {call.earlier}")
+        return commit(f"M{call.number}: review repairs")
     if call.state not in REPAIR_STATES:
         for finding in re.findall(r"^FINDING:.*$", call.prompt, re.MULTILINE):
             sys.stdout.write(f"REJECTED: {finding} | the code is right\n")

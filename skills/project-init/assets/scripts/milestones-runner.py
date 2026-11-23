@@ -27,9 +27,12 @@ base branch, and records the base branch in the git setting `branch.milestone/M<
    test session in the folder of the test writer; if it changed a test, a build session makes the
    tests pass and commits `M<n>: test repairs`. Any other finding goes to a repair session (it may
    not edit tests/ and commits `M<n>: review repairs`). Then a last review runs. A finding of the
-   last review blocks the milestone when its severity is high or its rule is a requirement ID,
-   unless the user approved the milestone after an earlier review blocked it. The other findings
-   stay: the table counts them. A milestone has at most two reviews in one run.
+   last review blocks the milestone when its severity is high or its rule is a requirement ID.
+   The other findings stay: the table counts them. A milestone has at most two reviews in one
+   run. After the user approves a block of the last review, the next run gives the decision and
+   the findings of the block to the repairs, and no new review runs: when the repairs change
+   nothing, the milestone merges; when they commit a change, the last review checks it, and its
+   findings block as usual. The approval covers the code that the user saw.
 
 After a build, rebuild or repair session, the runner does its own checks. It compares the hashes
 of tests/. It runs `python scripts/spec_coverage.py M<n>` over a temporary copy of docs/spec.md
@@ -532,7 +535,9 @@ class Running:
     the plan had it before the test session. decision is the Approval entry of the user, when an
     earlier review blocked the milestone. blocking holds the findings of the last review that
     block the merge. retest is True when the user approved a block about a test that looked
-    wrong: a test session gets the decision before the build goes on.
+    wrong: a test session gets the decision before the build goes on. approved holds the
+    findings of a block by the last review that the user approved: they go to the repairs with
+    the decision, and only a change after the approval gets a review (RUN-08).
     """
 
     row: Row
@@ -546,6 +551,7 @@ class Running:
     decision: tuple[str, ...] = ()
     blocking: list[str] = field(default_factory=list)
     retest: bool = False
+    approved: tuple[str, ...] = ()
 
 
 @dataclass
@@ -788,6 +794,17 @@ def block_entry(block: Sequence[str], label: str) -> list[str]:
         elif lines:
             lines.append(line.rstrip())
     return lines if any(line.strip() for line in lines) else []
+
+
+def last_block_entry(block: Sequence[str], label: str) -> list[str]:
+    """Return the last `- **<label>:**` entry of a block, as block_entry reads it.
+
+    A milestone that was blocked again after an approval has a second Blocked entry and, once the
+    user approves it, a second Approval entry: the last ones hold the question and the answer.
+    """
+    start = f"- **{label}:**"
+    starts = [i for i, line in enumerate(block) if line.startswith(start)]
+    return block_entry(block[starts[-1] :], label) if starts else []
 
 
 def milestone(number: int) -> str:
@@ -2410,10 +2427,16 @@ def rebuild_job(session: Session, running: Running) -> Job:
     return Job(SESSION_REBUILD, prompt, partial(judge_repair, session, running, SESSION_REBUILD))
 
 
+def decision_note(running: Running) -> list[str]:
+    """Return the line that gives a repair the user's decision on an earlier block, if any."""
+    if not running.decision:
+        return []
+    return [f"The user's decision on an earlier review: {' '.join(running.decision)}"]
+
+
 def repair_job(session: Session, running: Running, findings: Sequence[str]) -> Job:
     """Return the repair session of the milestone, for the FINDING lines about the code."""
-    answer = [f"The user's decision on an earlier review: {' '.join(running.decision)}"]
-    prompt = partial(repair_prompt, running.row, [*(answer if running.decision else []), *findings])
+    prompt = partial(repair_prompt, running.row, [*decision_note(running), *findings])
     return Job(SESSION_REPAIR, prompt, partial(judge_repair, session, running, SESSION_REPAIR))
 
 
@@ -2962,24 +2985,37 @@ def prepare_milestone(session: Session, row: Row) -> None:
 
 
 def review_decision(session: Session, row: Row) -> tuple[str, ...]:
-    """Return the Approval entry of a milestone that the user approved after a review blocked it.
+    """Return the Approval entry of a milestone that the user approved after its review stage.
 
-    No lines for any other milestone: then the findings of the last review can block it.
+    The block came from the last review (FINDING lines) or from a session after the review that
+    found a test that looks wrong (a BLOCKED line). No lines for any other milestone.
     """
-    if row.status != STATUS_APPROVED:
+    blocked = approved_block(session, row)
+    if not any("FINDING:" in line or "BLOCKED:" in line for line in blocked):
         return ()
     block = milestone_block(base_plan_lines(session.paths.root, session.base), row.id)
-    blocked = block_entry(block, "Blocked")
-    stopped_by_review = any("FINDING:" in line or "BLOCKED:" in line for line in blocked)
-    return tuple(block_entry(block, "Approval")) if stopped_by_review else ()
+    return tuple(last_block_entry(block, "Approval"))
+
+
+def approved_block(session: Session, row: Row) -> list[str]:
+    """Return the last Blocked entry of an approved milestone in the base plan; no lines if none."""
+    if row.status != STATUS_APPROVED:
+        return []
+    block = milestone_block(base_plan_lines(session.paths.root, session.base), row.id)
+    return last_block_entry(block, "Blocked")
 
 
 def retests(session: Session, row: Row, decision: Sequence[str]) -> bool:
     """Tell whether an approved block came from a session that found a test that looks wrong."""
+    return bool(decision) and any("BLOCKED:" in line for line in approved_block(session, row))
+
+
+def approved_findings(session: Session, row: Row, decision: Sequence[str]) -> tuple[str, ...]:
+    """Return the FINDING lines of an approved block by the last review; none for another block."""
     if not decision:
-        return False
-    block = milestone_block(base_plan_lines(session.paths.root, session.base), row.id)
-    return any("BLOCKED:" in line for line in block_entry(block, "Blocked"))
+        return ()
+    blocked = approved_block(session, row)
+    return tuple(line[line.index("FINDING:") :].strip() for line in blocked if "FINDING:" in line)
 
 
 def run_attempts(
@@ -3146,7 +3182,7 @@ def repair_tests(
     changed tests/, a build session makes the tests pass and commits `M<n>: test repairs`.
     """
     root, row = session.paths.root, running.row
-    prompt = partial(review_tests_prompt, row, findings)
+    prompt = partial(review_tests_prompt, row, [*decision_note(running), *findings])
     task = WriterTask(SESSION_REVIEW_TESTS, prompt, "HEAD", blocks=False)
     run, verdict = run_attempts(session, running, partial(writer_try, session, running, task))
     running.decisions += len(decision_lines(run.lines))
@@ -3176,13 +3212,15 @@ def review_milestone(session: Session, running: Running) -> tuple[ClaudeRun, Ver
     """Review the diff of the milestone branch; with findings, repair them and review once more.
 
     A finding about tests/ goes to a test session, any other finding to the repair session. After
-    the last review, a finding blocks the milestone when it is high or names a requirement,
-    unless the user approved the milestone after an earlier review blocked it. The other
-    findings stay: `running.findings` counts them. A milestone gets at most two reviews.
+    the last review, a finding that blocks the merge blocks the milestone; the other findings
+    stay: `running.findings` counts them. A milestone gets at most two reviews. A milestone whose
+    block by the last review the user approved takes review_approved instead.
 
     Returns:
         The run of the last session, and its verdict: done, failed, or blocked.
     """
+    if running.approved:
+        return review_approved(session, running)
     run, verdict = run_review(session, running, SESSION_REVIEW)
     findings = finding_lines(run.lines)
     if verdict.outcome != OUTCOME_DONE or not findings:
@@ -3190,13 +3228,39 @@ def review_milestone(session: Session, running: Running) -> tuple[ClaudeRun, Ver
     run, verdict = repair_findings(session, running, findings)
     if verdict.outcome != OUTCOME_DONE:
         return run, verdict
+    return last_review(session, running)
+
+
+def review_approved(session: Session, running: Running) -> tuple[ClaudeRun, Verdict]:
+    """Give the decision and the findings of an approved block to the repairs (RUN-08).
+
+    The approval covers the code that the user saw. When the repairs change nothing (the user
+    chose to merge), the milestone merges with no new review, and the approved findings stay.
+    When they commit a change, the last review checks it, and its findings block as usual.
+
+    Returns:
+        The run of the last session, and its verdict: done, failed, or blocked.
+    """
+    root = session.paths.root
+    head = git_head(root)
+    run, verdict = repair_findings(session, running, running.approved)
+    if verdict.outcome != OUTCOME_DONE:
+        return run, verdict
+    if git_head(root) == head:
+        running.findings = len(running.approved)
+        return run, verdict
+    return last_review(session, running)
+
+
+def last_review(session: Session, running: Running) -> tuple[ClaudeRun, Verdict]:
+    """Run the last review: a finding that blocks the merge blocks the milestone."""
     run, verdict = run_review(session, running, SESSION_REVIEW_LAST)
     if verdict.outcome != OUTCOME_DONE:
         return run, verdict
     last = finding_lines(run.lines)
     running.findings = len(last)
     running.blocking = [finding for finding in last if blocks_merge(finding)]
-    if running.blocking and not running.decision:
+    if running.blocking:
         return run, Verdict(OUTCOME_BLOCKED, "the last review found a fault that blocks the merge.")
     return run, verdict
 
@@ -3272,7 +3336,13 @@ def run_milestone(session: Session, row: Row) -> None:
             failed, or if the user did not confirm its human test.
     """
     decision = review_decision(session, row)
-    running = Running(row, Stopwatch(), decision=decision, retest=retests(session, row, decision))
+    running = Running(
+        row,
+        Stopwatch(),
+        decision=decision,
+        retest=retests(session, row, decision),
+        approved=approved_findings(session, row, decision),
+    )
     session.state.running = running
     try:
         run, verdict = run_stages(session, running)

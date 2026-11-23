@@ -1115,11 +1115,11 @@ def test_review_findings_about_tests_go_to_a_test_session(planned: Sandbox) -> N
 
 
 def approve_review_block(sandbox: Sandbox, decision: str) -> None:
-    """Do what the user does after a review blocked M1: approve the block, and commit."""
+    """Do what the user does after a review blocked M1: approve the last block, and commit."""
     plan = sandbox.folder / "docs" / "plan.md"
     text = plan.read_text(encoding="utf-8").replace("| blocked |", "| approved |")
-    last = "    2. Repair it in this way: <your instruction>."
-    plan.write_text(text.replace(last, f"{last}\n- **Approval:** {decision}"), encoding="utf-8")
+    head, last, tail = text.rpartition("    2. Repair it in this way: <your instruction>.")
+    plan.write_text(f"{head}{last}\n- **Approval:** {decision}{tail}", encoding="utf-8")
     sandbox.git("commit", "-am", "Approve M1")
 
 
@@ -1144,17 +1144,90 @@ def test_an_approved_review_block_is_merged_on_the_next_run(planned: Sandbox) ->
     approve_review_block(planned, "Merge it as it is.")
     code, output = run_runner(planned, "--end", "1")
     assert code == 0, output
-    # The build exists: the runner rebased the branch on the approval and reviewed it again.
-    # The finding stays, but the user decided, so it no longer blocks.
-    assert kinds(planned)[5:] == ["review M1", "repair M1", "review M1"]
-    repair = sessions(planned)[6]["prompt"]
+    # The build exists: the runner rebased the branch on the approval, and gave the decision and
+    # the finding of the block to a repair session. No new review ran (RUN-08).
+    assert kinds(planned)[5:] == ["repair M1"]
+    repair = sessions(planned)[5]["prompt"]
     assert "The user's decision on an earlier review: Merge it as it is." in repair
-    # The second repair changed nothing, so it made no commit.
+    assert "FINDING: high | src/m1.py:7 | Error Handling | Raise on a bad value." in repair
+    # The repair changed nothing, so it made no commit, and the code the user saw merged.
     assert subjects(planned, "-3") == ["M1: review repairs", "M1: First", "Approve M1"]
     plan = (planned.folder / "docs" / "plan.md").read_text("utf-8")
     assert "**M1**" not in plan
     assert "### M1" not in plan
     assert branches(planned) == ["main"]
+
+
+def block_m1_twice(planned: Sandbox) -> str:
+    """Let the last review block M1, approve a repair, and run again; return the output."""
+    planned.env["FAKE_CLAUDE_STATE"] = "blocking-repair"
+    run_runner(planned, "--end", "1")
+    approve_review_block(planned, "Repair it in this way: raise on a bad value.")
+    code, output = run_runner(planned, "--end", "1")
+    assert code == 1
+    return output
+
+
+def test_a_repair_after_an_approval_gets_a_last_review_that_can_block_again(
+    planned: Sandbox,
+) -> None:
+    output = block_m1_twice(planned)
+    # The repair changed the code after the approval, so the last review checked the change, and
+    # its high finding blocked the milestone again.
+    assert "Milestone M1 in docs/plan.md waits for your approval." in output
+    assert kinds(planned)[5:] == ["repair M1", "review M1"]
+    assert subjects(planned, "-1", "milestone/M1") == ["M1: review repairs"]
+    plan = (planned.folder / "docs" / "plan.md").read_text("utf-8")
+    assert plan.count("- **Blocked:**") == 2
+
+
+def test_the_next_approval_answers_the_last_block(planned: Sandbox) -> None:
+    block_m1_twice(planned)
+    approve_review_block(planned, "Merge it as it is.")
+    code, output = run_runner(planned, "--end", "1")
+    assert code == 0, output
+    assert kinds(planned)[7:] == ["repair M1"]
+    repair = sessions(planned)[7]["prompt"]
+    assert "The user's decision on an earlier review: Merge it as it is." in repair
+    assert "Repair it in this way" not in repair
+    assert branches(planned) == ["main"]
+
+
+def test_the_last_entry_of_a_block_is_read(built: Path) -> None:
+    runner = load_runner(built)
+    block = [
+        "### M1 — First",
+        "- **Blocked:** one",
+        "- **Approval:** first",
+        "- **Blocked:** two",
+        "  - FINDING: high | src/a.py:1 | Dead Code | Delete it.",
+        "- **Approval:** second",
+    ]
+    assert runner.last_block_entry(block, "Blocked") == [
+        "two",
+        "  - FINDING: high | src/a.py:1 | Dead Code | Delete it.",
+    ]
+    assert runner.last_block_entry(block, "Approval") == ["second"]
+    assert runner.last_block_entry(block, "Human test") == []
+
+
+def test_after_an_approved_wrong_test_the_last_review_blocks_as_usual(planned: Sandbox) -> None:
+    planned.env["FAKE_CLAUDE_STATE"] = "wrong-test"
+    run_runner(planned, "--end", "1")
+    approve_review_block(planned, "Keep the test.")
+    planned.env["FAKE_CLAUDE_STATE"] = "blocking"
+    code, output = run_runner(planned, "--end", "1")
+    # The approval answered a question about a test, not a finding of the review (RUN-08).
+    assert code == 1
+    assert "Milestone M1 in docs/plan.md waits for your approval." in output
+    assert "FINDING: high | src/m1.py:7 | Error Handling" in output
+    assert kinds(planned)[5:] == [
+        "review-tests M1",
+        "build M1",
+        "review M1",
+        "repair M1",
+        "review M1",
+    ]
 
 
 @pytest.mark.parametrize(
