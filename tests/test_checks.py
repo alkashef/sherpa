@@ -321,6 +321,14 @@ def test_eslint_refuses_a_todo_comment() -> None:
     assert terms in config
 
 
+def test_eslint_allows_console_and_fetch_in_their_modules_in_any_folder_of_src() -> None:
+    # The design chooses the folder of the page, such as src/web/ next to a Python server, and no
+    # session may edit eslint.config.js. The sixth real run blocked on the old `src/log.js`.
+    config = (bi.assets_dir() / "eslint.config.js").read_text(encoding="utf-8")
+    assert '{ files: ["src/**/api.js"], rules: { "no-restricted-globals": "off" } }' in config
+    assert '{ files: ["src/**/log.js"], rules: { "no-console": "off" } }' in config
+
+
 def stylelint_config() -> dict[str, object]:
     """Return the Stylelint config that new projects get."""
     text = (bi.assets_dir() / ".stylelintrc.json").read_text(encoding="utf-8")

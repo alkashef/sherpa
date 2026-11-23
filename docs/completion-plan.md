@@ -120,7 +120,11 @@ effort `medium` unless the step says otherwise.
     adds an API that saves notes, after `build_instance.py --add http-apis`, and replaces the
     server with FastAPI. The skill built the project with its own conda environment, `notecount`.
     Its pip install failed on a slow network (no version of ruff found), and the skill reported it
-    with the command to finish by hand, as its step 3 says. M1 runs.
+    with the command to finish by hand, as its step 3 says. In the first run of M1, every check
+    passed in the build session (pytest with the `ui` test in Playwright, `node --test`, tsc,
+    Prettier, Stylelint) except ESLint, which allowed `console` only in `src/log.js`. The build
+    session blocked with partial work (C1, repaired). The approval (Claude in the role of the
+    user) made the same change by hand in the project, and M1 runs again.
   - Done on: ____ README record in commit: ____
 - [ ] **B3. A real interview, from an empty folder to merged milestones.** The user is the
   developer: the user answers `/write-spec`, `/write-design` and `/write-plan` in chat for a small
@@ -171,6 +175,7 @@ effort `medium` unless the step says otherwise.
   | --- | --- | --- |
   | 5 (B1) | After the approval of a wrong test that a build session found, no test session ran, and M1 could not go on. RUN-12, option B, approved on November 23, 2026 | "After the approval of a block by a session, a test session gets the decision first (RUN-12)" |
   | 5 (B1) | A repair session rewrote the `Decided` decision DEC-004 and kept it `Decided`. RUN-13, option A, approved on November 23, 2026 | "A session may not change a Decided decision of the design (RUN-13)" |
+  | 6 (B2) | `eslint.config.js` let only `src/log.js` use `console` and only `src/api.js` call `fetch`. The design put the page in `src/web/`, and no session may edit the config, so the build session of M1 blocked | "ESLint allows log.js and api.js in any folder under src/" |
   | ____ | ____ | ____ |
 
 ## D. Make sherpa itself ready for a release

@@ -46,7 +46,8 @@ export default [
       ],
     },
   },
-  { files: ["src/api.js"], rules: { "no-restricted-globals": "off" } },
-  { files: ["src/log.js"], rules: { "no-console": "off" } },
+  // In any folder under src/ that the design chooses, such as src/web/ next to a Python server.
+  { files: ["src/**/api.js"], rules: { "no-restricted-globals": "off" } },
+  { files: ["src/**/log.js"], rules: { "no-console": "off" } },
   { files: ["tests/**/*.js"], languageOptions: { globals: { ...globals.node } } },
 ];
