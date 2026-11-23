@@ -42,8 +42,8 @@ the suite.
 | Path | Why no real run | Step |
 | --- | --- | --- |
 | `/write-spec`, `/write-design` and `/write-plan` with a person who answers | Runs 1 to 4 started from written docs (a kit) | B3 |
-| A build session that blocks with partial work | No build session blocked in runs 3 and 4 | B1 |
-| A repair or rebuild session that reports `BLOCKED:` for a wrong test | Built after run 3, and no test was wrong in run 4 | B1 |
+| A build session that blocks with partial work | Ran in the fifth real run: B1 is done | B1 |
+| A repair or rebuild session that reports `BLOCKED:` for a wrong test | Accepted as suite-only by the user on November 23, 2026 | B1 |
 | The modules `javascript`, `html-css`, `ui-design` and `http-apis`, and `ui` tests in Playwright | Each run was a Python command-line tool | B2 |
 | `build_instance.py --add` in a project that exists | Not needed in a run | B2 |
 | `check.yml` and `mutation.yml` on GitHub Actions | Each run pushed to a local bare repository | B4 |
@@ -80,7 +80,7 @@ final behavior.
 Each run uses a project that the skill built and real `claude -p` sessions, with `sonnet` at
 effort `medium` unless the step says otherwise.
 
-- [ ] **B1. Fifth real run: a build session that blocks (Python, `cli`).** The kit of the fourth
+- [x] **B1. Fifth real run: a build session that blocks (Python, `cli`).** The kit of the fourth
   run, with DEC-004 `Decided` (since A2, a `Proposed` decision stops the run at its start). M1
   runs alone. Then an older test goes onto the base branch: it passes after M1, but it expects
   `--subscribe` to be refused as an unknown option, which SLUG-008 makes wrong. The build session
@@ -99,9 +99,15 @@ effort `medium` unless the step says otherwise.
     SLUG-004 cuts it to `h`). The runner kept `M1: partial work` and committed `M1: blocked`. The
     approval (Claude in the role of the user, as in runs 3 and 4) is committed. The run after
     the approval found a fault of sherpa (C1, RUN-12): no test session got the decision, so the
-    build session stopped again. The user approved RUN-12 with option B, and it is built. The run
-    goes on from the kept work of M1, with the repaired runner.
-  - Done on: ____ README record in commit: ____
+    build session stopped again. The user approved RUN-12 with option B, and it is built. With
+    the repaired runner, a `retest` session got the decision and changed the test, the build
+    session finished from the kept work, and M1 merged (211 s). So the done-when of B1 is met in
+    M1. In M2 the planted older test worked: the test session left it, and the build session
+    blocked with partial work (187 s). After the approval a `retest` session changed it, and the
+    build went on. Then the last review blocked M2 for a fault of SLUG-009 (`medium`), and the
+    run after that approval merged M2 (434 s). The project's checks pass. The run also found
+    RUN-13 (C1).
+  - Done on: November 23, 2026. README record in commit: "Record the fifth real run, and its new idea (RUN-13)"
 - [ ] **B2. Sixth real run: a web project (`python`, `javascript`, `html-css`, `ui-design`,
   `http-apis`).** A small app with a page, an API and a `ui` test in Playwright. The project starts
   without `http-apis`, and `build_instance.py --add http-apis` adds it before the milestone of
@@ -158,6 +164,7 @@ effort `medium` unless the step says otherwise.
   | Run | Fault | Commit |
   | --- | --- | --- |
   | 5 (B1) | After the approval of a wrong test that a build session found, no test session ran, and M1 could not go on. RUN-12, option B, approved on November 23, 2026 | "After the approval of a block by a session, a test session gets the decision first (RUN-12)" |
+  | 5 (B1) | A repair session rewrote the `Decided` decision DEC-004 and kept it `Decided`. RUN-13 waits for the user | ____ |
   | ____ | ____ | ____ |
 
 ## D. Make sherpa itself ready for a release

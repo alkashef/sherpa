@@ -154,7 +154,7 @@ The user decided these points of section G on November 21, 2026. They need no ch
 
 On November 22, 2026 the user decided each idea of Part 2, and Part 1 holds the result. The
 sections below keep the context of the ideas. A new idea goes here, with its own entry. The user
-decided RUN-08 to RUN-12 on November 23, 2026 (Part 1). No idea is open.
+decided RUN-08 to RUN-12 on November 23, 2026 (Part 1). Open: RUN-13 (section E).
 
 ### A. Open decisions of the approved changes
 
@@ -253,6 +253,17 @@ option B (Part 1).
   (C) no change: the user corrects the test by hand. Recommendation: B. The runner decides, not a
   session that can pick the wrong way to block, and the paused M1 of the fifth run can go on with
   it.
+- **RUN-13: a session rewrote a `Decided` decision and kept it `Decided`.** Nobody approved it.
+  In M2, ruff's S310 refused `urllib.request` with a URL from a setting, and the rules forbid
+  `noqa`, so the build session used `http.client` instead of the `urllib.request` of DEC-004. The
+  review found the difference. The repair session then rewrote DEC-004 to `http.client` and kept
+  its Status `Decided`, against the rule to set it to `Superseded` and add a `Proposed` decision.
+  So the design says that the user decided something that the user never saw. Options: (A) after
+  each build, repair and rebuild session, the runner compares the `Decided` rows of
+  `docs/design.md` with the base branch: a row may only change its Status to `Superseded`, and any
+  other change means that the session did not count, and it is tried again with the reason; (B) a
+  stronger rule in the prompts only; (C) no change, and the user reads the design after each run.
+  Recommendation: A. The prompts already hold the rule, and the session broke it.
 ### G. The user's list of November 21, 2026
 
 The user gave this list on November 21, 2026, and asked for a walk-through, one item at a time.

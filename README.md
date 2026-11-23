@@ -721,3 +721,28 @@ project's checks pass.
   which the runner runs at its start, refuses a milestone whose Refs name a `Proposed` decision.
   So a milestone that a build session blocks with partial work is still checked only by the
   suite.
+
+A fifth real run on November 23, 2026 checked RUN-10, RUN-11 and a build session that blocks
+(step B1 of `docs/completion-plan.md`), with the same model, effort and test writer, on the
+project of the fourth run. DEC-004 was `Decided`, and a new requirement, SLUG-010, says what an
+unknown option does. Both milestones merged, and the project's checks pass.
+
+- A build session blocked with partial work, for the first time in a real run. In M1 the test
+  session wrote a wrong test (`--max 1` expected `hello`, but SLUG-004 cuts the word to `h`). The
+  build session blocked, and the runner committed `M1: partial work` and `M1: blocked`.
+- After the approval, no test session got the decision, so the build session stopped again. This
+  fault of sherpa is repaired (RUN-12): with the repair, a `retest` session changed the test, the
+  build went on from the kept work, and M1 merged.
+- In M2, an older test that the run put on the base branch after M1 expected `--subscribe` to be
+  refused. The test session of M2 left it as it was. The build session broke it and blocked, a
+  `retest` session changed it after the approval, and the build went on.
+- RUN-10 held. The last review rated a fault of SLUG-009 `medium` (a URL with a scheme other than
+  http or https gave another error message), so it blocked M2. After the approval, the repairs
+  changed the code, and the last review found nothing (RUN-08).
+- A session changed a `Decided` decision. Ruff's S310 refuses `urllib.request` with a URL from a
+  setting, and the rules forbid `noqa`, so the build session used `http.client` instead of the
+  `urllib.request` of DEC-004. The review found it. The repair session then rewrote DEC-004 to
+  `http.client` and kept the Status `Decided`. No check stops that. New idea RUN-13.
+- `python main.py Hello World` still prints `world`. The review named it, and said that the spec
+  does not define two titles: a gap of the kit's spec, not of sherpa.
+- The runs took 195, 62 and 211 seconds for M1, and 188, 1032 and 434 seconds for M2.
