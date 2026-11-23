@@ -321,6 +321,25 @@ def test_eslint_refuses_a_todo_comment() -> None:
     assert terms in config
 
 
+def test_eslint_requires_the_jsdoc_and_the_module_block_of_the_rules() -> None:
+    # RUN-14: in the sixth real run, no file had its @module block and three functions had no
+    # JSDoc, and no tool and no review reported it.
+    config = (bi.assets_dir() / "eslint.config.js").read_text(encoding="utf-8")
+    package = json.loads((bi.assets_dir() / "package.json").read_text(encoding="utf-8"))
+    assert package["devDependencies"]["eslint-plugin-jsdoc"] == "63.3.3"
+    assert 'import jsdoc from "eslint-plugin-jsdoc";' in config
+    assert "plugins: { jsdoc }" in config
+    for rule in (
+        "require-jsdoc",
+        "require-param-type",
+        "require-returns-type",
+        "check-param-names",
+    ):
+        assert f'"jsdoc/{rule}"' in config, rule
+    assert '"jsdoc/require-returns": ["error", { forceRequireReturn: true }]' in config
+    assert "tags: { module: { initialCommentsOnly: true, mustExist: true" in config
+
+
 def test_eslint_allows_console_and_fetch_in_their_modules_in_any_folder_of_src() -> None:
     # The design chooses the folder of the page, such as src/web/ next to a Python server, and no
     # session may edit eslint.config.js. The sixth real run blocked on the old `src/log.js`.

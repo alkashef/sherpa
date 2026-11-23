@@ -1,7 +1,33 @@
 // ESLint configuration. It enforces the JavaScript rules in CLAUDE.md.
 // Never disable a rule to make a change pass. Fix the code.
 import js from "@eslint/js";
+import jsdoc from "eslint-plugin-jsdoc";
 import globals from "globals";
+
+// Every named function has JSDoc with `@param {Type}` and `@returns {Type}`, and every module
+// starts with an `@module` block (see JavaScript and TypeScript). An inline callback, such as an
+// event handler, needs none.
+const jsdocRules = {
+  "jsdoc/require-jsdoc": [
+    "error",
+    {
+      require: { FunctionDeclaration: true, MethodDefinition: true, ClassDeclaration: true },
+      contexts: [
+        "VariableDeclarator > ArrowFunctionExpression",
+        "VariableDeclarator > FunctionExpression",
+      ],
+    },
+  ],
+  "jsdoc/require-param": "error",
+  "jsdoc/require-param-type": "error",
+  "jsdoc/check-param-names": "error",
+  "jsdoc/require-returns": ["error", { forceRequireReturn: true }],
+  "jsdoc/require-returns-type": "error",
+  "jsdoc/require-file-overview": [
+    "error",
+    { tags: { module: { initialCommentsOnly: true, mustExist: true, preventDuplicates: true } } },
+  ],
+};
 
 export default [
   { ignores: ["site/**", "node_modules/**"] },
@@ -13,7 +39,9 @@ export default [
       sourceType: "module",
       globals: { ...globals.browser },
     },
+    plugins: { jsdoc },
     rules: {
+      ...jsdocRules,
       // Code-smell limits (see Code smells).
       "max-lines-per-function": ["error", { max: 20, skipBlankLines: true, skipComments: true }],
       "max-params": ["error", 4],

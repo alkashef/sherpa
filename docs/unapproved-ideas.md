@@ -77,6 +77,7 @@ The approved changes are built. Their first text is in the git history of this f
 | 45 | After the approval of a block that a session made (not the last review), a test session (`retest`) gets the decision before the build goes on, and changes a test only when the decision says so. Before, only a `BLOCKED:` line of a repair or rebuild session led there, so a build session that found a wrong test blocked again after the approval. `workflow.md`, the page and the README say it | RUN-12 (option B), approved on November 23, 2026 |
 | 46 | After a build, repair or rebuild session, the runner compares the `Decided` rows of `docs/design.md` with the base branch. A row may change only its Status, and only to `Superseded`, and no session makes a row `Decided`. Any other change means that the session did not finish, and its retry gets the reason. The repair and rebuild prompts now hold the rule too. `workflow.md`, the page and the README say it | RUN-13 (option A), approved on November 23, 2026 |
 | 47 | The runner starts each Claude session with `--setting-sources project,local`, so the plugins and the hooks of the user's own settings stay out of a run, and the settings, hooks and permissions of the project apply. A real session showed it: no plugin and no hook of the user loaded, and the edit hook of the project still ran. `workflow.md`, the page and the README say it | RUN-15 (option A), approved on November 23, 2026 |
+| 48 | `eslint-plugin-jsdoc` 63.3.3 in `package.json` and `eslint.config.js`: each named function in `src/` has JSDoc with `@param {Type}` and `@returns {Type}` (also `void`), and each file starts with an `@module` block. An inline callback needs none. 63.3.3 is the newest version for Node 22.13; later versions need Node 22.22.2. On the page of the sixth run, ESLint reports 13 errors, and `--fix` adds only a stub that still fails. The rule of the header and the footer stays prose | RUN-14 (option A), approved on November 23, 2026 |
 
 One real run followed on November 21, 2026 (README, "Checked in real Claude Code sessions"). It
 proved the condition of the user's decision on rank 3: a `claude -p` session runs the built-in
@@ -156,7 +157,7 @@ The user decided these points of section G on November 21, 2026. They need no ch
 
 On November 22, 2026 the user decided each idea of Part 2, and Part 1 holds the result. The
 sections below keep the context of the ideas. A new idea goes here, with its own entry. The user
-decided RUN-08 to RUN-13 and RUN-15 on November 23, 2026 (Part 1). Open: RUN-14 (section E).
+decided RUN-08 to RUN-15 on November 23, 2026 (Part 1). No idea is open.
 
 ### A. Open decisions of the approved changes
 
@@ -271,7 +272,8 @@ option B (Part 1).
 
 New ideas from the sixth real run (November 23, 2026). Nobody approved them.
 
-- **RUN-14: rules of the page that no tool checks are lost.** In the sixth real run, no
+- **RUN-14: rules of the page that no tool checks are lost.** On November 23, 2026 the user
+  approved it with option A (Part 1). In the sixth real run, no
   JavaScript file had the `@module` block of the JavaScript rules, three functions had no JSDoc,
   and the page had no header and no footer (the UI design rules). The edit hook and `check.py` do
   not check these rules, and no review reported them. The approach of sherpa says that a rule
@@ -331,4 +333,4 @@ on the quality of the code. A walk-through item can hold more than one idea.
   are decided (Part 1).
 
 The user decided ranks 1 to 12 on November 20, 2026, and ranks 13 to 21 on November 22, 2026
-(Part 1). Part 2 holds one open idea: RUN-14.
+(Part 1). Part 2 holds no open idea.

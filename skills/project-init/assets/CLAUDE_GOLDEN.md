@@ -370,7 +370,8 @@ refuses the commit. `.claude/settings.json` denies a way around the hooks.
   change that first uses it. Never use an unlisted package.
 - ESLint (`eslint.config.js`) and `tsc` enforce the 20-line, 4-parameter, and complexity limits, the
   300-line file warning, typed parameters, `fetch` only in `api.js`, `console` only in `log.js`, no
-  module-level `let`, and no `innerHTML`. Fix findings and never weaken the configuration.
+  module-level `let`, no `innerHTML`, the JSDoc of each named function and the `@module` block of
+  each file. Fix findings and never weaken the configuration.
 - Naming: `kebab-case` files, `camelCase` functions and variables, `PascalCase` classes. Every
   function has JSDoc with `@param {Type}` and `@returns {Type}`, even when it is not exported.
   Describe a shared object shape once with `@typedef`. Every module starts with an `@module` block.

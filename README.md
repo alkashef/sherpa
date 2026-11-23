@@ -129,10 +129,10 @@ tool's config, where it is enforced on every run, and `CLAUDE.md` keeps only wha
 
 | File | What it is | Why |
 | --- | --- | --- |
-| `package.json` | Dev-only tools, pinned: ESLint, TypeScript, Node types, Prettier, Stylelint. Scripts: `typecheck`, `lint`, `lint:css`, `format:check`, `test` (it skips `tests/live/`). Also with `html-css` and `ui-design`. | The app itself has no dependencies and no build step. These tools only check the code. |
+| `package.json` | Dev-only tools, pinned: ESLint with `eslint-plugin-jsdoc`, TypeScript, Node types, Prettier, Stylelint. Scripts: `typecheck`, `lint`, `lint:css`, `format:check`, `test` (it skips `tests/live/`). Also with `html-css` and `ui-design`. | The app itself has no dependencies and no build step. These tools only check the code. |
 | `.prettierrc.json`, `.stylelintrc.json` | Prettier formats JavaScript, CSS and HTML at line length 100 (as ruff does). Stylelint checks CSS with its standard rules, BEM class names, and no color value outside `theme.css`. Also with `html-css` and `ui-design`. | The formatting and CSS the editor extensions show are checked by the hooks too, so they cannot drift. |
 | `tsconfig.json` | Type-checks plain JavaScript (`checkJs`, `strict`) without compiling. | Type errors are found in `.js` files without switching to TypeScript. |
-| `eslint.config.js` | ESLint rules: the same size limits as ruff, one class per file, `const` over `let`, `===`, no TODO comments, no `console` outside `log.js`, no `fetch` outside `api.js`, no `innerHTML`. | It enforces the JavaScript rules from `CLAUDE.md`, including the ones that keep unsafe HTML out. |
+| `eslint.config.js` | ESLint rules: the same size limits as ruff, one class per file, `const` over `let`, `===`, no TODO comments, no `console` outside `log.js`, no `fetch` outside `api.js`, no `innerHTML`, and, with `eslint-plugin-jsdoc`, JSDoc with `@param {Type}` and `@returns {Type}` on each named function and an `@module` block in each file of `src/`. | It enforces the JavaScript rules from `CLAUDE.md`, including the ones that keep unsafe HTML out. |
 
 ### With other modules
 
@@ -780,8 +780,10 @@ for Python.
   of the kit, not from sherpa. After each approval, the repairs did what the decision said (also
   "set `SO_REUSEADDR` only when `os.name != "nt"`"), and the last review checked them (RUN-08).
 - Rules that no tool checks were lost. No JavaScript file has the `@module` block, three
-  functions have no JSDoc, and the page has no header and no footer. No review reported it. New
-  idea RUN-14.
+  functions have no JSDoc, and the page has no header and no footer. No review reported it.
+  RUN-14 puts the JSDoc and the `@module` block into ESLint now (`eslint-plugin-jsdoc` 63.3.3,
+  the newest line for Node 22.13): on the page of the run it reports 13 errors, and `--fix` only
+  adds a stub that still fails. The header and the footer stay a rule in prose.
 - A plugin hook from the settings of the user ran in the unattended sessions and sent them
   security findings. RUN-15 keeps the settings of the user out of a session now: a real session
   with `--setting-sources project,local` loaded no plugin and no hook of the user, and the edit
