@@ -90,7 +90,8 @@ branch that pushes to a remote.
 
 Each session starts with permission prompts off. Its guard rails are the rules in
 `.claude/settings.json`: a `deny` rule always refuses, and an `ask` rule refuses when nobody can
-answer. The runner does not start without that file, while the commit hook is off, when
+answer. A session loads only the settings of the project (`--setting-sources project,local`), so
+the plugins and the hooks of the user's own settings stay out of a run. The runner does not start without that file, while the commit hook is off, when
 `python scripts/spec_coverage.py --consistency` finds an ID that the spec, the design and the plan
 do not agree on or a milestone whose Refs name a `Proposed` decision, when `python` on the PATH of a session is not the project's environment, or when
 a test writer other than Claude does not answer one short prompt.

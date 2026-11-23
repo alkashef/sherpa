@@ -76,6 +76,7 @@ The approved changes are built. Their first text is in the git history of this f
 | 44 | `spec_coverage.py --consistency` refuses a `Proposed` decision in the Refs of a milestone, so the runner does not start, and the message says that the user must confirm it with `/write-design`. `/write-plan` never changes a Status to pass the check. `workflow.md`, the page and the README say it | RUN-11, approved on November 23, 2026 |
 | 45 | After the approval of a block that a session made (not the last review), a test session (`retest`) gets the decision before the build goes on, and changes a test only when the decision says so. Before, only a `BLOCKED:` line of a repair or rebuild session led there, so a build session that found a wrong test blocked again after the approval. `workflow.md`, the page and the README say it | RUN-12 (option B), approved on November 23, 2026 |
 | 46 | After a build, repair or rebuild session, the runner compares the `Decided` rows of `docs/design.md` with the base branch. A row may change only its Status, and only to `Superseded`, and no session makes a row `Decided`. Any other change means that the session did not finish, and its retry gets the reason. The repair and rebuild prompts now hold the rule too. `workflow.md`, the page and the README say it | RUN-13 (option A), approved on November 23, 2026 |
+| 47 | The runner starts each Claude session with `--setting-sources project,local`, so the plugins and the hooks of the user's own settings stay out of a run, and the settings, hooks and permissions of the project apply. A real session showed it: no plugin and no hook of the user loaded, and the edit hook of the project still ran. `workflow.md`, the page and the README say it | RUN-15 (option A), approved on November 23, 2026 |
 
 One real run followed on November 21, 2026 (README, "Checked in real Claude Code sessions"). It
 proved the condition of the user's decision on rank 3: a `claude -p` session runs the built-in
@@ -155,7 +156,7 @@ The user decided these points of section G on November 21, 2026. They need no ch
 
 On November 22, 2026 the user decided each idea of Part 2, and Part 1 holds the result. The
 sections below keep the context of the ideas. A new idea goes here, with its own entry. The user
-decided RUN-08 to RUN-13 on November 23, 2026 (Part 1). Open: RUN-14 and RUN-15 (section E).
+decided RUN-08 to RUN-13 and RUN-15 on November 23, 2026 (Part 1). Open: RUN-14 (section E).
 
 ### A. Open decisions of the approved changes
 
@@ -281,7 +282,8 @@ New ideas from the sixth real run (November 23, 2026). Nobody approved them.
   `/code-review-sherpa`, so that the review reports a gap; (C) no change. Recommendation: A. A
   tool check holds in every session, and the review keeps its attention for what no tool can
   check.
-- **RUN-15: the unattended sessions load the settings of the user.** In the sixth real run, a
+- **RUN-15: the unattended sessions load the settings of the user.** On November 23, 2026 the
+  user approved it with option A (Part 1). In the sixth real run, a
   plugin hook from the settings of the user (a security review) sent findings to the build
   session of M2. So a run depends on the machine of the user, and a hook outside the project can
   push a session against the design. Options: (A) the runner starts each session with
@@ -329,4 +331,4 @@ on the quality of the code. A walk-through item can hold more than one idea.
   are decided (Part 1).
 
 The user decided ranks 1 to 12 on November 20, 2026, and ranks 13 to 21 on November 22, 2026
-(Part 1). Part 2 holds two open ideas: RUN-14 and RUN-15.
+(Part 1). Part 2 holds one open idea: RUN-14.

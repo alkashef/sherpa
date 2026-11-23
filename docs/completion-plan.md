@@ -133,7 +133,8 @@ effort `medium` unless the step says otherwise.
     sent ESLint errors back and Prettier rewrote files, but no CSS edit gave a Stylelint error.
     tsc runs in the full check, not in the edit hook, so that part of the done-when was wrong.
     The run found a fault (C1), so a later web run checks the repair. It also found RUN-14 and
-    RUN-15 (Part 2).
+    RUN-15 (Part 2). RUN-15, option A, approved on November 23, 2026, and built in commit
+    "Unattended sessions load only the settings of the project (RUN-15)".
   - Done on: November 23, 2026. README record in commit: "Record the sixth real run, and its new ideas (RUN-14, RUN-15)"
 - [ ] **B3. A real interview, from an empty folder to merged milestones.** The user is the
   developer: the user answers `/write-spec`, `/write-design` and `/write-plan` in chat for a small

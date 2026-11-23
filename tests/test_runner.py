@@ -305,6 +305,17 @@ def test_each_session_is_denied_the_tools_of_its_kind(built: Path) -> None:
     }
 
 
+def test_each_claude_session_loads_only_the_settings_of_the_project(built: Path) -> None:
+    # The sixth real run: a plugin hook of the user's own settings sent findings to a session.
+    runner = load_runner(built)
+    row = runner.Row(3, "Login", "sonnet", "low", "open")
+    for kind in runner.DENIED_TOOLS:
+        command = runner.session_command(row, kind)
+        index = command.index("--setting-sources")
+        assert command[index + 1] == "project,local", kind
+        assert index < command.index("--disallowedTools"), kind
+
+
 def test_each_session_kind_has_its_log(built: Path) -> None:
     runner = load_runner(built)
     row = runner.Row(3, "Login", "sonnet", "low", "open")

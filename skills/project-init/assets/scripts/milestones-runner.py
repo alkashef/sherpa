@@ -108,7 +108,9 @@ the sessions do that. Its git work is the branch, the worktree of a review, the 
 and the commits of a blocked milestone. The git pre-commit hook still runs every check and test on
 each commit of a session. Each session starts with permission prompts off, so its guard rails are
 the rules in .claude/settings.json, plus the --disallowedTools of its kind: the runner refuses to
-start without that file.
+start without that file. Each Claude session loads only the settings of the project
+(`--setting-sources project,local`), so the plugins and the hooks of the user's own settings stay
+out of a run (RUN-15).
 
 One step of a milestone in chat (docs/workflow.md, Execute) uses the same guards:
 `--tests-only M<n>` runs the test session in the current branch and commits nothing, and
@@ -215,6 +217,7 @@ WRITER_SIGN_IN: Final = {  # what the user does once, so that the writer runs wi
     WRITER_COPILOT: "set COPILOT_GITHUB_TOKEN to a fine-grained token",
 }
 WRITER_FILE: Final = "config/test-writer.json"  # the writer that /project-init recorded
+SETTING_SOURCES: Final = "project,local"  # a Claude session loads no settings of the user
 START_CHECK_PROMPT: Final = "Reply with the single word ok."
 START_CHECK_SECONDS: Final = 300
 # What the folder of a test session holds: no src/ and no .git. tests/ is copied too.
@@ -1188,7 +1191,8 @@ def session_command(row: Row, kind: str) -> list[str]:
 
     Returns:
         The command; --disallowedTools comes last, because it takes every argument after it.
-        Its program is a name: run_claude finds it on the PATH of the session.
+        Its program is a name: run_claude finds it on the PATH of the session. The session loads
+        only the settings of the project, not the plugins and hooks of the user (RUN-15).
     """
     return [
         "claude",
@@ -1199,6 +1203,8 @@ def session_command(row: Row, kind: str) -> list[str]:
         row.effort,
         "--permission-mode",
         "bypassPermissions",
+        "--setting-sources",
+        SETTING_SOURCES,
         "--disallowedTools",
         *DENIED_TOOLS[kind],
     ]
