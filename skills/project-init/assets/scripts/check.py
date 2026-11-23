@@ -83,7 +83,17 @@ NO_WEB = "no JavaScript, CSS or HTML in src/ or tests/"
 ONE_CLASS = "one class per file"
 UTF8 = "UTF-8 text"
 PLAIN_DOCS = "plain docs"
-STE_OPTIONS = ("--fail-over", "2.5", "--min-words", "100", "--repeated", "12")
+# CLAUDE.md repeats the purpose of README.md on purpose, so the repeated check leaves it out.
+STE_OPTIONS = (
+    "--fail-over",
+    "2.5",
+    "--min-words",
+    "100",
+    "--repeated",
+    "12",
+    "--repeated-skip",
+    "CLAUDE.md",
+)
 REPLACEMENT_CHARACTER = chr(0xFFFD)  # what a decoder puts in place of a byte it cannot read
 BINARY_PROBE = 8000  # git counts a file as binary when a NUL byte is in its first 8000 bytes
 BOUNDARIES = "module boundaries"

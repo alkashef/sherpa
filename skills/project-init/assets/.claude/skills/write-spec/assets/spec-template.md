@@ -7,7 +7,7 @@ in EARS syntax and has an ID that tests cite.
 
 ## 1. Purpose and scope
 
-<purpose>
+The purpose given to `/project-init` is "<purpose>".
 
 Record the business problem, affected people, current workaround, desired
 improvement, in-scope work, exclusions, and binding constraints.

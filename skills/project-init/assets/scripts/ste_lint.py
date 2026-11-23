@@ -10,8 +10,10 @@ the count for each 100 words. Code (fenced blocks and `inline code`) does not co
 
 --fail-over N exits 1 when a file scores over N. --min-words N skips a file of fewer words.
 --repeated N exits 1 when a sentence of N words or more is in two files: a fact belongs in one
-place. `scripts/check.py` runs it on README.md, CLAUDE.md and docs/*.md. EARS keeps "shall": the
-flavored mode allows it.
+place. --repeated-skip FILE leaves a file out of that check. `scripts/check.py` runs it on
+README.md, CLAUDE.md and docs/*.md, and leaves CLAUDE.md out of the check of repeated sentences:
+its Project section repeats the purpose of README.md on purpose, for each session of Claude. EARS
+keeps "shall": the flavored mode allows it.
 
 The rules and the score come from ste-lint.py of the asd-ste100 skill (score version 2). One
 change: a list item is a paragraph of its own, and a table row is in no paragraph, so a long list
@@ -298,6 +300,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--fail-over", type=float, default=None, help="exit 1 over this score")
     parser.add_argument("--min-words", type=int, default=0, help="skip a shorter file")
     parser.add_argument("--repeated", type=int, default=0, help="exit 1 on a repeated sentence")
+    parser.add_argument(
+        "--repeated-skip",
+        action="append",
+        default=[],
+        type=Path,
+        help="a file that the check of repeated sentences leaves out (give it again for more)",
+    )
     return parser.parse_args(argv)
 
 
@@ -313,7 +322,9 @@ def main(argv: list[str] | None = None) -> int:
         state = "skipped" if skipped else "over" if over else "ok"
         sys.stdout.write(f"{name}: {score.words} words, {score.per_100_words} for 100 ({state})\n")
         failed = failed or over
-    problems = repeated_sentences(texts, args.repeated) if args.repeated else []
+    skipped_names = {path.as_posix() for path in args.repeated_skip}
+    compared = {name: raw for name, raw in texts.items() if name not in skipped_names}
+    problems = repeated_sentences(compared, args.repeated) if args.repeated else []
     for problem in problems:
         sys.stdout.write(f"{problem}\n")
     return FAILED if failed or problems else 0

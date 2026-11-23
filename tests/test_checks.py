@@ -529,6 +529,30 @@ def test_a_sentence_in_two_docs_fails(project: Sandbox) -> None:
     assert "is in docs/a.md and docs/b.md. Keep it in one." in output
 
 
+def test_a_long_purpose_in_readme_and_claude_md_passes(sandbox: Sandbox) -> None:
+    # The builder writes the purpose into README.md and CLAUDE.md. A purpose of 12 words or more
+    # failed the check of repeated sentences at the first commit of the docs (fourth real run).
+    purpose = "Turns a title into a URL slug, and signs readers up for the newsletter"
+    result = sandbox.init("--with", "python", "--no-github", "--no-conda", "--purpose", purpose)
+    assert result.returncode == 0, result.stderr
+    (sandbox.folder / "docs" / "notes.md").write_text("A short note.\n", encoding="utf-8")
+    sandbox.git("add", "docs/notes.md")
+    code, output = check(sandbox.folder)
+    assert code == 0, output
+    assert "passed   plain docs" in output
+
+
+def test_a_skipped_file_is_left_out_of_the_repeated_check(tmp_path: Path) -> None:
+    sentence = "The runner keeps the work of a blocked milestone in its own branch for later.\n"
+    for name in ("a.md", "b.md"):
+        (tmp_path / name).write_text(sentence, encoding="utf-8")
+    script = str(bi.assets_dir() / "scripts" / "ste_lint.py")
+    files = [str(tmp_path / "a.md"), str(tmp_path / "b.md")]
+    assert run([sys.executable, script, "--repeated", "12", *files]).returncode == 1
+    skip = ["--repeated-skip", (tmp_path / "b.md").as_posix()]
+    assert run([sys.executable, script, "--repeated", "12", *skip, *files]).returncode == 0
+
+
 def test_a_long_list_or_table_is_not_a_long_paragraph(tmp_path: Path) -> None:
     # The style asks for lists and tables before prose (USER-20), so they do not count as one
     # long paragraph, as they do in ste-lint.py.
