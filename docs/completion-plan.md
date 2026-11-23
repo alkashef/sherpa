@@ -44,8 +44,8 @@ the suite.
 | `/write-spec`, `/write-design` and `/write-plan` with a person who answers | Runs 1 to 4 started from written docs (a kit) | B3 |
 | A build session that blocks with partial work | Ran in the fifth real run: B1 is done | B1 |
 | A repair or rebuild session that reports `BLOCKED:` for a wrong test | Accepted as suite-only by the user on November 23, 2026 | B1 |
-| The modules `javascript`, `html-css`, `ui-design` and `http-apis`, and `ui` tests in Playwright | Each run was a Python command-line tool | B2 |
-| `build_instance.py --add` in a project that exists | Not needed in a run | B2 |
+| The modules `javascript`, `html-css`, `ui-design` and `http-apis`, and `ui` tests in Playwright | Ran in the sixth real run: B2 is done | B2 |
+| `build_instance.py --add` in a project that exists | Ran in the sixth real run (`--add http-apis`) | B2 |
 | `check.yml` and `mutation.yml` on GitHub Actions | Each run pushed to a local bare repository | B4 |
 | `/find-bugs` and `release.py` | No run went as far as a release | B4 |
 | The modules `data`, `llm`, `logging`, `long-running`, `validation`, `static-site`, `mcp` and `docker`, and `live_checks.py` with an approved budget | No run used them | B5 |
@@ -108,7 +108,7 @@ effort `medium` unless the step says otherwise.
     run after that approval merged M2 (434 s). The project's checks pass. The run also found
     RUN-13 (C1).
   - Done on: November 23, 2026. README record in commit: "Record the fifth real run, and its new idea (RUN-13)"
-- [ ] **B2. Sixth real run: a web project (`python`, `javascript`, `html-css`, `ui-design`,
+- [x] **B2. Sixth real run: a web project (`python`, `javascript`, `html-css`, `ui-design`,
   `http-apis`).** A small app with a page, an API and a `ui` test in Playwright. The project starts
   without `http-apis`, and `build_instance.py --add http-apis` adds it before the milestone of
   the API.
@@ -124,8 +124,17 @@ effort `medium` unless the step says otherwise.
     passed in the build session (pytest with the `ui` test in Playwright, `node --test`, tsc,
     Prettier, Stylelint) except ESLint, which allowed `console` only in `src/log.js`. The build
     session blocked with partial work (C1, repaired). The approval (Claude in the role of the
-    user) made the same change by hand in the project, and M1 runs again.
-  - Done on: ____ README record in commit: ____
+    user) made the same change by hand in the project, and M1 merged (318 s). Then the user's
+    part added `http-apis` with `build_instance.py . --add http-apis`, and DEC-005 (FastAPI)
+    replaced DEC-001. The last review blocked M2 two times for `medium` findings of a
+    requirement, and after each approval the repairs did what the decision said. M2 merged
+    (275 s), and the project's checks pass, with 10 `ui` tests.
+  - Of the done-when: each milestone merged, and the `ui` tests pass in `check.py`. The edit hook
+    sent ESLint errors back and Prettier rewrote files, but no CSS edit gave a Stylelint error.
+    tsc runs in the full check, not in the edit hook, so that part of the done-when was wrong.
+    The run found a fault (C1), so a later web run checks the repair. It also found RUN-14 and
+    RUN-15 (Part 2).
+  - Done on: November 23, 2026. README record in commit: "Record the sixth real run, and its new ideas (RUN-14, RUN-15)"
 - [ ] **B3. A real interview, from an empty folder to merged milestones.** The user is the
   developer: the user answers `/write-spec`, `/write-design` and `/write-plan` in chat for a small
   tool of the user's choice, with no kit, and then the runner builds the plan. This is the only test
@@ -193,8 +202,9 @@ effort `medium` unless the step says otherwise.
   - Estimate: 1 hour.
   - Done on: ____ Commit (if the README changed): ____
 - [ ] **D3. Correct the old text that this plan found.**
-  - `docs/unapproved-ideas.md`: the last line still says that Part 2 holds RUN-08 and RUN-09,
-    which are decided, and a blank line is missing before section G.
+  - `docs/unapproved-ideas.md`: the last line still said that Part 2 holds RUN-08 and RUN-09,
+    which are decided, and a blank line was missing before section G. Corrected in the record
+    commit of B2.
   - README, "File structure": the tree does not show `find-bugs`, `.github/workflows/`,
     `.coveragerc`, `.prettierrc.json`, `.stylelintrc.json`, `docs/audit-claude-golden.md` or
     `tests/test_dashboard.py`.

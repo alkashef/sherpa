@@ -749,3 +749,39 @@ unknown option does. Both milestones merged, and the project's checks pass.
 - `python main.py Hello World` still prints `world`. The review named it, and said that the spec
   does not define two titles: a gap of the kit's spec, not of sherpa.
 - The runs took 195, 62 and 211 seconds for M1, and 188, 1032 and 434 seconds for M2.
+
+A sixth real run on November 23, 2026 checked a web project (step B2 of
+`docs/completion-plan.md`), with `sonnet` at effort `medium`. The skill built `notecount` with
+`python`, `javascript`, `html-css` and `ui-design`, and with its own conda environment. M1 is a
+page that counts the words and characters of a note, and a server of the standard library serves
+it. Before M2, the part of the user added the module `http-apis` with
+`build_instance.py . --add http-apis`, and replaced the server with FastAPI (DEC-001 `Superseded`
+by DEC-005). Both milestones merged. The project's checks pass, with 10 `ui` tests in Playwright
+for Python.
+
+- The pip install of the skill failed on a slow network: pip found no version of ruff. The skill
+  reported it with the command to finish by hand, as its step 3 says. This is not a fault of
+  sherpa.
+- A fault of sherpa, now repaired: `eslint.config.js` let only `src/log.js` use `console`, and
+  only `src/api.js` call `fetch`. The design put the page in `src/web/`, next to the Python
+  server, and no session may edit the config. So the build session of M1 blocked with partial
+  work, after every other check passed. The two exceptions now match `src/**/log.js` and
+  `src/**/api.js`. The approval made the same change in the project by hand, a `retest` session
+  changed nothing, and M1 merged.
+- The edit hook sent ruff and ESLint errors back to the sessions, and Prettier rewrote files after
+  an edit. No CSS edit gave a Stylelint error. tsc runs in the full check, not in the edit hook,
+  and it passed at each Gate.
+- In M2 the test session moved the NOTE-006 tests from `make_server` to the new app, as the plan
+  said, because the build deleted `src/server.py`.
+- The last review blocked M2 two times, each time for `medium` findings with a requirement ID
+  (RUN-09). The first block had two races of the page, a socket option and a missing `ui` test.
+  The second block had a test of NOTE-006 that sent its path through the `TestClient`, which
+  normalizes the path, so no traversal reached the app. That weak test came from the test design
+  of the kit, not from sherpa. After each approval, the repairs did what the decision said (also
+  "set `SO_REUSEADDR` only when `os.name != "nt"`"), and the last review checked them (RUN-08).
+- Rules that no tool checks were lost. No JavaScript file has the `@module` block, three
+  functions have no JSDoc, and the page has no header and no footer. No review reported it. New
+  idea RUN-14.
+- A plugin hook from the settings of the user ran in the unattended sessions and sent them
+  security findings. New idea RUN-15.
+- The runs took 172 and 318 seconds for M1, and 851, 600 and 275 seconds for M2.

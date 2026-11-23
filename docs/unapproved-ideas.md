@@ -155,7 +155,7 @@ The user decided these points of section G on November 21, 2026. They need no ch
 
 On November 22, 2026 the user decided each idea of Part 2, and Part 1 holds the result. The
 sections below keep the context of the ideas. A new idea goes here, with its own entry. The user
-decided RUN-08 to RUN-13 on November 23, 2026 (Part 1). No idea is open.
+decided RUN-08 to RUN-13 on November 23, 2026 (Part 1). Open: RUN-14 and RUN-15 (section E).
 
 ### A. Open decisions of the approved changes
 
@@ -267,6 +267,30 @@ option B (Part 1).
   stronger rule in the prompts only; (C) no change, and the user reads the design after each run.
   Recommendation: A. The prompts already hold the rule, and the session broke it. (Correction:
   the build and test prompts held the rule; the repair and rebuild prompts did not.)
+
+New ideas from the sixth real run (November 23, 2026). Nobody approved them.
+
+- **RUN-14: rules of the page that no tool checks are lost.** In the sixth real run, no
+  JavaScript file had the `@module` block of the JavaScript rules, three functions had no JSDoc,
+  and the page had no header and no footer (the UI design rules). The edit hook and `check.py` do
+  not check these rules, and no review reported them. The approach of sherpa says that a rule
+  that a tool can enforce goes into the config of that tool. Options: (A) add
+  `eslint-plugin-jsdoc` to `package.json` and `eslint.config.js`: JSDoc on every function, a type
+  for each parameter and for the return, and a file overview (`@module`) in each file; the rule
+  of the header and the footer stays prose; (B) add the rules to the checklist of
+  `/code-review-sherpa`, so that the review reports a gap; (C) no change. Recommendation: A. A
+  tool check holds in every session, and the review keeps its attention for what no tool can
+  check.
+- **RUN-15: the unattended sessions load the settings of the user.** In the sixth real run, a
+  plugin hook from the settings of the user (a security review) sent findings to the build
+  session of M2. So a run depends on the machine of the user, and a hook outside the project can
+  push a session against the design. Options: (A) the runner starts each session with
+  `--setting-sources project,local`, so that only the settings, hooks and permissions of the
+  project apply; (B) the runner warns at its start when the settings of the user turn on a hook
+  or a plugin; (C) no change. Recommendation: A, after a real session shows that the plugin hook
+  no longer runs. The project's settings carry the hooks and the permissions of the workflow, so
+  a session loses nothing that the project needs.
+
 ### G. The user's list of November 21, 2026
 
 The user gave this list on November 21, 2026, and asked for a walk-through, one item at a time.
@@ -305,4 +329,4 @@ on the quality of the code. A walk-through item can hold more than one idea.
   are decided (Part 1).
 
 The user decided ranks 1 to 12 on November 20, 2026, and ranks 13 to 21 on November 22, 2026
-(Part 1). Part 2 holds two open ideas: RUN-08 and RUN-09.
+(Part 1). Part 2 holds two open ideas: RUN-14 and RUN-15.
