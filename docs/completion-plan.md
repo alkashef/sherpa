@@ -80,15 +80,21 @@ final behavior.
 Each run uses a project that the skill built and real `claude -p` sessions, with `sonnet` at
 effort `medium` unless the step says otherwise.
 
-- [ ] **B1. Fifth real run: the blocks of a session (Python, `cli`).** The kit has two milestones.
-  In one, the design leaves out a fact that only the build session can find (for example, it names
-  a function that the chosen library does not have). In the other, a test is wrong. How to get a
-  wrong test from a test writer that reads the spec is still open: settle it when you write the
-  kit.
+- [ ] **B1. Fifth real run: a build session that blocks (Python, `cli`).** The kit of the fourth
+  run, with DEC-004 `Decided` (since A2, a `Proposed` decision stops the run at its start). M1
+  runs alone. Then an older test goes onto the base branch: it passes after M1, but it expects
+  `--subscribe` to be refused as an unknown option, which SLUG-008 makes wrong. The build session
+  of M2 makes that test fail, and it may not change a test, so it must block. Method approved by
+  the user on November 23, 2026.
   - Done when: a build session blocks, the runner commits `M<n>: partial work` and `M<n>: blocked`,
-    and after the approval the milestone goes on from that work and merges. Also, a rebuild
-    session reports `BLOCKED:`, and after the approval a test session gets the decision.
+    after the approval a test session gets the decision, and the milestone goes on from that work
+    and merges.
+  - A repair or rebuild session that reports `BLOCKED:` (after the review): accepted as
+    suite-only by the user on November 23, 2026. It uses the same block code as the build session.
+  - Risk: the test session of M2 can see the wrong test and correct it itself. Then the run shows
+    another path, and B1 stays open.
   - Estimate: 1 hour for the kit, 1 hour of runs.
+  - Status: in progress since November 23, 2026.
   - Done on: ____ README record in commit: ____
 - [ ] **B2. Sixth real run: a web project (`python`, `javascript`, `html-css`, `ui-design`,
   `http-apis`).** A small app with a page, an API and a `ui` test in Playwright. The project starts
