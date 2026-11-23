@@ -86,7 +86,7 @@ after the walk-through of section G ends. Several of them change the same files 
 `/write-tests`, `assets/docs/workflow.md` and `workflow.html`), so one pass changes each file and
 the diagram one time.
 
-None.
+None. The plan to finish sherpa is in `docs/completion-plan.md`.
 
 ### Decided with no work
 

@@ -151,6 +151,7 @@ checked with ruff 0.17.0 and mypy 2.4.0 using the configs in `assets/`.
 ```text
 CLAUDE.md                       instructions for working on this repository
 docs/
+  completion-plan.md            the plan to finish sherpa, with a record line for each step
   unapproved-ideas.md           Part 1: what is left of the approved changes. Part 2: proposed
                                 changes, not approved
   v1/ to v4/                    SDD report, presentation and demo; v4 is the current workflow

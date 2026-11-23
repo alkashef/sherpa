@@ -51,6 +51,8 @@ wording where it costs nothing.
   workflow changes, in the order of the work: delete an item in the commit that finishes it.
   Part 2 holds proposed workflow changes. Never implement one without the user's approval.
   `audit-claude-golden.md` is the audit table of rank 17, approved and applied on November 23, 2026.
+  `completion-plan.md` is the plan to finish sherpa, written on November 23, 2026: mark a step
+  `[x]` and fill in its record in the commit that finishes it. Never delete a finished step.
 - `README.md`: the full description, usage, contribution and test guide. Read it before changing
   what new projects get.
 
