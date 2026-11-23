@@ -75,6 +75,7 @@ The approved changes are built. Their first text is in the git history of this f
 | 43 | `/code-review-sherpa` and the review prompt of the runner: wrong behavior against a requirement is `high`, also as a missing test and for a rare input, and wrong behavior is never `low`. `workflow.md` and the page say it | RUN-10 (option B), approved on November 23, 2026 |
 | 44 | `spec_coverage.py --consistency` refuses a `Proposed` decision in the Refs of a milestone, so the runner does not start, and the message says that the user must confirm it with `/write-design`. `/write-plan` never changes a Status to pass the check. `workflow.md`, the page and the README say it | RUN-11, approved on November 23, 2026 |
 | 45 | After the approval of a block that a session made (not the last review), a test session (`retest`) gets the decision before the build goes on, and changes a test only when the decision says so. Before, only a `BLOCKED:` line of a repair or rebuild session led there, so a build session that found a wrong test blocked again after the approval. `workflow.md`, the page and the README say it | RUN-12 (option B), approved on November 23, 2026 |
+| 46 | After a build, repair or rebuild session, the runner compares the `Decided` rows of `docs/design.md` with the base branch. A row may change only its Status, and only to `Superseded`, and no session makes a row `Decided`. Any other change means that the session did not finish, and its retry gets the reason. The repair and rebuild prompts now hold the rule too. `workflow.md`, the page and the README say it | RUN-13 (option A), approved on November 23, 2026 |
 
 One real run followed on November 21, 2026 (README, "Checked in real Claude Code sessions"). It
 proved the condition of the user's decision on rank 3: a `claude -p` session runs the built-in
@@ -154,7 +155,7 @@ The user decided these points of section G on November 21, 2026. They need no ch
 
 On November 22, 2026 the user decided each idea of Part 2, and Part 1 holds the result. The
 sections below keep the context of the ideas. A new idea goes here, with its own entry. The user
-decided RUN-08 to RUN-12 on November 23, 2026 (Part 1). Open: RUN-13 (section E).
+decided RUN-08 to RUN-13 on November 23, 2026 (Part 1). No idea is open.
 
 ### A. Open decisions of the approved changes
 
@@ -253,7 +254,8 @@ option B (Part 1).
   (C) no change: the user corrects the test by hand. Recommendation: B. The runner decides, not a
   session that can pick the wrong way to block, and the paused M1 of the fifth run can go on with
   it.
-- **RUN-13: a session rewrote a `Decided` decision and kept it `Decided`.** Nobody approved it.
+- **RUN-13: a session rewrote a `Decided` decision and kept it `Decided`.** On November 23,
+  2026 the user approved it with option A (Part 1).
   In M2, ruff's S310 refused `urllib.request` with a URL from a setting, and the rules forbid
   `noqa`, so the build session used `http.client` instead of the `urllib.request` of DEC-004. The
   review found the difference. The repair session then rewrote DEC-004 to `http.client` and kept
@@ -263,7 +265,8 @@ option B (Part 1).
   `docs/design.md` with the base branch: a row may only change its Status to `Superseded`, and any
   other change means that the session did not count, and it is tried again with the reason; (B) a
   stronger rule in the prompts only; (C) no change, and the user reads the design after each run.
-  Recommendation: A. The prompts already hold the rule, and the session broke it.
+  Recommendation: A. The prompts already hold the rule, and the session broke it. (Correction:
+  the build and test prompts held the rule; the repair and rebuild prompts did not.)
 ### G. The user's list of November 21, 2026
 
 The user gave this list on November 21, 2026, and asked for a walk-through, one item at a time.

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="The sherpa spec-driven development workflow: who does each step, what it produces, and what enforces it.">
 <!-- The SHA-256 of docs/workflow.md when this page was last made to agree with it. -->
-<meta name="workflow-md-sha256" content="6b0108c02a6088293d8f45d7564842f432bb65c0fe15e98f01455145e4a9f0fa">
+<meta name="workflow-md-sha256" content="b843888c8a2a8c47016b3f82993973c96e7b70f0083b19910e3af692cd028ce2">
 <title>Sherpa SDD Workflow</title>
 <style>
   /* Layout: a slim /sherpa bar, then two rows of four cards that snake. Top row left to right (setup
@@ -542,6 +542,7 @@
           ul([
             '`check.py` fails when the code imports across a module boundary that the design does not permit.',
             '`spec_coverage.py --consistency` fails when a requirement has no test level.',
+            'Only the human makes a decision `Decided`. The runner counts a milestone session that changed a `Decided` row as not finished, unless the session only set its Status to `Superseded`.',
             'The browser tool is Playwright. Each user scenario of a project with a browser gets a `ui` test.',
             'After the first release, a change that breaks released data or a released interface needs a decision that records the transition.'
           ])]
@@ -648,7 +649,7 @@
           p('Only the spec is locked. For everything else that is not a blocker, the session does these steps:'),
           ol([
             'Picks the most conservative option and continues.',
-            'When the option changes the design, adds a `DEC-NNN` with the Status `Proposed`.',
+            'When the option changes the design, adds a `DEC-NNN` with the Status `Proposed`. When it replaces a `Decided` decision, sets that one to `Superseded` and changes nothing else in its row.',
             'Writes one `DECISION:` line for each decision in its report.'
           ]),
           p('The human reviews these lines after the run.')],
@@ -697,7 +698,7 @@
           ul([
             'The pre-commit hook runs the same full check on every commit. It refuses the commit if a check fails.',
             'At each push, the GitHub Actions workflow "Checks" installs the project on a clean machine from its dependency files, and runs the same checks.',
-            'After the build session, the runner compares the hashes of `tests/` and runs the spec coverage itself.'
+            'After the build session, the runner compares the hashes of `tests/` and runs the spec coverage itself. It also compares `spec.md` and the `Decided` rows of `design.md` with the base branch.'
           ])],
         ['Offline',
           ul([
@@ -752,7 +753,7 @@
             'The review session cannot edit: Edit and Write are disallowed. It runs in a worktree that the runner deletes, so a change cannot reach the branch; the log gets a warning.',
             'A fault against a requirement that no test catches is a missing test: the review names a test file for it.',
             'The repair session cannot change `tests/`, and the pre-commit hook runs each check again.',
-            'After a repair, the runner compares the hashes of `tests/` and runs the spec coverage again.'
+            'After a repair, the runner compares the hashes of `tests/` and runs the spec coverage again. A repair that changed a `Decided` row in another way than to set its Status to `Superseded` counts as not finished.'
           ])],
         ['In chat',
           p('When `/sherpa` builds one milestone in chat, `python scripts/milestones-runner.py --review-only M&lt;n&gt;` is the review session, in a worktree. Its findings about tests go to `--tests-only M&lt;n&gt; --review-findings`.')]

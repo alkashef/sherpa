@@ -43,7 +43,7 @@ A requirement has an ID (`AREA-NNN`, or `NFR-NNN` for a non-functional one), an 
 - Never edit `spec.md` without the user's approval, given in chat or in an **Approval** entry. Running `/write-spec` allows draft requirements only. The spec is final when the user approves it.
 - If the spec and the design disagree, the spec wins. In a milestone, in chat or unattended, fix the design and record it as a decision (below). Outside a milestone, stop and ask.
 - Stay in scope. When in doubt about the spec, ask. Only the spec is locked: a milestone never changes it. Everything else that step 5 does not name as a blocker may change in a milestone, in chat or unattended, without a question: a design decision (also a `Decided` one), a module, an interface, a setting. Decide it, record it and report it.
-- A decision in a milestone: pick the most conservative option and carry on. When it changes the design, add a `DEC-NNN` (the next free number) to `design.md` with the Status `Proposed`, and write "auto-decided in M<n>, review" in its Why. When it replaces a `Decided` decision, set that one to `Superseded`. The final report has one line per decision: `DECISION: <what> | <why> | <DEC-NNN or none>`. The user reviews these lines after the run and reverts or approves each.
+- A decision in a milestone: pick the most conservative option and carry on. When it changes the design, add a `DEC-NNN` (the next free number) to `design.md` with the Status `Proposed`, and write "auto-decided in M<n>, review" in its Why. When it replaces a `Decided` decision, set that one to `Superseded` and change nothing else in its row: only the user makes a decision `Decided`. The final report has one line per decision: `DECISION: <what> | <why> | <DEC-NNN or none>`. The user reviews these lines after the run and reverts or approves each.
 - A finding of a review: `FINDING: <high, medium or low> | <file>:<line> | <rule or smell> | <remedy>`. The file is the file where the fix goes: a missing test names a test file. A fault against a requirement that no test catches is a missing test, with the requirement ID as its rule. A review reports only a finding that it is sure of. The user reads the findings that a milestone kept after the run.
 - An idea in `unapproved-ideas.md` is not a requirement and not a decision. Never design, plan, test or build from it. It becomes work only through step 1, 2 or 3, with the approval that step needs. The skill that takes an idea up deletes its entry. To note an idea, add one line. Do not act on it.
 - Never report tests as passed unless they ran. Show failing output.
@@ -65,7 +65,8 @@ active, works through the table in order. Each milestone runs in its branch `mil
 worktree and, when the review has findings, the sessions that repair them and a last review. The
 runner, not a session, merges the branch into the base branch, pushes and deletes the branch. A
 build or repair session that changed a test file counts as not finished, and so does a milestone
-whose sessions changed `docs/spec.md`. Each session gets the folders of the project's conda
+whose sessions changed `docs/spec.md`, or changed a `Decided` row of `docs/design.md` in another
+way than to set its Status to `Superseded`. Each session gets the folders of the project's conda
 environment first on its PATH, and writes files with the Edit and Write tools.
 
 The runner stops at a `blocked` row, at a milestone that becomes blocked (and prints its

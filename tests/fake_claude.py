@@ -35,6 +35,9 @@ test session works in the folder of the test writer, which has no git.
     "retry"          the first build session of a milestone does nothing; a later one finishes it
     "tamper"         the build session also changes the test that the test session wrote
     "spec"           the build session also changes docs/spec.md
+    "decided"        the first build session of a milestone also changes the Decision of the
+                     Decided DEC-001 in docs/design.md; a later one puts the design back as
+                     `main` has it
     "no-remote"      the build session also points `origin` at a folder that does not exist, so
                      a later push fails
     "wanders"        the build session also checks out `main` when its commit is made
@@ -63,6 +66,7 @@ from pathlib import Path
 
 PLAN = Path("docs/plan.md")
 SPEC = Path("docs/spec.md")
+DESIGN = Path("docs/design.md")
 QUESTION = "- **Blocked:** Needs a decision: which database?"
 SESSIONS_LOG = "claude-sessions.jsonl"
 PROMPTS = {
@@ -304,6 +308,15 @@ def break_rule(call: Call) -> None:
         weaken_test(call.number)
     if call.state == "spec":
         SPEC.write_text(SPEC.read_text("utf-8") + "\nA new requirement.\n", encoding="utf-8")
+    if call.state == "decided" and call.earlier == 0:
+        changed = re.sub(
+            r"(?m)^(\| DEC-001 \| Decided \|)[^|]*\|",
+            r"\1 Another stack |",
+            DESIGN.read_text("utf-8"),
+        )
+        DESIGN.write_text(changed, encoding="utf-8")
+    if call.state == "decided" and call.earlier > 0:
+        git("checkout", "main", "--", str(DESIGN))
     if call.state == "no-remote":
         git("remote", "set-url", "origin", str(Path.cwd().parent / "no-remote.git"))
 

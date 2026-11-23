@@ -37,8 +37,10 @@ base branch, and records the base branch in the git setting `branch.milestone/M<
 
 After a build, rebuild or repair session, the runner does its own checks. It compares the hashes
 of tests/. It runs `python scripts/spec_coverage.py M<n>` over a temporary copy of docs/spec.md
-and tests/, with the saved block. It compares docs/spec.md with the base branch. A test file that
-changed, was added or was removed, a failed coverage check or a changed spec means that the
+and tests/, with the saved block. It compares docs/spec.md, and the `Decided` rows of
+docs/design.md, with the base branch: only the user makes a decision `Decided`, so a session may
+change such a row only to set its Status to `Superseded`. A test file that changed, was added or
+was removed, a failed coverage check, a changed spec or a changed `Decided` row means that the
 session did not finish. A review that ended with an error did not finish either. The same holds
 for a session that left its branch.
 
@@ -272,6 +274,11 @@ ENTRY_FRESH: Final = "fresh"  # the milestone runs from its start
 ENTRY_RESUME: Final = "resume"  # the sessions continue from the work an earlier run left
 ENTRY_BUILT: Final = "built"  # the build commit exists: only the checks, the review, the merge
 PLAN_PATH: Final = "docs/plan.md"  # the plan, as git names it
+DESIGN_PATH: Final = "docs/design.md"  # the design, as git names it
+DECISION_ROW: Final = re.compile(r"^\|\s*(DEC-\d{3,})\s*\|")  # | DEC-004 | Decided | ... |
+DECISION_STATUS_CELL: Final = 1  # the cells of a decision row: ID, Status, Decision, Why
+DECIDED: Final = "decided"  # only the user makes a decision Decided
+SUPERSEDED: Final = "superseded"
 BYTE_ORDER_MARK: Final = chr(0xFEFF)  # can start a UTF-8 file; it is not part of the text
 ANSWER_YES: Final = "yes"  # the answer that confirms a human test
 LIVE_SCRIPT: Final = "live_checks.py"  # in scripts/: runs the live checks after the milestones
@@ -1006,6 +1013,12 @@ RETEST_RULES: Final = (
     "(e) end with one line for each test that you changed: `CHANGED: <test>`, or with",
     "`NO CHANGE` when the decision asks for no change of a test.",
 )
+DECIDED_RULE: Final = (  # the runner checks it after the session (RUN-13)
+    "A Decided decision is the user's: in its row, change only the Status, and only to "
+    "Superseded. When your change needs another decision, add a DEC-NNN (the next free "
+    "number) with the Status Proposed and 'auto-decided in M<n>, review' in its Why, and set "
+    "the old one to Superseded;"
+)
 WRONG_TEST_RULE: Final = (
     "(<x>) a test in tests/ that looks wrong is a blocker: do not change it, do not edit "
     "docs/plan.md, commit nothing, and end the report with one line "
@@ -1028,7 +1041,8 @@ REBUILD_RULES: Final = (
     "(c) a tool call that a settings rule denies is not allowed: do not retry it or work",
     "around it;",
     "(d) a public function that you add goes into Interfaces of docs/design.md as a decision:",
-    "a DEC-NNN with the Status Proposed and 'auto-decided in M<n>, review' in its Why;",
+    "a DEC-NNN with the Status Proposed and 'auto-decided in M<n>, review' in its Why.",
+    DECIDED_RULE,
     "(e) write and change files with the Edit and Write tools, not through the shell;",
     WRONG_TEST_RULE.replace("<x>", "f"),
 )
@@ -1069,7 +1083,8 @@ REPAIR_RULES: Final = (
     "around it;",
     "(i) a public function that you add goes into Interfaces of docs/design.md as a decision",
     "(a DEC-NNN with the Status Proposed and 'auto-decided in M<n>, review' in its Why), so",
-    "that a test writer can test it from the design;",
+    "that a test writer can test it from the design.",
+    DECIDED_RULE,
     "(j) write and change files with the Edit and Write tools, not through the shell;",
     WRONG_TEST_RULE.replace("<x>", "k"),
 )
@@ -1899,6 +1914,74 @@ def locked_problem(root: Path, base: str) -> str | None:
     return None
 
 
+def decision_rows(lines: Sequence[str]) -> dict[str, list[str]]:
+    """Return the cells of each decision row of the design (`| DEC-NNN | Status | ... |`), by ID."""
+    rows: dict[str, list[str]] = {}
+    for line in lines:
+        match = DECISION_ROW.match(line)
+        if match is not None:
+            rows[match[1]] = [cell.strip() for cell in line.strip().strip("|").split("|")]
+    return rows
+
+
+def decision_status(cells: Sequence[str]) -> str:
+    """Return the Status of a decision row in lower case, without backticks and asterisks."""
+    if len(cells) <= DECISION_STATUS_CELL:
+        return ""
+    return cells[DECISION_STATUS_CELL].strip("`* ").lower()
+
+
+def without_status(cells: Sequence[str]) -> list[str]:
+    """Return the cells of a decision row without its Status."""
+    return [cell for index, cell in enumerate(cells) if index != DECISION_STATUS_CELL]
+
+
+def decision_kept(old: Sequence[str], new: Sequence[str]) -> bool:
+    """Tell whether a session left one decision row as the rules allow (RUN-13).
+
+    Only the user makes a decision Decided. So a row that is Decided on the base branch stays as
+    it is, or changes only its Status to Superseded. A row that is Decided now was Decided, with
+    the same cells, on the base branch. A missing row has no cells. The Status is compared by its
+    word, so `Decided` in backticks is still Decided; the other cells by their text.
+    """
+    old_status, new_status = decision_status(old), decision_status(new)
+    if old_status != DECIDED:
+        return new_status != DECIDED
+    return new_status in {DECIDED, SUPERSEDED} and without_status(new) == without_status(old)
+
+
+def changed_decisions(before: Sequence[str], after: Sequence[str]) -> list[str]:
+    """Return the ID of each decision row that a session changed against the rules, in order."""
+    old, new = decision_rows(before), decision_rows(after)
+    names = dict.fromkeys([*old, *new])
+    return [name for name in names if not decision_kept(old.get(name, []), new.get(name, []))]
+
+
+def decided_problem(root: Path, base: str) -> str | None:
+    """Return why a milestone does not count: a Decided decision differs from `base` (RUN-13).
+
+    Args:
+        root: The repository root.
+        base: The base branch of the run.
+
+    Returns:
+        The reason with the IDs of the changed decisions, or None.
+    """
+    done = _git(root, "show", f"{base}:{DESIGN_PATH}")
+    before = _split_lines(done.stdout.removeprefix(BYTE_ORDER_MARK)) if done.returncode == 0 else []
+    design = root / DESIGN_PATH
+    after = _read_lines(design) if design.is_file() else []
+    changed = changed_decisions(before, after)
+    if not changed:
+        return None
+    return (
+        f"a session changed what the user decided in {DESIGN_PATH}: {', '.join(changed)}. Put "
+        f"each of these rows back as {base} has it. Only the user makes a decision Decided. To "
+        "replace one, set its Status to Superseded, change nothing else in its row, and add a "
+        "new DEC-NNN with the Status Proposed."
+    )
+
+
 def check_range(first: int, last: int) -> None:
     """Refuse a range whose start is after its end.
 
@@ -2348,11 +2431,17 @@ def work_problem(session: Session, running: Running, kind: str) -> str | None:
     """Return why the work of a build or repair session does not count, or None.
 
     These are the runner's own checks: the hashes of tests/, the spec coverage with the saved
-    block, and docs/spec.md compared with the base branch.
+    block, docs/spec.md compared with the base branch, and the Decided decisions of
+    docs/design.md compared with the base branch.
     """
     saved = running.saved
     problem = None if saved is None else tests_problem(session.paths, running.row, saved, kind)
-    return problem or locked_problem(session.paths.root, session.base)
+    return problem or protected_problem(session.paths.root, session.base)
+
+
+def protected_problem(root: Path, base: str) -> str | None:
+    """Return why a session's work does not count: it changed the spec or a Decided decision."""
+    return locked_problem(root, base) or decided_problem(root, base)
 
 
 def work_verdict(session: Session, running: Running, kind: str) -> Verdict:
@@ -2370,8 +2459,8 @@ def is_blocked(paths: Paths, row: Row) -> bool:
 
 
 def blocked_verdict(session: Session) -> Verdict:
-    """Return blocked, or failed when the session that blocked its milestone changed the spec."""
-    problem = locked_problem(session.paths.root, session.base)
+    """Return blocked, or failed when the blocking session changed the spec or a decision."""
+    problem = protected_problem(session.paths.root, session.base)
     return Verdict(OUTCOME_BLOCKED, "") if problem is None else Verdict(OUTCOME_FAILED, problem)
 
 

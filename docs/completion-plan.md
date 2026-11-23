@@ -164,7 +164,7 @@ effort `medium` unless the step says otherwise.
   | Run | Fault | Commit |
   | --- | --- | --- |
   | 5 (B1) | After the approval of a wrong test that a build session found, no test session ran, and M1 could not go on. RUN-12, option B, approved on November 23, 2026 | "After the approval of a block by a session, a test session gets the decision first (RUN-12)" |
-  | 5 (B1) | A repair session rewrote the `Decided` decision DEC-004 and kept it `Decided`. RUN-13 waits for the user | ____ |
+  | 5 (B1) | A repair session rewrote the `Decided` decision DEC-004 and kept it `Decided`. RUN-13, option A, approved on November 23, 2026 | "A session may not change a Decided decision of the design (RUN-13)" |
   | ____ | ____ | ____ |
 
 ## D. Make sherpa itself ready for a release

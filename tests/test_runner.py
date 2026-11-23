@@ -724,6 +724,78 @@ def test_a_milestone_that_changes_the_spec_does_not_count(planned: Sandbox) -> N
     assert kinds(planned) == ["test M1", "build M1"]
 
 
+def decide_the_stack(sandbox: Sandbox) -> str:
+    """Do what /write-design does when the user confirms DEC-001: set it Decided, commit, push.
+
+    Returns:
+        The row of DEC-001.
+    """
+    design = sandbox.folder / "docs" / "design.md"
+    text = design.read_text("utf-8").replace("| DEC-001 | Proposed |", "| DEC-001 | Decided |")
+    design.write_text(text, encoding="utf-8")
+    sandbox.git("add", "-A")
+    sandbox.git("commit", "-m", "Decide the stack")
+    sandbox.git("push")
+    [row] = [line for line in text.splitlines() if line.startswith("| DEC-001 | Decided |")]
+    return row
+
+
+def test_a_session_that_changes_a_decided_decision_is_tried_again(planned: Sandbox) -> None:
+    row = decide_the_stack(planned)
+    planned.env["FAKE_CLAUDE_STATE"] = "decided"
+    code, output = run_runner(planned, "--end", "1")
+    assert code == 0, output
+    assert kinds(planned) == ["test M1", "build M1", "build M1", "review M1"]
+    retry = sessions(planned)[2]["prompt"]
+    assert "a session changed what the user decided in docs/design.md: DEC-001." in retry
+    assert "set its Status to Superseded, change nothing else in its row" in retry
+    assert row in (planned.folder / "docs" / "design.md").read_text("utf-8").splitlines()
+
+
+DESIGN_BEFORE = (
+    "| ID | Status | Decision | Why |",
+    "| --- | --- | --- | --- |",
+    "| DEC-001 | Decided | `urllib.request` | The standard library is enough |",
+    "| DEC-002 | Proposed | JSON | TBD |",
+)
+DEC_001 = DESIGN_BEFORE[2]
+DEC_002 = DESIGN_BEFORE[3]
+NEW_ROW = "| DEC-003 | Proposed | `http.client` | auto-decided in M2, review |"
+
+
+@pytest.mark.parametrize(
+    ("rows", "changed"),
+    [
+        ((DEC_001, DEC_002), []),
+        ((DEC_001.replace("| DEC-001 | Decided |", "|  DEC-001  |  `Decided`  |"), DEC_002), []),
+        ((DEC_001.replace("Decided", "Superseded"), DEC_002, NEW_ROW), []),
+        ((DEC_001, DEC_002.replace("JSON", "YAML")), []),
+        ((DEC_001.replace("urllib.request", "http.client"), DEC_002), ["DEC-001"]),
+        (
+            (DEC_001.replace("Decided", "Superseded").replace("urllib", "http"), DEC_002),
+            ["DEC-001"],
+        ),
+        ((DEC_001.replace("Decided", "Proposed"), DEC_002), ["DEC-001"]),
+        ((DEC_002,), ["DEC-001"]),
+        ((DEC_001, DEC_002.replace("Proposed", "Decided")), ["DEC-002"]),
+        ((DEC_001, DEC_002, NEW_ROW.replace("Proposed", "Decided")), ["DEC-003"]),
+    ],
+)
+def test_only_the_user_makes_or_changes_a_decided_decision(
+    built: Path, rows: tuple[str, ...], changed: list[str]
+) -> None:
+    runner = load_runner(built)
+    assert runner.changed_decisions(DESIGN_BEFORE, [*DESIGN_BEFORE[:2], *rows]) == changed
+
+
+def test_the_repair_and_rebuild_prompts_keep_the_decided_decisions(built: Path) -> None:
+    runner = load_runner(built)
+    row = runner.Row(3, "Login", "sonnet", "low", "open")
+    rule = "A Decided decision is the user's: in its row, change only the Status"
+    assert rule in runner.repair_prompt(row, [])
+    assert rule in runner.rebuild_prompt(row)
+
+
 def test_runner_refuses_a_milestone_whose_refs_name_a_proposed_decision(
     planned: Sandbox,
 ) -> None:
