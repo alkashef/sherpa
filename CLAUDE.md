@@ -34,6 +34,10 @@ and the milestone runner all use Claude Code features. Do not add support for an
 unless asked, but keep the method itself (spec, design, plan, checks) free of Claude-specific
 wording where it costs nothing.
 
+sherpa supports Windows only (a scope limitation, decided on November 24, 2026). Do not add
+support for Linux or macOS unless asked. But keep `check.py` and what it runs portable: the
+`check.yml` workflow of a new project runs `check.py` on Linux.
+
 ## Where things are
 
 - `skills/project-init/SKILL.md`: what Claude reads when the skill runs.
@@ -64,7 +68,9 @@ repository. Do not use `base`, another project's environment, or the system Pyth
 Run commands in it with `conda run -n sherpa <command>`, for example
 `conda run -n sherpa python -m pytest` (the suite) or
 `conda run -n sherpa python skills/project-init/scripts/build_instance.py <folder> --dry-run`.
-The lint and type-check commands are in README, "How to test".
+The lint and type-check commands are in README, "How to test". The tools are pinned in
+`requirements-dev.txt`. At each push, `.github/workflows/suite.yml` runs the suite and those
+checks on a clean Windows machine of GitHub.
 
 ## Rules for changing the skill
 

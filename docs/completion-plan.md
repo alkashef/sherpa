@@ -26,11 +26,17 @@ sherpa is finished when all five points are true:
 2. Each path of the workflow ran in a real Claude Code session at least one time, or the user
    accepted it as checked by the suite only (next section).
 3. The last real run of each kind of project found no new fault of sherpa.
-4. The suite passes on Windows, Linux and macOS, on a clean machine.
+4. The suite passes on Windows, on a clean machine. Before November 24, 2026, this point also
+   named Linux and macOS (scope limitation below).
 5. The docs show the workflow as built, and the release of sherpa has a tag.
 
 Out of scope, by earlier decisions: AI assistants other than Claude Code (`CLAUDE.md`, Approach);
 an existing project as the start (rank 13); a third language before a project needs one (rank 19).
+
+Scope limitation, decided by the user on November 24, 2026 (D1): sherpa supports Windows only.
+The suite, the skill, the hooks and the runner are checked on Windows, and no check runs them on
+Linux or macOS. One part runs on Linux all the same: the `check.yml` workflow of a new project
+runs `check.py` on a clean Linux machine of GitHub (B4 checks it).
 
 ## Paths that no real session ran
 
@@ -218,8 +224,12 @@ effort `medium` unless the step says otherwise.
   `.github/workflows/` of this repository runs pytest, ruff and mypy at each push, on Windows,
   Linux and macOS. Today the suite runs only on one Windows machine, so no test ran the skill, the
   hooks or the runner on Linux or macOS.
-  - Done when: the workflow passes on the three systems.
-  - Estimate: 1 hour, plus the repairs of what Linux and macOS find.
+  - Approved by the user on November 24, 2026, for Windows only, with Linux and macOS recorded as
+    a scope limitation (definition of done). The workflow is `.github/workflows/suite.yml`. It
+    installs the pinned tools of the new `requirements-dev.txt`, runs the lint and type checks of
+    README, "How to test", and runs the suite with `pytest -n auto` on `windows-latest`.
+  - Done when: the workflow passes on Windows.
+  - Estimate: 1 hour, plus the repairs of what a clean machine finds.
   - Done in commit: ____
 - [ ] **D2. Install sherpa from a clean clone.** Do the steps of the README, "Set up the machine
   (once)", word for word on a second machine or a new user profile. Then run `/project-init`.
@@ -232,7 +242,8 @@ effort `medium` unless the step says otherwise.
     commit of B2.
   - README, "File structure": the tree does not show `find-bugs`, `.github/workflows/`,
     `.coveragerc`, `.prettierrc.json`, `.stylelintrc.json`, `docs/audit-claude-golden.md` or
-    `tests/test_dashboard.py`.
+    `tests/test_dashboard.py`. It also does not show the files of D1 at the root of sherpa:
+    `.github/workflows/suite.yml` and `requirements-dev.txt`.
   - Done when: both are correct and the suite passes.
   - Estimate: 30 minutes.
   - Done in commit: ____

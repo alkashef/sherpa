@@ -53,6 +53,10 @@ plan is built one milestone at a time. AI generation is probabilistic, so determ
 Gemini, etc.). The current choice is to limit it to Claude Code, because the skill, the rules files,
 the permissions, the hooks and the milestone runner use its features.
 
+**Which system.** sherpa supports Windows only. The suite, the skill, the hooks and the runner are
+checked on Windows, and nothing checks them on Linux or macOS. One part runs on Linux all the same:
+the `check.yml` workflow of a new project runs `check.py` on a clean Linux machine of GitHub.
+
 **How a new project meets each objective.** The rest of this file gives the details.
 
 | Objective | How a new project gets it |
@@ -379,8 +383,11 @@ own environment, not a new project's.
 
    ```bat
    conda activate sherpa
-   pip install ruff==0.17.0 mypy pytest pytest-cov
+   pip install -r requirements-dev.txt
    ```
+
+   The file pins ruff, mypy, pytest, pytest-cov and pytest-xdist. The GitHub workflow of the suite
+   installs the same versions.
 
 3. After that, each time you work here, only activate it:
 
@@ -445,6 +452,10 @@ its own git config, a fake `gh` (`tests/fake_gh.py`) that answers the three call
 and adds a local bare repository as `origin`, so every push is a real git push, and a fake conda
 (`tests/fake_conda.py`) that lists and "creates" environments without touching conda. Your own git
 config, GitHub account and conda environments are never touched.
+
+At each push, `.github/workflows/suite.yml` runs the suite and the lint and type checks below on a
+clean Windows machine of GitHub, with the tools of `requirements-dev.txt`. Windows is the only
+system that sherpa supports (Approach, "Which system").
 
 - `test_assets.py`: every asset the builder lists exists; every section of `CLAUDE_GOLDEN.md` goes
   into `CLAUDE.md` or a rules file; every `Bash(...)` permission rule has a `PowerShell(...)` twin;

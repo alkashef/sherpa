@@ -1,0 +1,55 @@
+# The suite, the lint checks and the type checks of sherpa itself, at each push, on a clean
+# Windows machine. The commands are those of README, "How to test". Windows only: Linux and macOS
+# are out of the scope of sherpa (docs/completion-plan.md, definition of done).
+name: Suite
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  suite:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install the tools
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Lint and type checks of the scripts
+        working-directory: skills/project-init
+        run: |
+          python -m ruff check --config assets/ruff.toml scripts
+          python -m ruff format --check --config assets/ruff.toml scripts assets/scripts
+          python -m mypy --config-file assets/mypy.ini scripts assets/scripts
+
+      - name: Lint of the scripts from inside assets/
+        working-directory: skills/project-init/assets
+        run: python -m ruff check --config ruff.toml scripts
+
+      - name: Lint and type checks of the tests
+        env:
+          MYPYPATH: "skills/project-init/scripts;tests"
+        run: |
+          python -m ruff check --config skills/project-init/assets/ruff.toml tests
+          python -m mypy --config-file skills/project-init/assets/mypy.ini tests
+
+      - name: The suite
+        run: python -m pytest -n auto
