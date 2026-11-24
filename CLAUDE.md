@@ -57,6 +57,8 @@ support for Linux or macOS unless asked. But keep `check.py` and what it runs po
   `audit-claude-golden.md` is the audit table of rank 17, approved and applied on November 23, 2026.
   `completion-plan.md` is the plan to finish sherpa, written on November 23, 2026: mark a step
   `[x]` and fill in its record in the commit that finishes it. Never delete a finished step.
+  `status.md` is the status table of the finish, in the order of priority, with every other
+  open item: update it when a status changes.
 - `README.md`: the full description, usage, contribution and test guide. Read it before changing
   what new projects get.
 

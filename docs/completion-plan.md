@@ -200,7 +200,7 @@ effort `medium` unless the step says otherwise.
 
 ## C. Repair what the runs find
 
-- [ ] **C1. Repair each fault of sherpa that part B finds.** One commit for each fault, with a
+- [x] **C1. Repair each fault of sherpa that part B finds.** One commit for each fault, with a
   test, as in runs 3 and 4. A repair that changes the workflow goes to Part 2 of
   `docs/unapproved-ideas.md` first. When a run found a fault, a later run of the same kind checks
   the repair. After two such runs of one kind, the user decides whether to run it again.
@@ -229,6 +229,9 @@ effort `medium` unless the step says otherwise.
   - Opened again on November 24, 2026 by the eighth real run (B5). Its fault is repaired, and
     RUN-17 and RUN-18 are built. Each repair was checked in the project of the run with real
     sessions, not in a later run of the same kind. The user decides whether that check is enough.
+  - Decided by the user on November 24, 2026, option 1: the checks in real sessions in the
+    project of the eighth run are enough, as for RUN-15 and RUN-16. No second run of the kind.
+  - Done again on: November 24, 2026, for runs 1 to 8. Recorded in commit: "Close C1 again: the repairs of run 8 are checked in real sessions"
 
   | Run | Fault | Commit |
   | --- | --- | --- |
