@@ -152,6 +152,11 @@ effort `medium` unless the step says otherwise.
   - Done when: the user approved the three docs, `spec_coverage.py --consistency` passes, and the
     runner merges each milestone. Each unclear question and each fault is recorded.
   - Estimate: 2 hours of the user's time, plus 1 hour of runs.
+  - Status: started on November 24, 2026. The installed skill was a copy of November 19 (with
+    `/sdd`, not `/sherpa`), so it was replaced with the current one first. The user runs the
+    interview in a new VS Code window and notes each unclear question. The user allowed Claude to
+    read the session transcripts of the B3 project folder, only to record the faults and the
+    unclear questions.
   - Done on: ____ README record in commit: ____
 - [ ] **B4. A real GitHub run: the two workflows, `/find-bugs` and a release.** Needs approval:
   it creates a private repository on the user's GitHub account. Push the project of B1 or B3 to
