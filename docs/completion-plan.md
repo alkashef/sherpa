@@ -189,6 +189,10 @@ effort `medium` unless the step says otherwise.
     real sessions. The run found one new fault (the comments about the coverage of a process,
     below), so the web kind has now had two runs after a fault: the user decides whether it runs
     again. README record in commit: "Record the seventh real run, and repair the coverage rule of a stopped process".
+  - Decided by the user on November 24, 2026: no third web run. The repair of run 7 is checked by
+    the suite (`test_code_that_only_a_stopped_process_runs_does_not_count`). If B3 builds a small
+    web tool, it also checks that `/write-design` plans a test of the server code in the test
+    process.
 
   | Run | Fault | Commit |
   | --- | --- | --- |
