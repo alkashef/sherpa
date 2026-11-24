@@ -7,7 +7,9 @@ description: Look for bugs before a release, without changing the code or a test
 
 Find the faults of the code against the spec and the design, before a release. Change no code and
 no test. Each bug becomes a fix milestone, and the runner builds it: its test session writes the
-failing test first, so a bug whose test passes is a false alarm.
+test first. The test of a fault of the code fails until the build repairs it, so if it passes at
+once, the fault was a false alarm. The test of a gap in the tests (a surviving mutant) passes at
+once, because the code is right, and it kills the mutant.
 
 ## 1. Set the scope
 
@@ -47,7 +49,8 @@ failing test first, so a bug whose test passes is a false alarm.
 
 - For each `BUG:` line, add one fix milestone to `docs/plan.md`, by the rules of `/write-plan`: a
   row in the table "Milestones at a glance" and a block. Its **Refs** hold the requirement ID, and
-  its **Tests first** hold the test of the `BUG:` line, which fails while the bug is there.
+  its **Tests first** hold the test of the `BUG:` line: it fails while a fault of the code is
+  there, and for a gap in the tests it passes at once and kills the mutant.
 - Show the table first. The user approves the rows. Commit nothing.
 
 ## 5. Finish

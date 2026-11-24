@@ -52,8 +52,8 @@ the suite.
 | A repair or rebuild session that reports `BLOCKED:` for a wrong test | Accepted as suite-only by the user on November 23, 2026 | B1 |
 | The modules `javascript`, `html-css`, `ui-design` and `http-apis`, and `ui` tests in Playwright | Ran in the sixth real run: B2 is done | B2 |
 | `build_instance.py --add` in a project that exists | Ran in the sixth real run (`--add http-apis`) | B2 |
-| `check.yml` and `mutation.yml` on GitHub Actions | Each run pushed to a local bare repository | B4 |
-| `/find-bugs` and `release.py` | No run went as far as a release | B4 |
+| `check.yml` and `mutation.yml` on GitHub Actions | Ran in the GitHub run: B4 is done | B4 |
+| `/find-bugs` and `release.py` | Ran in the GitHub run: B4 is done | B4 |
 | The modules `data`, `llm`, `logging`, `long-running`, `validation`, `static-site`, `mcp` and `docker`, and `live_checks.py` with an approved budget | `llm`, `validation`, `logging` and `live_checks.py` ran in the eighth real run. The others were accepted as suite-only on November 24, 2026 | B5 |
 
 ## A. Decide and build the open ideas
@@ -158,7 +158,7 @@ effort `medium` unless the step says otherwise.
     read the session transcripts of the B3 project folder, only to record the faults and the
     unclear questions.
   - Done on: ____ README record in commit: ____
-- [ ] **B4. A real GitHub run: the two workflows, `/find-bugs` and a release.** Needs approval:
+- [x] **B4. A real GitHub run: the two workflows, `/find-bugs` and a release.** Needs approval:
   it creates a private repository on the user's GitHub account. Push the project of B1 or B3 to
   GitHub. Then see `check.yml` pass, start `mutation.yml` by hand, run `/find-bugs` with the
   surviving mutants, build its fix milestones, and cut a release with `release.py`.
@@ -171,8 +171,12 @@ effort `medium` unless the step says otherwise.
     account `alkashef` for the private repository `alkashef/tagnote`. `check.yml` passed on a clean
     Linux machine, the first real run of `check.py` on Linux. `mutation.yml` passed with an empty
     list of mutants: a fault of sherpa (C1), repaired. With the repair, a run made 158 mutants in
-    15 minutes, and 32 survived.
-  - Done on: ____ README record in commit: ____
+    15 minutes, and 32 survived. `/find-bugs` wrote four `BUG:` lines (gaps in the tests), and
+    their fix milestones M3 to M6 merged. A fix milestone of the user, M7, changed the prompt, and
+    the live check still failed: the model `qwen2.5:1.5b-instruct` does not meet TAG-010, a fault
+    of the project. `release.py M7` pushed the tag `v2026.11.25` and the row of
+    `docs/releases.md` to GitHub. Each `check.yml` run passed.
+  - Done on: November 25, 2026. README record in commit: "Record the GitHub run (B4), and correct /find-bugs about a test that passes"
 - [x] **B5. The other modules: a real run, or accepted as suite-only.** Needs the user's decision
   for each module. Recommendation: one run with `llm`, `validation` and `logging`, and
   `live_checks.py` with a small approved budget, because a flow of data to a provider and a paid
@@ -239,7 +243,8 @@ effort `medium` unless the step says otherwise.
     project of the eighth run are enough, as for RUN-15 and RUN-16. No second run of the kind.
   - Done again on: November 24, 2026, for runs 1 to 8. Recorded in commit: "Close C1 again: the repairs of run 8 are checked in real sessions"
   - Opened by B4 on November 24, 2026, and closed again in the commit of the repair: a real run of
-    the repaired `mutation.yml` on GitHub checked it.
+    the repaired `mutation.yml` on GitHub checked it. The correction of `/find-bugs` is checked by
+    the run itself: the runner merged M3 to M6, whose tests passed at once.
 
   | Run | Fault | Commit |
   | --- | --- | --- |
@@ -251,6 +256,7 @@ effort `medium` unless the step says otherwise.
   | 8 (B5) | RUN-17: the budget ceiling had no form, and the test writer read it as a number. Option A, approved by the user on November 24, 2026: the ceiling is an amount and a currency, and the tests get the amount and the currency apart | "The budget ceiling of the live checks is an amount and a currency (RUN-17)" |
   | 8 (B5) | RUN-18: the rules of `llm` loaded only for `prompts/**` and `src/**/llm*`, and the design named the client `src/model_client.py`. Option A, approved by the user on November 24, 2026: they load for every file of `src/` | "The rules of llm load for every file of src/ (RUN-18)" |
   | B4 | `mutation.yml` passed and kept an empty list. mutmut 3 refuses a module whose name starts with `src.`, and the projects import `from src.<module>`; the config was written for mutmut 2; and `|| true` hid each error. It now runs `mutmut==2.5.1`, fails on a fatal error or when it makes no mutant, keeps the log on a failure, and keeps the change of each surviving mutant | "The mutation workflow runs mutmut 2.5.1, and a failed run fails (B4)" |
+  | B4 | `/find-bugs` said that a bug whose test passes is a false alarm. The test of a gap in the tests (a surviving mutant) passes at once, because the code is right, and the runner accepts it. The skill now says both | "Record the GitHub run (B4), and correct /find-bugs about a test that passes" |
   | ____ | ____ | ____ |
 
 ## D. Make sherpa itself ready for a release

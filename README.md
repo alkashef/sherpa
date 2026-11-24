@@ -875,3 +875,31 @@ milestones merged, and the project's checks pass.
   the answer with exit code 4. So the live check found what no milestone can find: the prompt
   does not hold this model to the spec.
 - The runs took 566 seconds for M1, and 339 and 181 seconds for M2.
+
+A GitHub run on November 24 and 25, 2026 (step B4) took `tagnote` of the eighth run to GitHub,
+as the private repository of the user's account, and ran the two workflows, `/find-bugs`, its
+fix milestones and a release. The steps that a person does were done by Claude in the role of
+the user.
+
+- `check.yml` passed on a clean Linux machine at each push, 11 times. It was the first real run
+  of `check.py` on Linux.
+- A fault of sherpa, now repaired: `mutation.yml` passed and kept an empty list. mutmut 3
+  refuses a module whose name starts with `src.`, and the code of a project imports
+  `from src.<module>`. The config was written for mutmut 2, and `|| true` hid each error. The
+  workflow now runs `mutmut==2.5.1`, fails on a fatal error or when it makes no mutant, and keeps
+  the change of each surviving mutant. Its run made 158 mutants in 15 minutes, and 32 survived.
+- `/find-bugs` read the 32 survivors and the coverage (99%). It wrote four `BUG:` lines, each a
+  gap in the tests, set aside the equivalent mutants, and asked whether the spec must cover the
+  checks of the settings. The answer, in the role of the user: the design is enough. It found no
+  `pip-audit`, and said so.
+- A fault of sherpa, now corrected: `/find-bugs` said that a bug whose test passes is a false
+  alarm. The test of a gap in the tests passes at once, because the code is right, and the
+  runner accepts it. Its four fix milestones (M3 to M6) merged, each with tests that passed at
+  once and no change of the code.
+- A fix milestone in the role of the user (M7) put an example answer with the asked number of
+  tags into the prompt. With RUN-17 in the project, the live check reached the real model, and
+  it failed again: the model gave 5 tags and a title of 69 characters. So
+  `qwen2.5:1.5b-instruct` does not meet TAG-010. This is a fault of the project and its model,
+  and the live check reported it.
+- `release.py M7` built the archive, tagged `v2026.11.25`, added the row of `docs/releases.md`,
+  and pushed both to GitHub.

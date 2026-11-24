@@ -318,6 +318,8 @@ def test_find_bugs_changes_no_code_and_plans_each_bug() -> None:
         "`BUG: <requirement ID> | <file>:<line>",
         "by the rules of `/write-plan`",
         "Do not plan\n  it.",
+        # B4: the test of a gap in the tests passes at once, and the runner accepts it.
+        "for a gap in the tests it passes at once and kills the mutant",
     ):
         assert part in text, part
 
