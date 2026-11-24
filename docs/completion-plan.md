@@ -227,7 +227,10 @@ effort `medium` unless the step says otherwise.
   - Approved by the user on November 24, 2026, for Windows only, with Linux and macOS recorded as
     a scope limitation (definition of done). The workflow is `.github/workflows/suite.yml`. It
     installs the pinned tools of the new `requirements-dev.txt`, runs the lint and type checks of
-    README, "How to test", and runs the suite with `pytest -n auto` on `windows-latest`.
+    README, "How to test", and runs the suite with `pytest -n auto` on `windows-latest`. The first
+    run failed 48 tests of `test_runner.py`, for one cause: Python ran from the tool cache of
+    GitHub, and the runner starts only in a conda environment named after its project (`sherpa`
+    in these tests). The workflow now creates the conda environment `sherpa`, as the README does.
   - Done when: the workflow passes on Windows.
   - Estimate: 1 hour, plus the repairs of what a clean machine finds.
   - Done in commit: ____
