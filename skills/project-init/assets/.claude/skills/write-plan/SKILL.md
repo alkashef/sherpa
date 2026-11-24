@@ -58,7 +58,8 @@ plan only. Do not write code, install dependencies, or start a milestone.
 6. A test that only a live external service can prove has the level `live` and is in
    `tests/live/`. No milestone runs it. List each one under a heading "## Live checks", after the
    last milestone block (template in `docs/workflow.md`). Leave the entries **Approval** and
-   **Budget ceiling** for the user: the live checks run only after the user fills them.
+   **Budget ceiling** for the user: the live checks run only after the user fills them. The
+   ceiling is an amount and a currency, such as `5 USD`.
 7. Do not add a requirement or a dependency that the spec and design do not have. If the plan needs
    one, stop and propose the spec or design change for approval. For a decision the design leaves
    open, the milestone's session decides and records it (`docs/workflow.md`, Rules): do not turn it

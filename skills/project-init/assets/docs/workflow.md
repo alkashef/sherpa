@@ -48,7 +48,7 @@ A requirement has an ID (`AREA-NNN`, or `NFR-NNN` for a non-functional one), an 
 - An idea in `unapproved-ideas.md` is not a requirement and not a decision. Never design, plan, test or build from it. It becomes work only through step 1, 2 or 3, with the approval that step needs. The skill that takes an idea up deletes its entry. To note an idea, add one line. Do not act on it.
 - Never report tests as passed unless they ran. Show failing output.
 - A milestone run calls no live external service (an LLM, a paid API, a production database) and uses no real user data. It does not start the app for a person. A test uses a real local part where one exists (a database file in a temporary folder, a server that the test starts on 127.0.0.1) and a fake only for an external service. Its Gate is the checks of step 4.
-- A live check is a test in `tests/live/` that calls a live external service with a test account. No milestone runs it. `python scripts/live_checks.py` runs the live checks after the milestones, and only when `plan.md` holds the user's approval with a budget ceiling under "## Live checks" (template below). The tests stop before they pass the ceiling.
+- A live check is a test in `tests/live/` that calls a live external service with a test account. No milestone runs it. `python scripts/live_checks.py` runs the live checks after the milestones, and only when `plan.md` holds the user's approval with a budget ceiling under "## Live checks" (template below). The ceiling is an amount and a currency, such as `5 USD`. The tests get the amount in `LIVE_BUDGET_CEILING` and the currency in `LIVE_BUDGET_CURRENCY`, and stop before they pass the ceiling.
 - Every fix, however small, is a milestone. A fix that changes no requirement and no design decision goes straight to `/write-plan`: one milestone whose Tests first holds a test that fails while the fault is there.
 - At each push, the GitHub Actions workflow "Checks" installs the project on a clean machine from its dependency files and runs `python scripts/check.py`.
 - Before a release, the user can run `/find-bugs`. It changes no code: it compares the code changed since the last release with the spec and the design, with most attention on the lines that no test runs, and reads the dependency audit and the surviving mutants of the workflow "Mutation tests" of GitHub Actions. Each bug becomes a fix milestone that the user approves. A finding that no requirement covers is a question about the spec.
@@ -107,8 +107,8 @@ Before a run, so that it does not stop for something known in advance:
 4. Make sure that `claude -p --permission-mode bypassPermissions "say ok"` works. An organisation
    policy can disable it.
 5. Make sure that `git push` works without a prompt. A session cannot answer a sign-in window.
-6. For live checks, write your approval and the budget ceiling under "## Live checks" in
-   `plan.md`.
+6. For live checks, write your approval and the budget ceiling (an amount and a currency, such as
+   `5 USD`) under "## Live checks" in `plan.md`.
 7. For a test writer other than Claude, sign in to its command line once: `codex login`, one
    interactive `agy` session, or `COPILOT_GITHUB_TOKEN`. `--test-writer` overrides
    `config/test-writer.json` for one run.
@@ -162,6 +162,6 @@ entries.
 ## Live checks
 
 - **Approval:** <The user's decision, in the user's words.>
-- **Budget ceiling:** <The most that one run of the live checks may cost.>
+- **Budget ceiling:** <An amount and a currency, for example `5 USD`: the most that one run of the live checks may cost.>
 - <requirement ID>: <test name in tests/live/>
 ```

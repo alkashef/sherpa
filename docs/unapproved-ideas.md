@@ -79,6 +79,7 @@ The approved changes are built. Their first text is in the git history of this f
 | 47 | The runner starts each Claude session with `--setting-sources project,local`, so the plugins and the hooks of the user's own settings stay out of a run, and the settings, hooks and permissions of the project apply. A real session showed it: no plugin and no hook of the user loaded, and the edit hook of the project still ran. `workflow.md`, the page and the README say it | RUN-15 (option A), approved on November 23, 2026 |
 | 48 | `eslint-plugin-jsdoc` 63.3.3 in `package.json` and `eslint.config.js`: each named function in `src/` has JSDoc with `@param {Type}` and `@returns {Type}` (also `void`), and each file starts with an `@module` block. An inline callback needs none. 63.3.3 is the newest version for Node 22.13; later versions need Node 22.22.2. On the page of the sixth run, ESLint reports 13 errors, and `--fix` adds only a stub that still fails. The rule of the header and the footer stays prose | RUN-14 (option A), approved on November 23, 2026 |
 | 49 | The runner starts each Claude session with `--strict-mcp-config`, so no MCP server of the user's account loads (the claude.ai connectors, such as Gmail and Slack). When the folder of the session holds the project's `.mcp.json`, `--mcp-config` loads its servers; the folder of a test session has none. A real session showed it: 15 connectors without the flag, none with it, and only the project's server with `--mcp-config`. `workflow.md`, the page and the README say it | RUN-16 (option A), approved on November 23, 2026 |
+| 50 | The budget ceiling of the live checks is an amount and a currency, such as `5 USD`. `live_checks.py` runs the tests only when the entry starts with one (text after it is a note for people), and else prints "not run" with the reason. The tests get the amount in `LIVE_BUDGET_CEILING` and the currency in `LIVE_BUDGET_CURRENCY`. The template of `workflow.md`, `/write-plan`, `/write-tests`, the page and the README say it | RUN-17 (option A), approved on November 24, 2026 |
 
 One real run followed on November 21, 2026 (README, "Checked in real Claude Code sessions"). It
 proved the condition of the user's decision on rank 3: a `claude -p` session runs the built-in
@@ -158,8 +159,8 @@ The user decided these points of section G on November 21, 2026. They need no ch
 
 On November 22, 2026 the user decided each idea of Part 2, and Part 1 holds the result. The
 sections below keep the context of the ideas. A new idea goes here, with its own entry. The user
-decided RUN-08 to RUN-16 on November 23, 2026 (Part 1). RUN-17 and RUN-18, from the eighth real
-run, are open.
+decided RUN-08 to RUN-16 on November 23, 2026, and RUN-17 on November 24, 2026 (Part 1). RUN-18,
+from the eighth real run, is open.
 
 ### A. Open decisions of the approved changes
 
@@ -308,7 +309,8 @@ New ideas from the sixth real run (November 23, 2026). Nobody approved them.
 
 New ideas from the eighth real run (November 24, 2026). Nobody approved them.
 
-- **RUN-17: the budget ceiling of the live checks has no form.** The template of
+- **RUN-17: the budget ceiling of the live checks has no form.** On November 24, 2026 the user
+  approved it with option A (Part 1). The template of
   `docs/workflow.md` asks for "the most that one run of the live checks may cost", and
   `live_checks.py` gives the text to the tests in `LIVE_BUDGET_CEILING`. `/write-tests` says that
   a live test reads the ceiling and stops before it passes it, but not in what form. In the run,

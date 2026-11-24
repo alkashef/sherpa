@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="The sherpa spec-driven development workflow: who does each step, what it produces, and what enforces it.">
 <!-- The SHA-256 of docs/workflow.md when this page was last made to agree with it. -->
-<meta name="workflow-md-sha256" content="29e92a145c7b11cc753837068ed3c33048a7e6837d00b15cb256dfdb6cecba95">
+<meta name="workflow-md-sha256" content="059b4d88a5d873e6d6831c715f5882b5bb4aaf36fb98ec3f73c960af1cb0c48b">
 <title>Sherpa SDD Workflow</title>
 <style>
   /* Layout: a slim /sherpa bar, then two rows of four cards that snake. Top row left to right (setup
@@ -569,7 +569,7 @@
           ul([
             'The table "Milestones at a glance": milestone, description, model, effort, human test and status',
             'One block for each milestone: Refs, Owner, Tests first, Build, Gate and, for some, Human test',
-            '"Live checks": the tests that need a live external service, with the human\'s approval and a budget ceiling'
+            '"Live checks": the tests that need a live external service, with the human\'s approval and a budget ceiling (an amount and a currency, such as 5 USD)'
           ])],
         ['Gate',
           ul([
@@ -831,7 +831,7 @@
           p('The approval permits exactly what it says.')],
         ['After the last milestone',
           ul([
-            'The runner runs `python scripts/live_checks.py`. The live checks run only with the human\'s approval and a budget ceiling in `plan.md`. The result is passed, failed or not run.',
+            'The runner runs `python scripts/live_checks.py`. The live checks run only with the human\'s approval and a budget ceiling in `plan.md`, an amount and a currency such as 5 USD. The tests get the amount and the currency, and stop before they pass the ceiling. The result is passed, failed or not run.',
             'The human reads the `DECISION:` lines and the `FINDING:` lines in the logs.'
           ])],
         ['Release',

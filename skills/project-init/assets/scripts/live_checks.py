@@ -7,11 +7,14 @@ with the approval of the user.
 The approval is in docs/plan.md, under the heading `## Live checks`:
 
     - **Approval:** <the user's words>
-    - **Budget ceiling:** <amount>
+    - **Budget ceiling:** <amount> <currency>
 
 The two entries must exist. An empty entry does not count. An entry that holds a placeholder in
-angle brackets does not count. The tests get the ceiling in the environment variable
-LIVE_BUDGET_CEILING. They must stop before they pass it.
+angle brackets does not count. An entry ends at a blank line or at the next item of the list.
+The ceiling starts with an amount and a currency code of three capital letters, for example
+`5 USD` or `2.50 EUR`; text after them is a note for people. The tests get the amount in the
+environment variable LIVE_BUDGET_CEILING (for example `5`) and the currency in
+LIVE_BUDGET_CURRENCY (for example `USD`). They must stop before they pass it.
 
 The Python tests are the `test_*.py` files. pytest runs them, without the coverage floor. The
 JavaScript tests are the `*.test.js` files. `node --test` runs them.
@@ -23,6 +26,8 @@ test run goes to standard error. The summary lines and their exit codes:
     1  Live checks: failed.
     3  Live checks: not run (no test in tests/live/).
     3  Live checks: not run (docs/plan.md has no approval with a budget ceiling).
+    3  Live checks: not run (the budget ceiling in docs/plan.md is not an amount and a currency,
+       such as 5 USD).
 
 The script itself changes no file: pytest writes no cache, and Python writes no bytecode.
 
@@ -44,11 +49,13 @@ LIVE_DIR = Path("tests") / "live"
 PYTHON_TESTS = "test_*.py"
 WEB_TESTS = "*.test.js"
 CEILING_VARIABLE = "LIVE_BUDGET_CEILING"
+CURRENCY_VARIABLE = "LIVE_BUDGET_CURRENCY"
 
 LIVE_HEADING = re.compile(r"^## Live checks\b", re.IGNORECASE)
 SECTION_HEADING = re.compile(r"^#{1,2} ")
 LIST_ITEM = re.compile(r"^- ")  # the next entry, or a line `- <requirement ID>: <test name>`
 PLACEHOLDER = re.compile(r"<[^<>]*>")
+AMOUNT = re.compile(r"^(\d+(?:\.\d+)?)\s+([A-Z]{3})(?![A-Za-z])")  # `5 USD`, `2.50 EUR`
 
 EXIT_PASSED = 0
 EXIT_FAILED = 1
@@ -59,6 +66,10 @@ FAILED = "Live checks: failed."
 NO_TEST = f"Live checks: not run (no test in {LIVE_DIR.as_posix()}/)."
 NO_APPROVAL = (
     f"Live checks: not run ({PLAN_PATH.as_posix()} has no approval with a budget ceiling)."
+)
+NO_AMOUNT = (
+    f"Live checks: not run (the budget ceiling in {PLAN_PATH.as_posix()} is not an amount and"
+    " a currency, such as 5 USD)."
 )
 
 
@@ -111,6 +122,18 @@ def budget_ceiling(root: Path) -> str | None:
     return ceiling if is_filled(approval) and is_filled(ceiling) else None
 
 
+def budget_variables(ceiling: str) -> dict[str, str] | None:
+    """Return the environment variables of the amount and the currency of a ceiling.
+
+    Returns:
+        None when the ceiling does not start with an amount and a currency, such as `5 USD`.
+    """
+    match = AMOUNT.match(ceiling)
+    if match is None:
+        return None
+    return {CEILING_VARIABLE: match[1], CURRENCY_VARIABLE: match[2]}
+
+
 def live_tests(root: Path, pattern: str) -> list[str]:
     """Return the live test files whose name matches the pattern, as paths from root."""
     paths = (root / LIVE_DIR).rglob(pattern)
@@ -133,14 +156,14 @@ def live_commands(root: Path) -> dict[str, list[str]]:
     return commands
 
 
-def run(command: list[str], root: Path, ceiling: str) -> tuple[int, str]:
-    """Run a command in root, with the budget ceiling. Return its exit code and its output."""
+def run(command: list[str], root: Path, budget: dict[str, str]) -> tuple[int, str]:
+    """Run a command in root, with the budget variables. Return its exit code and its output."""
     settings = {"NO_COLOR": "1", "FORCE_COLOR": "0", "PYTHONDONTWRITEBYTECODE": "1"}
     try:
         result = subprocess.run(
             command,
             cwd=root,
-            env={**os.environ, **settings, CEILING_VARIABLE: ceiling},
+            env={**os.environ, **settings, **budget},
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -152,11 +175,11 @@ def run(command: list[str], root: Path, ceiling: str) -> tuple[int, str]:
     return result.returncode, (result.stdout + result.stderr).strip()
 
 
-def failures_of(commands: dict[str, list[str]], root: Path, ceiling: str) -> list[str]:
+def failures_of(commands: dict[str, list[str]], root: Path, budget: dict[str, str]) -> list[str]:
     """Run each command. Return the output of each one that failed, under the name of its tool."""
     failures: list[str] = []
     for name, command in commands.items():
-        code, output = run(command, root, ceiling)
+        code, output = run(command, root, budget)
         if code:
             failures.append(f"`{name}` failed:\n{output}")
     return failures
@@ -179,7 +202,10 @@ def check(root: Path) -> tuple[int, str]:
     ceiling = budget_ceiling(root)
     if ceiling is None:
         return EXIT_NOT_RUN, NO_APPROVAL
-    failures = failures_of(commands, root, ceiling)
+    budget = budget_variables(ceiling)
+    if budget is None:
+        return EXIT_NOT_RUN, NO_AMOUNT
+    failures = failures_of(commands, root, budget)
     if failures:
         print("\n\n".join(failures), file=sys.stderr, flush=True)
         return EXIT_FAILED, FAILED

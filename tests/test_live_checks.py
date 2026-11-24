@@ -45,7 +45,12 @@ FAILING = "def test_the_service_answers() -> None:\n    assert False\n"
 READS_CEILING = (
     "import os\n\n\n"
     "def test_the_ceiling_is_given() -> None:\n"
-    '    assert os.environ["LIVE_BUDGET_CEILING"] == "5 USD"\n'
+    '    assert os.environ["LIVE_BUDGET_CEILING"] == "5"\n'
+    '    assert os.environ["LIVE_BUDGET_CURRENCY"] == "USD"\n'
+)
+NO_AMOUNT = (
+    "Live checks: not run (the budget ceiling in docs/plan.md is not an amount and a currency,"
+    " such as 5 USD)."
 )
 WEB_PASSING = 'import test from "node:test";\n\ntest("the service answers", () => {});\n'
 WEB_FAILING = (
@@ -171,6 +176,35 @@ def test_the_list_of_live_tests_is_not_part_of_the_ceiling(tmp_path: Path) -> No
     # name>` under the ceiling, and the ceiling took that line too.
     plan = PLAN.replace(CEILING, f"{CEILING}\n- PAY-001: `test_pay_001_the_service_answers`")
     root = project(tmp_path, plan=plan, files={"tests/live/test_api.py": READS_CEILING})
+    code, lines, errors = live_checks(root)
+    assert (code, lines) == (0, [PASSED]), errors
+
+
+@pytest.mark.parametrize("ceiling", ["five dollars", "$5", "USD 5", "5 usd", "5"])
+def test_a_ceiling_that_is_not_an_amount_and_a_currency_is_not_run(
+    tmp_path: Path, ceiling: str
+) -> None:
+    # RUN-17: in the eighth real run, the ceiling had no form, and a test read it as a number.
+    plan = PLAN.replace(CEILING, f"- **Budget ceiling:** {ceiling}")
+    root = project(tmp_path, plan=plan, files={"tests/live/test_api.py": FAILING})
+    code, lines, errors = live_checks(root)
+    assert (code, lines, errors) == (3, [NO_AMOUNT], "")
+
+
+@pytest.mark.parametrize(
+    ("ceiling", "amount", "currency"),
+    [("0 USD. The model runs on this machine.", "0", "USD"), ("2.50 EUR", "2.50", "EUR")],
+)
+def test_the_tests_get_the_amount_and_the_currency(
+    tmp_path: Path, ceiling: str, amount: str, currency: str
+) -> None:
+    reads = (
+        "import os\n\n\ndef test_the_budget_is_given() -> None:\n"
+        f'    assert os.environ["LIVE_BUDGET_CEILING"] == "{amount}"\n'
+        f'    assert os.environ["LIVE_BUDGET_CURRENCY"] == "{currency}"\n'
+    )
+    plan = PLAN.replace(CEILING, f"- **Budget ceiling:** {ceiling}")
+    root = project(tmp_path, plan=plan, files={"tests/live/test_api.py": reads})
     code, lines, errors = live_checks(root)
     assert (code, lines) == (0, [PASSED]), errors
 

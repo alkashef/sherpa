@@ -39,7 +39,9 @@ comes back to you once, with its error type and message.
      starts on 127.0.0.1.
    - `live:` in `tests/live/`: a live external service, with the test account that the design
      names. Write the test, but do not run it: no milestone session calls a live service. The
-     test reads the budget ceiling from the environment variable `LIVE_BUDGET_CEILING` and stops
+     test reads the amount of the budget ceiling from the environment variable
+     `LIVE_BUDGET_CEILING` (a plain number, such as `5`) and its currency from
+     `LIVE_BUDGET_CURRENCY` (such as `USD`), and stops
      before it passes it.
 
    A test uses the real local part that the design names (a database file in a temporary folder,

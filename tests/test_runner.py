@@ -52,7 +52,7 @@ PLAN = """# Plan — project-init
 """
 HUMAN_TEST = "- **Human test:** Start the app and open the first page.\n  The page shows 1."
 NO_MILESTONES = PLAN[: PLAN.index("| **M1**")] + "\n## Milestones\n\nNone planned.\n"
-LIVE_APPROVAL = "\n## Live checks\n\n- **Approval:** Run them.\n- **Budget ceiling:** 1\n"
+LIVE_APPROVAL = "\n## Live checks\n\n- **Approval:** Run them.\n- **Budget ceiling:** 1 USD\n"
 
 
 def load_runner(project: Path) -> ModuleType:
