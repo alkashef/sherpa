@@ -47,7 +47,7 @@ CEILING_VARIABLE = "LIVE_BUDGET_CEILING"
 
 LIVE_HEADING = re.compile(r"^## Live checks\b", re.IGNORECASE)
 SECTION_HEADING = re.compile(r"^#{1,2} ")
-ENTRY_START = re.compile(r"^- \*\*")
+LIST_ITEM = re.compile(r"^- ")  # the next entry, or a line `- <requirement ID>: <test name>`
 PLACEHOLDER = re.compile(r"<[^<>]*>")
 
 EXIT_PASSED = 0
@@ -82,13 +82,16 @@ def live_section(plan_lines: list[str]) -> list[str]:
 
 
 def entry_value(section: list[str], label: str) -> str:
-    """Return the text after `- **<label>:**` in a section, with its continuation lines."""
+    """Return the text after `- **<label>:**` in a section, with its continuation lines.
+
+    The entry ends at a blank line or at the next item of the list.
+    """
     start = f"- **{label}:**"
     parts: list[str] = []
     for line in section:
         if not parts and line.startswith(start):
             parts = [line[len(start) :]]
-        elif parts and (ENTRY_START.match(line) or not line.strip()):
+        elif parts and (LIST_ITEM.match(line) or not line.strip()):
             break
         elif parts:
             parts.append(line)

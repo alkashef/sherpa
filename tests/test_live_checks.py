@@ -166,6 +166,15 @@ def test_an_entry_can_continue_on_the_next_line(tmp_path: Path) -> None:
     assert (code, lines) == (0, [PASSED]), errors
 
 
+def test_the_list_of_live_tests_is_not_part_of_the_ceiling(tmp_path: Path) -> None:
+    # The eighth real run: the template of docs/workflow.md lists `- <requirement ID>: <test
+    # name>` under the ceiling, and the ceiling took that line too.
+    plan = PLAN.replace(CEILING, f"{CEILING}\n- PAY-001: `test_pay_001_the_service_answers`")
+    root = project(tmp_path, plan=plan, files={"tests/live/test_api.py": READS_CEILING})
+    code, lines, errors = live_checks(root)
+    assert (code, lines) == (0, [PASSED]), errors
+
+
 def test_the_live_run_has_no_coverage_floor(tmp_path: Path) -> None:
     # No test runs src/pay.py. With the 80% floor, the run would fail.
     files = {"tests/live/test_api.py": PASSING, "src/pay.py": "def pay() -> int:\n    return 1\n"}

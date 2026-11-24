@@ -54,7 +54,7 @@ the suite.
 | `build_instance.py --add` in a project that exists | Ran in the sixth real run (`--add http-apis`) | B2 |
 | `check.yml` and `mutation.yml` on GitHub Actions | Each run pushed to a local bare repository | B4 |
 | `/find-bugs` and `release.py` | No run went as far as a release | B4 |
-| The modules `data`, `llm`, `logging`, `long-running`, `validation`, `static-site`, `mcp` and `docker`, and `live_checks.py` with an approved budget | No run used them | B5 |
+| The modules `data`, `llm`, `logging`, `long-running`, `validation`, `static-site`, `mcp` and `docker`, and `live_checks.py` with an approved budget | `llm`, `validation`, `logging` and `live_checks.py` ran in the eighth real run. The others were accepted as suite-only on November 24, 2026 | B5 |
 
 ## A. Decide and build the open ideas
 
@@ -173,22 +173,29 @@ effort `medium` unless the step says otherwise.
   call carry the most risk. Accept the other modules as suite-only.
   - Done when: each row below has a run or a date of acceptance.
   - Estimate: 3 hours for the recommended run.
+  - Status: the user asked on November 24, 2026 to start and finish B5. The eighth real run used
+    `llm`, `validation` and `logging` in `tagnote`, a CLI that tags a note with the local model
+    `qwen2.5:1.5b-instruct` (Ollama). Both milestones merged. The live check ran with an approval
+    and a ceiling of 0 USD, written by Claude in the role of the user. The run found a fault of
+    `live_checks.py` (repaired, C1), RUN-17 and RUN-18 (Part 2). The done-when is met, but the box
+    stays open until the user decides RUN-17 and RUN-18: the user's definition of done allows no
+    open issue.
 
   | Module | Real run (README record) or accepted as suite-only on |
   | --- | --- |
-  | `data` | ____ |
-  | `llm` | ____ |
-  | `logging` | ____ |
-  | `long-running` | ____ |
-  | `validation` | ____ |
-  | `static-site` | ____ |
-  | `mcp` | ____ |
-  | `docker` | ____ |
-  | `live_checks.py` | ____ |
+  | `data` | Accepted as suite-only on November 24, 2026, by the recommendation, when the user asked to finish B5 |
+  | `llm` | Eighth real run (README record in commit "Record the eighth real run, and repair the entries of the live checks"), with a local model. No hosted provider ran: no API key is on the machine |
+  | `logging` | Eighth real run (README record in commit "Record the eighth real run, and repair the entries of the live checks") |
+  | `long-running` | Accepted as suite-only on November 24, 2026, by the recommendation, when the user asked to finish B5 |
+  | `validation` | Eighth real run (README record in commit "Record the eighth real run, and repair the entries of the live checks") |
+  | `static-site` | Accepted as suite-only on November 24, 2026, by the recommendation, when the user asked to finish B5 |
+  | `mcp` | Accepted as suite-only on November 24, 2026, by the recommendation, when the user asked to finish B5 |
+  | `docker` | Accepted as suite-only on November 24, 2026, by the recommendation, when the user asked to finish B5 |
+  | `live_checks.py` | Eighth real run (README record in commit "Record the eighth real run, and repair the entries of the live checks"). It found a fault (repaired) and RUN-17 |
 
 ## C. Repair what the runs find
 
-- [x] **C1. Repair each fault of sherpa that part B finds.** One commit for each fault, with a
+- [ ] **C1. Repair each fault of sherpa that part B finds.** One commit for each fault, with a
   test, as in runs 3 and 4. A repair that changes the workflow goes to Part 2 of
   `docs/unapproved-ideas.md` first. When a run found a fault, a later run of the same kind checks
   the repair. After two such runs of one kind, the user decides whether to run it again.
@@ -214,6 +221,8 @@ effort `medium` unless the step says otherwise.
   - A fault that B3, B4 or B5 finds opens this step again: add its row to the table, and set the
     box back to `[ ]` until its repair is checked.
   - Done on: November 24, 2026, for runs 1 to 7. Recorded in commit: "Close C1: run 7 checks the repairs of run 5"
+  - Opened again on November 24, 2026 by the eighth real run (B5): one fault is repaired, and
+    RUN-17 and RUN-18 wait for the user's decision.
 
   | Run | Fault | Commit |
   | --- | --- | --- |
@@ -221,6 +230,9 @@ effort `medium` unless the step says otherwise.
   | 5 (B1) | A repair session rewrote the `Decided` decision DEC-004 and kept it `Decided`. RUN-13, option A, approved on November 23, 2026 | "A session may not change a Decided decision of the design (RUN-13)" |
   | 6 (B2) | `eslint.config.js` let only `src/log.js` use `console` and only `src/api.js` call `fetch`. The design put the page in `src/web/`, and no session may edit the config, so the build session of M1 blocked | "ESLint allows log.js and api.js in any folder under src/" |
   | 7 (C1) | The comments of `.coveragerc` and `pytest.ini` said that the processes that a test starts count for the coverage floor. A server that a test stops writes no data, so the build session of M1 blocked on a floor of 0%. Option A, approved by the user on November 24, 2026: the comments and the Testing rules say it now | "Record the seventh real run, and repair the coverage rule of a stopped process" |
+  | 8 (B5) | `live_checks.py` read the line `- <requirement ID>: <test name>` under the budget ceiling as a part of the ceiling, and the template of `docs/workflow.md` puts that line there. An entry now ends at the next item of the list | "Record the eighth real run, and repair the entries of the live checks" |
+  | 8 (B5) | RUN-17: the budget ceiling has no form, and the test writer read it as a number. Waits for the user's decision | ____ |
+  | 8 (B5) | RUN-18: the rules of `llm` load only for `prompts/**` and `src/**/llm*`, and the design named the client `src/model_client.py`. Waits for the user's decision | ____ |
   | ____ | ____ | ____ |
 
 ## D. Make sherpa itself ready for a release

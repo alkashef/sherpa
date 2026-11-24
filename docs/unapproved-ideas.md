@@ -158,7 +158,8 @@ The user decided these points of section G on November 21, 2026. They need no ch
 
 On November 22, 2026 the user decided each idea of Part 2, and Part 1 holds the result. The
 sections below keep the context of the ideas. A new idea goes here, with its own entry. The user
-decided RUN-08 to RUN-16 on November 23, 2026 (Part 1). No idea is open.
+decided RUN-08 to RUN-16 on November 23, 2026 (Part 1). RUN-17 and RUN-18, from the eighth real
+run, are open.
 
 ### A. Open decisions of the approved changes
 
@@ -304,6 +305,32 @@ New ideas from the sixth real run (November 23, 2026). Nobody approved them.
   `--mcp-config .mcp.json` when the folder of the session holds the project's file; (B) deny rules
   for MCP tools in the project's `settings.json`, which a new connector can miss; (C) no change.
   Recommendation: A.
+
+New ideas from the eighth real run (November 24, 2026). Nobody approved them.
+
+- **RUN-17: the budget ceiling of the live checks has no form.** The template of
+  `docs/workflow.md` asks for "the most that one run of the live checks may cost", and
+  `live_checks.py` gives the text to the tests in `LIVE_BUDGET_CEILING`. `/write-tests` says that
+  a live test reads the ceiling and stops before it passes it, but not in what form. In the run,
+  the test writer read it as a number (`float(...)`), and the ceiling was
+  `0 USD. The model runs on this machine, so a run costs no money.`, so the live test failed
+  before it called the model. Options: (A) the template asks for an amount and its currency, for
+  example `5 USD`, and `live_checks.py` runs the tests only when the entry starts with one (else
+  "not run", with the reason). The tests get the amount alone in `LIVE_BUDGET_CEILING` and the
+  currency in `LIVE_BUDGET_CURRENCY`, and `/write-tests` says so. (B) The text stays free, and
+  `/write-tests` says that a test reads the first number of `LIVE_BUDGET_CEILING`. (C) No change.
+  Recommendation: A. The script checks the form once for every project, and a test writer cannot
+  misread a plain number.
+- **RUN-18: the rules of `llm` can miss the client of the model.** `.claude/rules/llm.md` loads
+  only for `prompts/**` and `src/**/llm*`. The design of the run named the client
+  `src/model_client.py`, so the build session of M2 changed it, and the check of the answer,
+  without the LLM rules. The build session of M1 had them only because it wrote the prompt file.
+  The design held the same rules, so nothing was lost this time. Options: (A) the rules of `llm`
+  load for `src/**` too, as the rules of code quality do: about 20 more lines in each session
+  that touches `src/`, and only in a project with `llm`; (B) the rules of `llm` say that the one
+  module that talks to the model is `src/llm_client.py`, and `/write-design` names it so; (C) no
+  change: the design carries the LLM decisions. Recommendation: A. It needs no name that a design
+  can miss, and its cost is small.
 
 ### G. The user's list of November 21, 2026
 

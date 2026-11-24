@@ -504,7 +504,7 @@ system that sherpa supports (Approach, "Which system").
   ignores text such as "SHA-256" outside the fixed places.
 - `test_live_checks.py`: no test in `tests/live/`, or no approval with a budget ceiling in the
   plan, means not run; a placeholder is not an approval; the tests get the ceiling in
-  `LIVE_BUDGET_CEILING`; the result is passed or failed; a normal pytest or `npm test` run
+  `LIVE_BUDGET_CEILING`, without the list of live tests under it; the result is passed or failed; a normal pytest or `npm test` run
   skips `tests/live/`; and the script changes no file.
 - `test_dashboard.py`: the page shows what needs you, the trace of each requirement (also to a
   milestone that a commit finished), the code map with a forbidden import and the class list,
@@ -833,3 +833,40 @@ project's checks pass, with 41 tests and 100% coverage.
 - In M2, the review found three `medium` findings with no requirement ID, so they did not block
   (RUN-09), and the repairs made them. The last review found nothing.
 - The runs took 294 and 220 seconds for M1, and 747 seconds for M2.
+
+An eighth real run on November 24, 2026 checked the modules `llm`, `validation` and `logging`,
+and `live_checks.py` with an approval and a budget ceiling (step B5 of
+`docs/completion-plan.md`), with `sonnet` at effort `medium`. The skill built `tagnote` with
+`python`, `cli`, `llm`, `validation` and `logging`. It is a CLI that gives a note a title and
+tags, with the model `qwen2.5:1.5b-instruct` on a local Ollama server. No API key was set on the
+machine, so the run sent no data to a hosted provider and made no paid call. The approval of the
+live checks, with a ceiling of 0 USD, was written by Claude in the role of the user. Both
+milestones merged, and the project's checks pass.
+
+- The validation component reports every problem at once, and the logging goes to a file from
+  the settings. The design kept the console log for errors only, because standard error of a CLI
+  holds the `error:` lines.
+- A build session added DEC-007 as `Proposed` (RUN-13 held), and the test review added the unit
+  tests of `config.py` and `tagging.py`.
+- The last review blocked M2 with a `high` finding of TAG-006: a title with a line break passed.
+  The approval, in the role of the user, asked for the line break only, because a title of only
+  spaces meets the spec. A `retest` session wrote the test first (RUN-12), the rebuild made it
+  pass, and the last review found nothing. Its report says that it dropped a stricter check of
+  other line breaks because of the approval.
+- A fault of sherpa, now repaired: `live_checks.py` read the line `- TAG-010: <test name>` under
+  the budget ceiling as a part of the ceiling. The template of `docs/workflow.md` puts that line
+  there, so each plan of the template had the fault. An entry now ends at the next item of the
+  list.
+- A fault of sherpa that waits for a decision (RUN-17): nothing says what form the budget ceiling
+  takes. The test writer read `LIVE_BUDGET_CEILING` as a number, and the ceiling was
+  `0 USD. The model runs on this machine, ...`, so the live test failed before it called the
+  model.
+- A gap of sherpa that waits for a decision (RUN-18): the rules of `llm` load only for
+  `prompts/**` and `src/**/llm*`. The design named the client `src/model_client.py`, so the build
+  session of M2 changed it without the LLM rules. The build session of M1 had them only because
+  it wrote the prompt file. Here the design held the same rules, so nothing was lost.
+- With a plain number as the ceiling, the live test ran against the real model and failed for a
+  real reason: the model gave a title of 65 characters and 5 tags, not 3, and the tool refused
+  the answer with exit code 4. So the live check found what no milestone can find: the prompt
+  does not hold this model to the spec.
+- The runs took 566 seconds for M1, and 339 and 181 seconds for M2.
