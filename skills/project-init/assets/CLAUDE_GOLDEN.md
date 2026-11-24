@@ -188,6 +188,8 @@ refuses the commit. `.claude/settings.json` denies a way around the hooks.
   named after its ID. Every new public function in the business-logic layer also has a unit test.
 - Layout: `tests/unit/` (one test file per source module), `tests/e2e/`, and `tests/live/` (live
   checks: no milestone runs them). `scripts/check.py` enforces a coverage floor of 80% on `src/`.
+  It counts a process that a test starts only when the process ends by itself. A server that a
+  test stops writes no coverage data, so test its code in the test process too.
 - Never weaken or edit an existing test, baseline, or fixture to make it pass. Change one only when
   its requirement changed, and say so in the report.
 

@@ -3,5 +3,7 @@
 
 [run]
 # Also measure the Python processes that a test starts, such as an end-to-end test that runs
-# main.py. Without it, code that only such a test reaches counts as not covered.
+# main.py to its end. Without it, code that only such a test reaches counts as not covered.
+# A process that a test stops, such as a server, writes no data, so test its code in the test
+# process too (see Testing in CLAUDE.md).
 patch = subprocess

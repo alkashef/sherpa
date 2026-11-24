@@ -122,7 +122,7 @@ tool's config, where it is enforced on every run, and `CLAUDE.md` keeps only wha
 | `ruff.toml` | Linter and formatter config: line length 100, docstrings, type annotations, import order (`src` is first-party, whether or not its files exist yet), imports only at the top of a file, naming, security checks, no `print` outside `scripts/`, no TODO comments, pathlib, and limits on complexity (8), arguments (4) and statements per function (15). | Ruff checks style, common bugs and code smells in well under a second, so Claude can run it after every change. The limits keep functions small. |
 | `mypy.ini` | Type checker config: `strict = True` on `src/`. | Strict typing finds wrong types and missing `None` checks before the code runs, and typed code is easier for Claude to change safely. |
 | `pytest.ini` | Test config: tests live in `tests/`, async tests run without decorators, and a normal run skips `tests/live/`. The test command requires 80% branch coverage. | Tests prove a change works. The coverage floor stops untested code from growing. |
-| `.coveragerc` | Coverage config: `patch = subprocess` also measures the Python processes that a test starts. | An end-to-end test that runs `main.py` as a process counts for the coverage floor. Without it, a correct project with such tests failed the floor in the trial of the test writers. |
+| `.coveragerc` | Coverage config: `patch = subprocess` also measures the Python processes that a test starts, when they end by themselves. | An end-to-end test that runs `main.py` as a process counts for the coverage floor. Without it, a correct project with such tests failed the floor in the trial of the test writers. A server that a test stops writes no data, so the Testing rules ask for a test of its code in the test process too. |
 | `requirements.txt` | pytest, pytest-cov, hypothesis, mypy, ruff and python-dotenv, each pinned with `==`. With `--no-conda`, or if the install fails, only a comment naming them. | The skill installs the latest versions into the new environment and pins what pip installed, so it never guesses a version, and a clone gets the same tools. |
 
 ### With the `javascript` module
@@ -789,3 +789,36 @@ for Python.
   with `--setting-sources project,local` loaded no plugin and no hook of the user, and the edit
   hook of the project still ran.
 - The runs took 172 and 318 seconds for M1, and 851, 600 and 275 seconds for M2.
+
+A seventh real run on November 24, 2026 was a second web project, to check the repair of the
+sixth run and RUN-13 to RUN-16 (step C1 of `docs/completion-plan.md`), with `sonnet` at effort
+`medium`. The skill built `billsplit` with `python`, `javascript`, `html-css`, `ui-design` and
+`http-apis` from the start, and with its own conda environment. M1 is a page that splits a bill
+with a tip, served by FastAPI. M2 saves the splits through an API. Both milestones merged. The
+project's checks pass, with 41 tests and 100% coverage.
+
+- The pip install of the skill worked this time.
+- The ESLint repair of the sixth run held: `src/web/log.js` uses `console`, `src/web/api.js`
+  calls `fetch`, and ESLint passes.
+- RUN-14 held: the edit hook sent `jsdoc/require-returns` back to a build session, which added the
+  tag. Each JavaScript file has its `@module` block, and each named function its JSDoc.
+- RUN-15 and RUN-16 held: of the 18 transcripts of the run, none shows a plugin or a hook of the
+  user, and none shows an MCP tool. In the sixth run, 10 of 12 showed the plugins of the user, and
+  11 of 12 the claude.ai connectors.
+- RUN-13 held: no session changed a `Decided` decision. A repair session added DEC-008 as
+  `Proposed`, for the user to decide.
+- A fault of sherpa, now repaired: the build session of M1 blocked with partial work on the
+  coverage floor (0%). The only Python code in `src/` was the server, and each test reached it
+  through `main.py`, run as a process and stopped with `terminate()`. A stopped process writes no
+  coverage data, but the comments of `.coveragerc` and `pytest.ini` said that the processes of a
+  test count. A probe gave 91% for a process that ends by itself, and 0% for a stopped server,
+  also when uvicorn shut down on `CTRL_BREAK_EVENT`. The comments now say so, and the Testing
+  rules ask for a test of server code in the test process too. The kit also had a gap: it put the
+  `TestClient` tests of the app in M2, although the rules of `http-apis` ask for them. After the
+  approval, a `retest` session added them, and M1 merged from the kept work (RUN-12).
+- The approval also asked the test session to list the new tests in the Tests first of the plan.
+  It could not, because a test session changes only `tests/`, and it said so. The block of a
+  milestone goes when it merges, so nothing was lost.
+- In M2, the review found three `medium` findings with no requirement ID, so they did not block
+  (RUN-09), and the repairs made them. The last review found nothing.
+- The runs took 294 and 220 seconds for M1, and 747 seconds for M2.

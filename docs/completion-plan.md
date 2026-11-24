@@ -183,12 +183,19 @@ effort `medium` unless the step says otherwise.
   the repair. After two such runs of one kind, the user decides whether to run it again.
   - Done when: the last run of each kind found no new fault (definition of done, point 3).
   - Estimate: about 1 hour for each fault (runs 3 and 4 found four faults).
+  - Status: the seventh real run, a second web run, ran on November 24, 2026, with the user's
+    approval. The kit is a page that splits a bill (M1) and saves the splits through an API (M2).
+    Both milestones merged. The ESLint repair of run 6, RUN-13, RUN-14, RUN-15 and RUN-16 held in
+    real sessions. The run found one new fault (the comments about the coverage of a process,
+    below), so the web kind has now had two runs after a fault: the user decides whether it runs
+    again. README record in commit: "Record the seventh real run, and repair the coverage rule of a stopped process".
 
   | Run | Fault | Commit |
   | --- | --- | --- |
   | 5 (B1) | After the approval of a wrong test that a build session found, no test session ran, and M1 could not go on. RUN-12, option B, approved on November 23, 2026 | "After the approval of a block by a session, a test session gets the decision first (RUN-12)" |
   | 5 (B1) | A repair session rewrote the `Decided` decision DEC-004 and kept it `Decided`. RUN-13, option A, approved on November 23, 2026 | "A session may not change a Decided decision of the design (RUN-13)" |
   | 6 (B2) | `eslint.config.js` let only `src/log.js` use `console` and only `src/api.js` call `fetch`. The design put the page in `src/web/`, and no session may edit the config, so the build session of M1 blocked | "ESLint allows log.js and api.js in any folder under src/" |
+  | 7 (C1) | The comments of `.coveragerc` and `pytest.ini` said that the processes that a test starts count for the coverage floor. A server that a test stops writes no data, so the build session of M1 blocked on a floor of 0%. Option A, approved by the user on November 24, 2026: the comments and the Testing rules say it now | "Record the seventh real run, and repair the coverage rule of a stopped process" |
   | ____ | ____ | ____ |
 
 ## D. Make sherpa itself ready for a release

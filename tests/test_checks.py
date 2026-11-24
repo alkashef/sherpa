@@ -254,6 +254,37 @@ def test_code_that_a_test_runs_in_a_process_counts_for_coverage(project: Sandbox
     assert code == 0, output
 
 
+SERVER = (  # prints the sum, then serves until it is stopped, as a web server does
+    '"""Entry point."""\n\nimport sys\nimport time\n\nfrom src.calc import add\n\n'
+    'sys.stdout.write(f"{add(1, 2)}\\n")\nsys.stdout.flush()\n'
+    "while True:\n    time.sleep(1)\n"
+)
+SERVER_TEST = (  # the only test that reaches src/calc.py starts main.py and stops it
+    "import subprocess\nimport sys\n\n\n"
+    "def test_server_prints_the_sum() -> None:\n"
+    '    command = [sys.executable, "main.py"]\n'
+    "    server = subprocess.Popen(command, stdout=subprocess.PIPE, text=True)\n"
+    "    assert server.stdout is not None\n"
+    '    assert server.stdout.readline().strip() == "3"\n'
+    "    server.terminate()\n"
+    "    server.wait()\n"
+)
+
+
+def test_code_that_only_a_stopped_process_runs_does_not_count(project: Sandbox) -> None:
+    # The seventh real run: a server that a test stops writes no coverage data, so the floor
+    # fails. The Testing rules and the comment of .coveragerc say so, and ask for a test in the
+    # test process too.
+    (project.folder / "src" / "__init__.py").write_text('"""Source."""\n', encoding="utf-8")
+    (project.folder / "src" / "calc.py").write_text(CALC, encoding="utf-8")
+    (project.folder / "main.py").write_text(SERVER, encoding="utf-8")
+    (project.folder / "tests" / "e2e" / "test_main.py").write_text(SERVER_TEST, encoding="utf-8")
+    code, output = check(project.folder)
+    assert code == 2, output
+    assert "failed   pytest" in output
+    assert "Required test coverage of 80% not reached" in output
+
+
 def test_code_with_no_test_fails(project: Sandbox) -> None:
     # A package file that holds only a docstring is not code.
     (project.folder / "src" / "__init__.py").write_text(GOOD, encoding="utf-8")
