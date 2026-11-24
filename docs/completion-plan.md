@@ -177,7 +177,7 @@ effort `medium` unless the step says otherwise.
 
 ## C. Repair what the runs find
 
-- [ ] **C1. Repair each fault of sherpa that part B finds.** One commit for each fault, with a
+- [x] **C1. Repair each fault of sherpa that part B finds.** One commit for each fault, with a
   test, as in runs 3 and 4. A repair that changes the workflow goes to Part 2 of
   `docs/unapproved-ideas.md` first. When a run found a fault, a later run of the same kind checks
   the repair. After two such runs of one kind, the user decides whether to run it again.
@@ -193,6 +193,16 @@ effort `medium` unless the step says otherwise.
     the suite (`test_code_that_only_a_stopped_process_runs_does_not_count`). If B3 builds a small
     web tool, it also checks that `/write-design` plans a test of the server code in the test
     process.
+  - Decided by the user on November 24, 2026, option A: run 7 checks the repairs of run 5 for the
+    Python CLI kind too. RUN-12 and RUN-13 are in the runner and the design rules, which are the
+    same for each kind. In run 7, M1 blocked, and after the approval a `retest` session got the
+    decision first. The repair session added DEC-008 as `Proposed` and changed no `Decided` row.
+    Thus each fault of runs 1 to 7 is repaired, and a real run or, by the user's decision, the
+    suite checks the repair. Point 3 holds by these two decisions, not by a run that found no
+    fault.
+  - A fault that B3, B4 or B5 finds opens this step again: add its row to the table, and set the
+    box back to `[ ]` until its repair is checked.
+  - Done on: November 24, 2026, for runs 1 to 7. Recorded in commit: "Close C1: run 7 checks the repairs of run 5"
 
   | Run | Fault | Commit |
   | --- | --- | --- |
