@@ -14,12 +14,13 @@ Last update: November 25, 2026.
 | --- | --- | --- | --- |
 | 1 | D1 | CI workflow (Windows only, by the user's decision). It needs nothing, and every later run uses it. | done |
 | 2 | B5 | Other modules: `llm`, `validation`, `logging` and `live_checks.py` in a real run; the others accepted as suite-only. | done |
-| 3 | Hosted LLM provider | B5 used a local model only, because no API key is on the machine. Data that leaves the machine and a paid call are not checked. Needs the user's decision: accept as suite-only, or give an API key for a run. A run can find faults, so it comes before C1. | - |
-| 4 | B3 | Real interview, the only test of "zero lines of code" from the first step. 2 hours of the user's time. It can find faults, so it comes before C1. | doing |
-| 5 | B4 | GitHub run on the project of B5: `check.yml`, `mutation.yml`, `/find-bugs` and a release. It can find faults, so it comes before C1. | done |
-| 6 | C1 | Repairs of the faults that steps 2 to 5 find. After all the runs, so each repair is made one time. It opens again when a run finds a fault. | done |
-| 7 | D2 | Clean clone install: the README setup steps on a new user profile. After the repairs, because they can change those steps. | - |
-| 8 | D3 | README file tree. After every step that adds files, so the tree is written one time. | - |
-| 9 | E1 | `docs/v5/`: report, presentation and demo. After parts B to D, so it is written one time. | - |
-| 10 | E2 | Last README pass. After E1, and after every row of the paths table is closed. | - |
-| 11 | E3 | Release tag. Last. | - |
+| 3 | Hosted LLM provider | B5 used a local model only. The user chose a real run on November 25, 2026: an OpenAI model, with the user's key in a file outside the project, and a ceiling of 1 USD. A run can find faults, so it comes before C1. | doing |
+| 4 | RUN-19 | No rule or deny rule stops an unattended session from reading `config/.env`, so a real key can land in a session transcript. Found while row 3 was planned. Needs the user's decision (Part 2). Its repair comes with C1. | - |
+| 5 | B3 | Real interview, the only test of "zero lines of code" from the first step. 2 hours of the user's time. It can find faults, so it comes before C1. | doing |
+| 6 | B4 | GitHub run on the project of B5: `check.yml`, `mutation.yml`, `/find-bugs` and a release. It can find faults, so it comes before C1. | done |
+| 7 | C1 | Repairs of the faults that steps 2 to 6 find, and of RUN-19. After all the runs, so each repair is made one time. It opens again when a run finds a fault. | done |
+| 8 | D2 | Clean clone install: the README setup steps on a new user profile. After the repairs, because they can change those steps. | - |
+| 9 | D3 | README file tree. After every step that adds files, so the tree is written one time. | - |
+| 10 | E1 | `docs/v5/`: report, presentation and demo. After parts B to D, so it is written one time. | - |
+| 11 | E2 | Last README pass. After E1, and after every row of the paths table is closed. | - |
+| 12 | E3 | Release tag. Last. | - |

@@ -161,7 +161,7 @@ The user decided these points of section G on November 21, 2026. They need no ch
 On November 22, 2026 the user decided each idea of Part 2, and Part 1 holds the result. The
 sections below keep the context of the ideas. A new idea goes here, with its own entry. The user
 decided RUN-08 to RUN-16 on November 23, 2026, and RUN-17 and RUN-18 on November 24, 2026
-(Part 1). No idea is open.
+(Part 1). RUN-19 is open.
 
 ### A. Open decisions of the approved changes
 
@@ -335,6 +335,20 @@ New ideas from the eighth real run (November 24, 2026). Nobody approved them.
   module that talks to the model is `src/llm_client.py`, and `/write-design` names it so; (C) no
   change: the design carries the LLM decisions. Recommendation: A. It needs no name that a design
   can miss, and its cost is small.
+
+New idea from the plan of a run with a hosted model (November 25, 2026). Nobody approved it.
+
+- **RUN-19: an unattended session can read `config/.env`.** The rules keep secrets in
+  `config/.env` and out of code, logs and reports, but no rule and no deny rule of
+  `settings.json` stops a session from reading the file. The sessions of a run work with the
+  permission prompts off, so a session that checks the settings can show a real key in its
+  transcript. Options: (A) deny rules for reading `config/.env` and `.env` (the `Read` tool, and
+  `cat`, `type` and `Get-Content` as `Bash(...)` and `PowerShell(...)` twins), and a rule in
+  Security and privacy: read `config/.env.example` for the keys, never `config/.env`; deny rules
+  match the text of a command, so they stop a mistake, not a determined workaround; (B) the
+  runner moves `config/.env` out of the project folder while the sessions run, and puts it back
+  after; (C) no change: the user keeps real keys out of the project during a run. Recommendation:
+  A. It costs little, and it holds also in a session in chat.
 
 ### G. The user's list of November 21, 2026
 
