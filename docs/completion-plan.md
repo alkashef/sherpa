@@ -220,7 +220,7 @@ effort `medium` unless the step says otherwise.
 
 ## D. Make sherpa itself ready for a release
 
-- [ ] **D1. A CI workflow for the suite of sherpa.** Needs approval. A workflow in
+- [x] **D1. A CI workflow for the suite of sherpa.** Needs approval. A workflow in
   `.github/workflows/` of this repository runs pytest, ruff and mypy at each push, on Windows,
   Linux and macOS. Today the suite runs only on one Windows machine, so no test ran the skill, the
   hooks or the runner on Linux or macOS.
@@ -231,9 +231,11 @@ effort `medium` unless the step says otherwise.
     run failed 48 tests of `test_runner.py`, for one cause: Python ran from the tool cache of
     GitHub, and the runner starts only in a conda environment named after its project (`sherpa`
     in these tests). The workflow now creates the conda environment `sherpa`, as the README does.
+    The second run passed on November 24, 2026: each lint and type check, and 362 tests in 301 s
+    on 4 workers. It found no fault of sherpa.
   - Done when: the workflow passes on Windows.
   - Estimate: 1 hour, plus the repairs of what a clean machine finds.
-  - Done in commit: ____
+  - Done in commit: "Mark D1 done: the suite passes on a clean Windows machine of GitHub"
 - [ ] **D2. Install sherpa from a clean clone.** Do the steps of the README, "Set up the machine
   (once)", word for word on a second machine or a new user profile. Then run `/project-init`.
   - Done when: each step works as written, or the README is correct after the run.
