@@ -166,6 +166,12 @@ effort `medium` unless the step says otherwise.
     `/find-bugs` writes its `BUG:` lines (or reports none), and the tag and the row of
     `docs/releases.md` are on GitHub.
   - Estimate: 2 hours.
+  - Status: started on November 24, 2026, with the user's approval, on the project of B5
+    (`tagnote`): it is the newest project, and B3 is still with the user. The user chose the
+    account `alkashef` for the private repository `alkashef/tagnote`. `check.yml` passed on a clean
+    Linux machine, the first real run of `check.py` on Linux. `mutation.yml` passed with an empty
+    list of mutants: a fault of sherpa (C1), repaired. With the repair, a run made 158 mutants in
+    15 minutes, and 32 survived.
   - Done on: ____ README record in commit: ____
 - [x] **B5. The other modules: a real run, or accepted as suite-only.** Needs the user's decision
   for each module. Recommendation: one run with `llm`, `validation` and `logging`, and
@@ -232,6 +238,8 @@ effort `medium` unless the step says otherwise.
   - Decided by the user on November 24, 2026, option 1: the checks in real sessions in the
     project of the eighth run are enough, as for RUN-15 and RUN-16. No second run of the kind.
   - Done again on: November 24, 2026, for runs 1 to 8. Recorded in commit: "Close C1 again: the repairs of run 8 are checked in real sessions"
+  - Opened by B4 on November 24, 2026, and closed again in the commit of the repair: a real run of
+    the repaired `mutation.yml` on GitHub checked it.
 
   | Run | Fault | Commit |
   | --- | --- | --- |
@@ -242,6 +250,7 @@ effort `medium` unless the step says otherwise.
   | 8 (B5) | `live_checks.py` read the line `- <requirement ID>: <test name>` under the budget ceiling as a part of the ceiling, and the template of `docs/workflow.md` puts that line there. An entry now ends at the next item of the list | "Record the eighth real run, and repair the entries of the live checks" |
   | 8 (B5) | RUN-17: the budget ceiling had no form, and the test writer read it as a number. Option A, approved by the user on November 24, 2026: the ceiling is an amount and a currency, and the tests get the amount and the currency apart | "The budget ceiling of the live checks is an amount and a currency (RUN-17)" |
   | 8 (B5) | RUN-18: the rules of `llm` loaded only for `prompts/**` and `src/**/llm*`, and the design named the client `src/model_client.py`. Option A, approved by the user on November 24, 2026: they load for every file of `src/` | "The rules of llm load for every file of src/ (RUN-18)" |
+  | B4 | `mutation.yml` passed and kept an empty list. mutmut 3 refuses a module whose name starts with `src.`, and the projects import `from src.<module>`; the config was written for mutmut 2; and `|| true` hid each error. It now runs `mutmut==2.5.1`, fails on a fatal error or when it makes no mutant, keeps the log on a failure, and keeps the change of each surviving mutant | "The mutation workflow runs mutmut 2.5.1, and a failed run fails (B4)" |
   | ____ | ____ | ____ |
 
 ## D. Make sherpa itself ready for a release

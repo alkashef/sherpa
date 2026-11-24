@@ -333,6 +333,17 @@ def test_a_rule_for_all_inputs_gets_a_property_test_and_mutants_run_on_demand() 
     assert ".github/workflows/mutation.yml" in bi.template_files()["python"]
 
 
+def test_the_mutation_run_fails_when_mutmut_fails_and_keeps_each_surviving_change() -> None:
+    # B4: the run passed and kept an empty list, because mutmut 3 refuses the module names
+    # `src.<module>` and `|| true` hid the error.
+    workflow = (bi.assets_dir() / ".github" / "workflows" / "mutation.yml").read_text("utf-8")
+    assert "mutmut==2.5.1" in workflow
+    assert "mutmut run || true" not in workflow
+    assert "$((status & 1))" in workflow
+    assert "for id in $(mutmut result-ids survived); do mutmut show" in workflow
+    assert workflow.count("if: always()") == 1
+
+
 def test_each_module_names_what_its_tests_prove() -> None:
     sections = {s.section_id: s for s in bi.read_sections(bi.assets_dir() / "CLAUDE_GOLDEN.md")}
     for section_id in ("B8", "B6", "B5", "B4", "B3", "A18", "A14"):

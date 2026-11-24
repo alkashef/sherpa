@@ -1,8 +1,12 @@
 # Mutation tests, on demand. Start them in GitHub: Actions, "Mutation tests", Run workflow.
 # They change the code of the files changed since the last release tag, one small change at a
 # time, and run the tests after each change. A change that no test notices is a surviving mutant.
-# The list of surviving mutants is the artifact "mutants"; /find-bugs reads it.
-# Python uses mutmut. mutmut 3 needs fork(), so it runs on Linux and not on Windows.
+# The list of surviving mutants, with the change of each one, is the artifact "mutants";
+# /find-bugs reads it. A run that fails, or that makes no mutant, fails the workflow, so an empty
+# list means that the tests killed each mutant.
+# Python uses mutmut 2.5.1. mutmut 3 refuses a module whose name starts with `src.`, and the code
+# of a project imports `from src.<module> import <name>`. mutmut 2 changes the files in place and
+# runs all the tests (not tests/live/, which pytest.ini keeps out) after each change.
 # JavaScript uses Stryker.
 name: Mutation tests
 
@@ -46,11 +50,22 @@ jobs:
             echo "No Python file changed since the last release." > mutants/python.txt
             exit 0
           fi
-          pip install -r requirements.txt mutmut
+          pip install -r requirements.txt mutmut==2.5.1
           paths=$(paste -sd, changed-python.txt)
-          printf '[mutmut]\npaths_to_mutate=%s\ntests_dir=tests/\n' "$paths" > setup.cfg
-          mutmut run || true
-          mutmut results > mutants/python.txt || true
+          runner="python -m pytest -x -q -p no:cacheprovider"
+          printf '[mutmut]\npaths_to_mutate=%s\ntests_dir=tests/\nrunner=%s\n' "$paths" "$runner" \
+            > setup.cfg
+          status=0
+          mutmut run > mutants/run.log 2>&1 || status=$?
+          # The exit code of mutmut is a bit mask: 1 is a fatal error; 2, 4 and 8 mean surviving,
+          # timed-out and suspicious mutants. The log counts the mutants as done/total.
+          if [ $((status & 1)) -ne 0 ] || ! grep -qE '[0-9]+/[1-9][0-9]*' mutants/run.log; then
+            echo "mutmut failed, or it made no mutant (exit code $status). See run.log." >&2
+            tail -c 3000 mutants/run.log >&2
+            exit 1
+          fi
+          mutmut results > mutants/python.txt
+          for id in $(mutmut result-ids survived); do mutmut show "$id"; done >> mutants/python.txt
 
       - name: Set up Node.js
         if: hashFiles('package.json') != ''
@@ -72,6 +87,7 @@ jobs:
           cp reports/mutation/mutation.json mutants/javascript.json || true
 
       - name: Keep the list of surviving mutants
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: mutants
