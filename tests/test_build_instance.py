@@ -52,6 +52,14 @@ def test_rules_files_start_with_their_paths(full_build: Path) -> None:
         assert path.read_text(encoding="utf-8").startswith('---\npaths:\n  - "'), path.name
 
 
+def test_the_llm_rules_load_for_every_file_of_src(tmp_path: Path) -> None:
+    # RUN-18: in the eighth real run, the design named the client of the model
+    # src/model_client.py, and the rules of llm loaded only for prompts/** and src/**/llm*.
+    build(tmp_path, "--with", "python", "llm")
+    rules = (tmp_path / ".claude" / "rules" / "llm.md").read_text(encoding="utf-8")
+    assert rules.startswith('---\npaths:\n  - "prompts/**"\n  - "src/**"\n---\n')
+
+
 @pytest.mark.parametrize("modules", [[], ["python"], ALL_MODULES], ids=["none", "python", "all"])
 def test_no_placeholder_is_left(tmp_path: Path, modules: list[str]) -> None:
     build(tmp_path, "--with", *modules)

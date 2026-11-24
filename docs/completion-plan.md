@@ -167,7 +167,7 @@ effort `medium` unless the step says otherwise.
     `docs/releases.md` are on GitHub.
   - Estimate: 2 hours.
   - Done on: ____ README record in commit: ____
-- [ ] **B5. The other modules: a real run, or accepted as suite-only.** Needs the user's decision
+- [x] **B5. The other modules: a real run, or accepted as suite-only.** Needs the user's decision
   for each module. Recommendation: one run with `llm`, `validation` and `logging`, and
   `live_checks.py` with a small approved budget, because a flow of data to a provider and a paid
   call carry the most risk. Accept the other modules as suite-only.
@@ -179,7 +179,12 @@ effort `medium` unless the step says otherwise.
     and a ceiling of 0 USD, written by Claude in the role of the user. The run found a fault of
     `live_checks.py` (repaired, C1), RUN-17 and RUN-18 (Part 2). The done-when is met, but the box
     stays open until the user decides RUN-17 and RUN-18: the user's definition of done allows no
-    open issue. RUN-17 is built (option A).
+    open issue. RUN-17 and RUN-18 are built (option A each), and each repair was checked in the
+    project of the run with real sessions: the repaired `live_checks.py` with the real model, and
+    a session that read only `src/model_client.py` and got the LLM rules.
+  - Not checked: a hosted provider (data that leaves the machine, a paid call). No API key is on
+    the machine.
+  - Done on: November 24, 2026. README record in commit: "Record the eighth real run, and repair the entries of the live checks"
 
   | Module | Real run (README record) or accepted as suite-only on |
   | --- | --- |
@@ -221,8 +226,9 @@ effort `medium` unless the step says otherwise.
   - A fault that B3, B4 or B5 finds opens this step again: add its row to the table, and set the
     box back to `[ ]` until its repair is checked.
   - Done on: November 24, 2026, for runs 1 to 7. Recorded in commit: "Close C1: run 7 checks the repairs of run 5"
-  - Opened again on November 24, 2026 by the eighth real run (B5): one fault is repaired, and
-    RUN-17 is built (option A), and RUN-18 waits for the user's decision.
+  - Opened again on November 24, 2026 by the eighth real run (B5). Its fault is repaired, and
+    RUN-17 and RUN-18 are built. Each repair was checked in the project of the run with real
+    sessions, not in a later run of the same kind. The user decides whether that check is enough.
 
   | Run | Fault | Commit |
   | --- | --- | --- |
@@ -232,7 +238,7 @@ effort `medium` unless the step says otherwise.
   | 7 (C1) | The comments of `.coveragerc` and `pytest.ini` said that the processes that a test starts count for the coverage floor. A server that a test stops writes no data, so the build session of M1 blocked on a floor of 0%. Option A, approved by the user on November 24, 2026: the comments and the Testing rules say it now | "Record the seventh real run, and repair the coverage rule of a stopped process" |
   | 8 (B5) | `live_checks.py` read the line `- <requirement ID>: <test name>` under the budget ceiling as a part of the ceiling, and the template of `docs/workflow.md` puts that line there. An entry now ends at the next item of the list | "Record the eighth real run, and repair the entries of the live checks" |
   | 8 (B5) | RUN-17: the budget ceiling had no form, and the test writer read it as a number. Option A, approved by the user on November 24, 2026: the ceiling is an amount and a currency, and the tests get the amount and the currency apart | "The budget ceiling of the live checks is an amount and a currency (RUN-17)" |
-  | 8 (B5) | RUN-18: the rules of `llm` load only for `prompts/**` and `src/**/llm*`, and the design named the client `src/model_client.py`. Waits for the user's decision | ____ |
+  | 8 (B5) | RUN-18: the rules of `llm` loaded only for `prompts/**` and `src/**/llm*`, and the design named the client `src/model_client.py`. Option A, approved by the user on November 24, 2026: they load for every file of `src/` | "The rules of llm load for every file of src/ (RUN-18)" |
   | ____ | ____ | ____ |
 
 ## D. Make sherpa itself ready for a release

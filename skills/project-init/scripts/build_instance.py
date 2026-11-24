@@ -56,7 +56,8 @@ def rule_files() -> dict[str, tuple[list[str], list[str]]]:
             ["A5", "A6", "A8", "A9", "A11a", "A12", "A13", "A18", "A19"],
         ),
         "readme": (["README.md"], ["A17a"]),
-        "llm": (["prompts/**", "src/**/llm*"], ["A14"]),
+        # Every file of src/: the design may give the client of the model any name (RUN-18).
+        "llm": (["prompts/**", "src/**"], ["A14"]),
         "python": (["**/*.py"], ["B1"]),
         "javascript": (["**/*.js", "**/*.mjs", "**/*.ts"], ["B2"]),
         "html-css": (["**/*.html", "**/*.css"], ["B3"]),
