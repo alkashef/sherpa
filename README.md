@@ -903,3 +903,21 @@ the user.
   and the live check reported it.
 - `release.py M7` built the archive, tagged `v2026.11.25`, added the row of `docs/releases.md`,
   and pushed both to GitHub.
+
+A run with a hosted model on November 25, 2026 checked the path that the eighth run left out: data
+that leaves the machine, a paid call, and an API key. The user gave an OpenAI key in a file
+outside the project, and chose a budget ceiling of 1 USD. In the role of the writer, Claude
+changed the spec of `tagnote` (a hosted model, a refused key, and a key that no log or output
+holds) and its design (DEC-009 for the OpenAI API with the model `gpt-4.1-mini-2025-04-14`, and
+DEC-010 for the flow of data and the key). The runner built one milestone, M8.
+
+- No session got the key: the tests of M8 use a fake server with a fake key. The runner's own
+  live check therefore failed on the missing setting. Then `live_checks.py` ran alone, with the
+  key as a variable of that one process, and passed. It was the first live check that passed in
+  a real run. The call cost about 0.0001 USD.
+- The key is in no commit, no file of the project, no output of the run and no session
+  transcript.
+- The test session changed the tests of the old decision DEC-002 with it, as the plan said. A
+  build session added DEC-011 (the setting of the key) as `Proposed`, and the user confirmed it.
+- RUN-19 came from the plan of this run: no rule stops a session from reading `config/.env`. The
+  run kept the key out of the project, so it did not meet that gap.

@@ -14,7 +14,7 @@ Last update: November 25, 2026.
 | --- | --- | --- | --- |
 | 1 | D1 | CI workflow (Windows only, by the user's decision). It needs nothing, and every later run uses it. | done |
 | 2 | B5 | Other modules: `llm`, `validation`, `logging` and `live_checks.py` in a real run; the others accepted as suite-only. | done |
-| 3 | Hosted LLM provider | B5 used a local model only. The user chose a real run on November 25, 2026: an OpenAI model, with the user's key in a file outside the project, and a ceiling of 1 USD. A run can find faults, so it comes before C1. | doing |
+| 3 | Hosted LLM provider | B5 used a local model only. On November 25, 2026, a run used an OpenAI model with the user's key, kept outside the project, and a ceiling of 1 USD. Its live check passed, and the key is in no file, output or transcript. A run can find faults, so it comes before C1. | done |
 | 4 | RUN-19 | No rule or deny rule stops an unattended session from reading `config/.env`, so a real key can land in a session transcript. Found while row 3 was planned. Needs the user's decision (Part 2). Its repair comes with C1. | - |
 | 5 | B3 | Real interview, the only test of "zero lines of code" from the first step. 2 hours of the user's time. It can find faults, so it comes before C1. | doing |
 | 6 | B4 | GitHub run on the project of B5: `check.yml`, `mutation.yml`, `/find-bugs` and a release. It can find faults, so it comes before C1. | done |

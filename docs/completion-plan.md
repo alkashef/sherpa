@@ -192,14 +192,14 @@ effort `medium` unless the step says otherwise.
     open issue. RUN-17 and RUN-18 are built (option A each), and each repair was checked in the
     project of the run with real sessions: the repaired `live_checks.py` with the real model, and
     a session that read only `src/model_client.py` and got the LLM rules.
-  - Not checked: a hosted provider (data that leaves the machine, a paid call). No API key is on
-    the machine.
+  - A hosted provider was checked later, on November 25, 2026: the user gave an OpenAI key, and a
+    live check with a real call passed (row 3 of `docs/status.md`).
   - Done on: November 24, 2026. README record in commit: "Record the eighth real run, and repair the entries of the live checks"
 
   | Module | Real run (README record) or accepted as suite-only on |
   | --- | --- |
   | `data` | Accepted as suite-only on November 24, 2026, by the recommendation, when the user asked to finish B5 |
-  | `llm` | Eighth real run (README record in commit "Record the eighth real run, and repair the entries of the live checks"), with a local model. No hosted provider ran: no API key is on the machine |
+  | `llm` | Eighth real run (README record in commit "Record the eighth real run, and repair the entries of the live checks"), with a local model. A hosted provider (OpenAI) ran on November 25, 2026, with the user's key (README record in commit "Record the run with a hosted model (row 3 of the status table)") |
   | `logging` | Eighth real run (README record in commit "Record the eighth real run, and repair the entries of the live checks") |
   | `long-running` | Accepted as suite-only on November 24, 2026, by the recommendation, when the user asked to finish B5 |
   | `validation` | Eighth real run (README record in commit "Record the eighth real run, and repair the entries of the live checks") |
