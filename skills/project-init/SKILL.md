@@ -45,8 +45,9 @@ To change what new projects get, edit `assets/`, not this file.
    python "<this skill's folder>\scripts\init_project.py" --name <name> --with <modules> --purpose "<purpose>" --test-writer <writer>
    ```
 
-   Plain `python` on this machine can be the Microsoft Store stub. If it fails, use
-   `C:\Users\aa186095\AppData\Local\miniconda3\python.exe`. Options: `--public`, `--no-github`
+   Plain `python` on Windows can be the Microsoft Store stub. If it fails, use the Python of
+   Miniconda: `$env:LOCALAPPDATA\miniconda3\python.exe` or `$env:USERPROFILE\miniconda3\python.exe`,
+   whichever exists. Options: `--public`, `--no-github`
    (local repository only), `--remote-url <url>` (push to a repository that already exists),
    `--no-conda` (no conda environment), `--test-writer` (default `claude`).
 

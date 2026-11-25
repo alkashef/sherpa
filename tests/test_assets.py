@@ -134,6 +134,22 @@ def test_the_golden_rules_say_where_the_keys_are() -> None:
     assert "`config/.env.example`" in security
 
 
+def test_no_file_of_the_skill_names_a_users_folder() -> None:
+    # D2: SKILL.md named the Miniconda path of the machine where the skill was written, and that
+    # path does not exist for another user. %USERPROFILE% and $env:LOCALAPPDATA are allowed.
+    user_folder = re.compile(r"[A-Za-z]:[\\/]+Users[\\/]+(?![%$<{])\w", re.IGNORECASE)
+    skill = bi.assets_dir().parent
+    found = [
+        str(path.relative_to(skill))
+        for path in skill.rglob("*")
+        if path.is_file()
+        and path.suffix in {".md", ".py", ".json", ".sh", ".html", ".yml", ".toml", ".ini"}
+        and "cache" not in str(path)
+        and user_folder.search(path.read_text("utf-8", errors="replace"))
+    ]
+    assert found == []
+
+
 def test_the_spec_and_the_workflow_ask_before_an_edit() -> None:
     # An ask rule refuses when nobody can answer, so an unattended milestone cannot change the
     # requirements or the rules it works under (docs/workflow.md, Approval).
