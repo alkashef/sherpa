@@ -90,7 +90,8 @@ branch that pushes to a remote.
 
 Each session starts with permission prompts off. Its guard rails are the rules in
 `.claude/settings.json`: a `deny` rule always refuses, and an `ask` rule refuses when nobody can
-answer. A session loads only the settings of the project (`--setting-sources project,local`), so
+answer. Deny rules also block the usual commands that read `config/.env`, which holds the real
+secrets. A session loads only the settings of the project (`--setting-sources project,local`), so
 the plugins and the hooks of the user's own settings stay out of a run. It loads no MCP server of
 the user's account, such as a mail or chat connector (`--strict-mcp-config`): only the servers of
 the project's `.mcp.json`, when its folder holds one. The runner does not start without that file, while the commit hook is off, when

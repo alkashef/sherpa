@@ -169,8 +169,9 @@ refuses the commit. `.claude/settings.json` denies a way around the hooks.
 - Fixed vocabularies (statuses, sources, error codes) are enums, or named immutable constants where
   the language has no enums, in the module that owns them. No other module-level constants.
 - To add a setting, in the same change: (1) add the key to `config/.env.example` (its default, or
-  empty if secret); (2) add it to `config/.env`; (3) add a typed field in `config.py`; (4) add a row
-  to the settings table in `docs/design.md`; (5) pass the value in from the entry point.
+  empty if secret); (2) tell the user to add it to `config/.env`, which no session reads; (3) add a
+  typed field in `config.py`; (4) add a row to the settings table in `docs/design.md`; (5) pass the
+  value in from the entry point.
 
 ## Dependencies
 <!-- A10. Applies when: the project uses third-party libraries. Environment commands are in the language sections. -->
@@ -273,6 +274,8 @@ refuses the commit. `.claude/settings.json` denies a way around the hooks.
 - Secrets (API keys, tokens, passwords, database IDs) live only in `config/.env` or the platform's
   secret store. They never appear in code, committed files, logs, error messages, reports, or
   browser-side code.
+- Never read `config/.env`: what a session reads goes to the AI provider. `config/.env.example`
+  names the keys. Deny rules in `.claude/settings.json` block the usual commands that read it.
 - User data stays on the machine. A flow of user data to an external service (an LLM API, Notion, a
   cloud store) must be listed in `docs/design.md` as a `DEC-NNN` and approved by the user. Servers
   listen on `127.0.0.1` unless the design says otherwise. Telemetry is off. At run time the app

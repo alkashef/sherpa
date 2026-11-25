@@ -1,5 +1,6 @@
 """The skill's assets agree with what build_instance.py expects to find in them."""
 
+import fnmatch
 import hashlib
 import json
 import re
@@ -99,6 +100,38 @@ def test_a_shell_may_not_write_a_file_in_another_encoding() -> None:
     deny = settings["permissions"]["deny"]
     for cmdlet in ("Set-Content", "Out-File", "Add-Content"):
         assert f"PowerShell({cmdlet} *)" in deny, cmdlet
+
+
+def denied(tool: str, command: str) -> bool:
+    """Return True when a deny rule of the settings asset for `tool` matches `command`."""
+    settings = json.loads((bi.assets_dir() / ".claude" / "settings.json").read_text("utf-8"))
+    rules = [r for r in settings["permissions"]["deny"] if r.startswith(f"{tool}(")]
+    return any(fnmatch.fnmatchcase(command, r[len(tool) + 1 : -1]) for r in rules)
+
+
+def test_a_session_may_not_read_the_secrets() -> None:
+    # RUN-19: sessions run with the permission prompts off, and what a session reads goes to the
+    # AI provider. The keys stay readable in config/.env.example.
+    settings = json.loads((bi.assets_dir() / ".claude" / "settings.json").read_text("utf-8"))
+    assert "Read(**/.env)" in settings["permissions"]["deny"]
+    both = ["cat", "type", "more", "head", "tail", "grep"]
+    readers = {"Bash": both, "PowerShell": [*both, "Get-Content", "gc", "Select-String"]}
+    for tool, commands in readers.items():
+        for command in commands:
+            for path in ("config/.env", "config\\.env", ".env"):
+                assert denied(tool, f"{command} {path}"), (tool, command, path)
+                assert denied(tool, f"{command} {path} -n"), (tool, command, path)
+            assert not denied(tool, f"{command} config/.env.example"), (tool, command)
+    assert denied("PowerShell", "Select-String -Path config/.env -Pattern KEY")
+    assert denied("Bash", "grep MODEL config/.env")
+
+
+def test_the_golden_rules_say_where_the_keys_are() -> None:
+    # RUN-19: the deny rules stop a mistake, not a workaround, so the rules say it too.
+    golden = bi.assets_dir().joinpath("CLAUDE_GOLDEN.md").read_text("utf-8")
+    security = golden.split("## Security")[1].split("\n## ")[0]
+    assert "Never read `config/.env`" in security
+    assert "`config/.env.example`" in security
 
 
 def test_the_spec_and_the_workflow_ask_before_an_edit() -> None:

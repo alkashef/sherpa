@@ -245,6 +245,9 @@ effort `medium` unless the step says otherwise.
   - Opened by B4 on November 24, 2026, and closed again in the commit of the repair: a real run of
     the repaired `mutation.yml` on GitHub checked it. The correction of `/find-bugs` is checked by
     the run itself: the runner merged M3 to M6, whose tests passed at once.
+  - Opened by RUN-19 on November 25, 2026 (found while the run with a hosted model was planned),
+    and closed again in the commit of the repair: real sessions with the flags of the runner
+    checked it.
 
   | Run | Fault | Commit |
   | --- | --- | --- |
@@ -257,6 +260,7 @@ effort `medium` unless the step says otherwise.
   | 8 (B5) | RUN-18: the rules of `llm` loaded only for `prompts/**` and `src/**/llm*`, and the design named the client `src/model_client.py`. Option A, approved by the user on November 24, 2026: they load for every file of `src/` | "The rules of llm load for every file of src/ (RUN-18)" |
   | B4 | `mutation.yml` passed and kept an empty list. mutmut 3 refuses a module whose name starts with `src.`, and the projects import `from src.<module>`; the config was written for mutmut 2; and `|| true` hid each error. It now runs `mutmut==2.5.1`, fails on a fatal error or when it makes no mutant, keeps the log on a failure, and keeps the change of each surviving mutant | "The mutation workflow runs mutmut 2.5.1, and a failed run fails (B4)" |
   | B4 | `/find-bugs` said that a bug whose test passes is a false alarm. The test of a gap in the tests (a surviving mutant) passes at once, because the code is right, and the runner accepts it. The skill now says both | "Record the GitHub run (B4), and correct /find-bugs about a test that passes" |
+  | Hosted model | RUN-19: no rule and no deny rule stopped a session from reading `config/.env`. Option A, approved by the user on November 25, 2026: deny rules for the Read tool and the usual read commands, and a rule in Security and privacy. In real sessions with a fake key, the old deny rules let the Read tool and `Get-Content` put the key in the transcript; the new ones refused each of 5 reads, also with the new rule line removed | "A session may not read config/.env (RUN-19)" |
   | ____ | ____ | ____ |
 
 ## D. Make sherpa itself ready for a release
