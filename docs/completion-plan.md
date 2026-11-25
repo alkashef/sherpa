@@ -311,7 +311,7 @@ effort `medium` unless the step says otherwise.
     from conda-forge and pinned the tools, and `python scripts/check.py` printed
     `All checks passed.`
   - Done on: November 25, 2026. Commit: "The skill names no user's folder (D2)" and "Repair what a clean install found (D2)"
-- [ ] **D3. Correct the old text that this plan found.**
+- [x] **D3. Correct the old text that this plan found.**
   - `docs/unapproved-ideas.md`: the last line still said that Part 2 holds RUN-08 and RUN-09,
     which are decided, and a blank line was missing before section G. Corrected in the record
     commit of B2.
@@ -321,7 +321,10 @@ effort `medium` unless the step says otherwise.
     `.github/workflows/suite.yml` and `requirements-dev.txt`.
   - Done when: both are correct and the suite passes.
   - Estimate: 30 minutes.
-  - Done in commit: ____
+  - Record: the first item was already corrected in B2. The tree now also shows `status.md`,
+    `check.yml`, `mutation.yml`, `find-bugs`, `.prettierrc.json`, `.stylelintrc.json` and
+    `test_dashboard.py`. The suite passes (375 tests).
+  - Done on: November 25, 2026. Commit: "Correct the file tree of the README (D3)"
 
 ## E. Write the final docs and release
 

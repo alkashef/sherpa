@@ -154,8 +154,12 @@ checked with ruff 0.17.0 and mypy 2.4.0 using the configs in `assets/`.
 
 ```text
 CLAUDE.md                       instructions for working on this repository
+.github/workflows/suite.yml     runs the suite and the checks on a clean Windows machine
+requirements-dev.txt            the pinned tools for the suite and the checks
 docs/
   completion-plan.md            the plan to finish sherpa, with a record line for each step
+  status.md                     the status of each step, and of each other open item
+  audit-claude-golden.md        the audit table of the master (rank 17), applied
   unapproved-ideas.md           Part 1: what is left of the approved changes. Part 2: proposed
                                 changes, not approved
   v1/ to v4/                    SDD report, presentation and demo; v4 is the current workflow
@@ -168,7 +172,8 @@ skills/project-init/            the skill. Install by copying this folder.
     CLAUDE_GOLDEN.md            the master, in tagged sections. Never copied.
     CLAUDE_GOLDEN.md.646        the master before the cut to the line budget. Reference only.
     docs/                       workflow.md, workflow.html, unapproved-ideas.md, releases.md (copied); spec, design, plan (filled in)
-    .claude/skills/             sherpa, write-spec, write-design, write-plan, write-tests, code-review-sherpa (copied)
+    .claude/skills/             sherpa, write-spec, write-design, write-plan, write-tests, code-review-sherpa, find-bugs (copied)
+    .github/workflows/          check.yml (the checks on each push), mutation.yml (mutation tests) (copied)
     scripts/cleanup.py          cache cleaner (copied)
     scripts/check.py            the checks both hooks run (copied)
     scripts/spec_coverage.py    which requirement has a test, and do the docs agree (copied)
@@ -182,6 +187,7 @@ skills/project-init/            the skill. Install by copying this folder.
     README.md, requirements.txt, config/.env.example    (filled in or copied)
     ruff.toml, mypy.ini, pytest.ini, .coveragerc        Python checks
     package.json, tsconfig.json, eslint.config.js       JavaScript checks
+    .prettierrc.json, .stylelintrc.json                 formatting and CSS checks
     .gitignore, .gitattributes, .dockerignore, .claude/settings.json, .vscode/
 tests/                          the test suite (not installed with the skill)
   fake_gh.py, fake_conda.py     stand in for the GitHub CLI and conda; never touch the real ones
@@ -190,6 +196,7 @@ tests/                          the test suite (not installed with the skill)
   test_build_instance.py        what the builder writes and leaves alone
   test_init_project.py          init end to end, and every refusal
   test_checks.py                check.py and both hooks, with the real ruff, mypy and pytest
+  test_dashboard.py             the dashboard page
   test_spec_coverage.py         which requirement has a test, on a small spec, design, plan and tests
   test_live_checks.py           the live checks: approval, budget ceiling, result
   test_release.py               a release, on a git project with a bare remote
