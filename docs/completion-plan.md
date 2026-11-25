@@ -156,7 +156,8 @@ effort `medium` unless the step says otherwise.
     `/sdd`, not `/sherpa`), so it was replaced with the current one first. The user runs the
     interview in a new VS Code window and notes each unclear question. The user allowed Claude to
     read the session transcripts of the B3 project folder, only to record the faults and the
-    unclear questions.
+    unclear questions. On November 25, 2026, before the interview, old personal copies of the
+    project skills were found and moved away (C1, row B3).
   - Done on: ____ README record in commit: ____
 - [x] **B4. A real GitHub run: the two workflows, `/find-bugs` and a release.** Needs approval:
   it creates a private repository on the user's GitHub account. Push the project of B1 or B3 to
@@ -210,7 +211,7 @@ effort `medium` unless the step says otherwise.
 
 ## C. Repair what the runs find
 
-- [x] **C1. Repair each fault of sherpa that part B finds.** One commit for each fault, with a
+- [ ] **C1. Repair each fault of sherpa that part B finds.** One commit for each fault, with a
   test, as in runs 3 and 4. A repair that changes the workflow goes to Part 2 of
   `docs/unapproved-ideas.md` first. When a run found a fault, a later run of the same kind checks
   the repair. After two such runs of one kind, the user decides whether to run it again.
@@ -248,6 +249,8 @@ effort `medium` unless the step says otherwise.
   - Opened by RUN-19 on November 25, 2026 (found while the run with a hosted model was planned),
     and closed again in the commit of the repair: real sessions with the flags of the runner
     checked it.
+  - Opened by B3 on November 25, 2026, before the interview: old personal copies of the project
+    skills (row B3 below). It closes when the B3 interview runs the project's own skills.
 
   | Run | Fault | Commit |
   | --- | --- | --- |
@@ -262,6 +265,7 @@ effort `medium` unless the step says otherwise.
   | B4 | `/find-bugs` said that a bug whose test passes is a false alarm. The test of a gap in the tests (a surviving mutant) passes at once, because the code is right, and the runner accepts it. The skill now says both | "Record the GitHub run (B4), and correct /find-bugs about a test that passes" |
   | Hosted model | RUN-19: no rule and no deny rule stopped a session from reading `config/.env`. Option A, approved by the user on November 25, 2026: deny rules for the Read tool and the usual read commands, and a rule in Security and privacy. In real sessions with a fake key, the old deny rules let the Read tool and `Get-Content` put the key in the transcript; the new ones refused each of 5 reads, also with the new rule line removed | "A session may not read config/.env (RUN-19)" |
   | D2 | On a new user profile, `conda create` failed on the terms of Anaconda, `SKILL.md` named a folder of one machine, and the README missed the git identity and Git. Repaired, and a second run of `/project-init` checked it (D2) | "Repair what a clean install found (D2)" |
+  | B3 | Before the interview: `%USERPROFILE%\.claude\skills\` had old personal copies of `sdd`, `write-spec`, `write-design`, `write-plan` and `write-tests` (of November 24, 141 to 332 changed lines each). Claude Code uses a personal skill before a project skill of the same name, so the interview would have run the old skills. With the user's approval, they moved to `%USERPROFILE%\.claude\skills-backup-2026-11-25\`, and the README install steps now say to remove such copies. The B3 interview checks it | "Remove the personal copies of the project skills before B3" |
   | ____ | ____ | ____ |
 
 ## D. Make sherpa itself ready for a release

@@ -226,7 +226,11 @@ your account.
 1. Copy `skills/project-init` to `%USERPROFILE%\.claude\skills\project-init`.
 2. If an old `%USERPROFILE%\.claude\skills\project-docs-init` is there, delete it. This skill
    replaces it.
-3. After every change to the skill, copy it again.
+3. If `%USERPROFILE%\.claude\skills\` has a folder with the name of a project skill (`sdd`,
+   `sherpa`, `write-spec`, `write-design`, `write-plan`, `write-tests`, `code-review-sherpa`,
+   `find-bugs`), remove it. Claude Code uses a personal skill before a project skill of the same
+   name, so a new project would run the old copy.
+4. After every change to the skill, copy it again.
 
 #### 2. Set up GitHub
 
