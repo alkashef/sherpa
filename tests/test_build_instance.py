@@ -71,7 +71,7 @@ def test_name_and_purpose_reach_the_readme(tmp_path: Path) -> None:
     readme = (tmp_path / "my-app" / "README.md").read_text(encoding="utf-8")
     assert "my-app" in readme
     assert "Counts sheep" in readme
-    assert "conda create -n my-app" in readme
+    assert "conda create -n my-app -c conda-forge --override-channels python=3.12" in readme
 
 
 def test_vscode_terminal_is_cmd_with_the_conda_environment(tmp_path: Path) -> None:

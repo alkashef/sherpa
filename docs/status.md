@@ -24,7 +24,7 @@ Last update: November 25, 2026.
 | 5 | B3 | Real interview, the only test of "zero lines of code" from the first step. 2 hours of the user's time. It can find faults, so it comes before C1. | `opus`, high | doing |
 | 6 | B4 | GitHub run on the project of B5: `check.yml`, `mutation.yml`, `/find-bugs` and a release. It can find faults, so it comes before C1. | `sonnet`, high | done |
 | 7 | C1 | Repairs of the faults that steps 2 to 6 find, and of RUN-19. After all the runs, so each repair is made one time. It opens again when a run finds a fault. | `opus`, high | done |
-| 8 | D2 | Clean clone install: the README setup steps on a new user profile. After the repairs, because they can change those steps. | `sonnet`, medium | doing |
+| 8 | D2 | Clean clone install: the README setup steps on a new user profile. After the repairs, because they can change those steps. Done on November 25, 2026: it found four faults (a folder of one machine in `SKILL.md`, the terms of Anaconda, the git identity, the module syntax), now repaired, and the second run of `/project-init` passed `check.py`. | `sonnet`, medium | done |
 | 9 | D3 | README file tree. After every step that adds files, so the tree is written one time. | `sonnet`, low | - |
 | 10 | E1 | `docs/v5/`: report, presentation and demo. After parts B to D, so it is written one time. | `opus`, high | - |
 | 11 | E2 | Last README pass. After E1, and after every row of the paths table is closed. | `opus`, medium | - |

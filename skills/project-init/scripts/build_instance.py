@@ -327,7 +327,8 @@ def empty_dirs(flags: list[str]) -> list[str]:
 def python_fills(name: str) -> dict[str, str]:
     """Return the Project and README values that follow from using Python."""
     setup = (
-        f"```bash\nconda create -n {name} python=3.12\nconda activate {name}\n"
+        f"```bash\nconda create -n {name} -c conda-forge --override-channels python=3.12\n"
+        f"conda activate {name}\n"
         "pip install -r requirements.txt\n```\n\n"
         "Copy `config/.env.example` to `config/.env` and fill in the values.\n\n"
         "External dependencies (LLM server, models, API keys): none yet. Explain here how to set "

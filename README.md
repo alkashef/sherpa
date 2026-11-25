@@ -211,17 +211,22 @@ First set up the machine, once. Then start each new project.
 
 ### Set up the machine (once)
 
+You need VS Code, and Claude Code (the VS Code extension or the `claude` command) signed in to
+your account.
+
 #### 1. Install the skill
 
 1. Copy `skills/project-init` to `%USERPROFILE%\.claude\skills\project-init`.
-2. Delete the old `%USERPROFILE%\.claude\skills\project-docs-init`. This skill replaces it.
+2. If an old `%USERPROFILE%\.claude\skills\project-docs-init` is there, delete it. This skill
+   replaces it.
 3. After every change to the skill, copy it again.
 
 #### 2. Set up GitHub
 
-1. Install the GitHub CLI:
+1. Install Git and the GitHub CLI:
 
    ```bat
+   winget install Git.Git
    winget install GitHub.cli
    ```
 
@@ -232,7 +237,15 @@ First set up the machine, once. Then start each new project.
    gh auth login
    ```
 
-4. Check that git has `user.name` and `user.email` set.
+   When it asks whether to authenticate Git with your GitHub credentials, answer yes. The skill
+   pushes the first commit with them.
+
+4. Give git the name and the email of your commits, once:
+
+   ```bat
+   git config --global user.name "Your Name"
+   git config --global user.email "you@example.com"
+   ```
 
 If winget fails with `0x8a15000f` (data required by the source is missing):
 
@@ -262,7 +275,7 @@ Do "Set up the machine" above once. Then, for each new project:
 
 #### 1. Create the project folder
 
-1. Create an empty folder for the project, for example `C:\alkashef\GitHub\my-app`.
+1. Create an empty folder for the project, for example `%USERPROFILE%\GitHub\my-app`.
 2. Open it in VS Code (File > Open Folder). The folder may hold only `.git`, `.claude` and
    `.vscode`. A repository with commits is refused, because the skill is for new projects.
 3. Open Claude Code in that folder (the VS Code extension, or `claude` in the VS Code terminal).
@@ -361,7 +374,7 @@ Nothing was deleted. The usual causes:
 - `gh` is missing or not logged in: run `winget install GitHub.cli`, then `gh auth login`.
 - The folder holds other files.
 - The repository name is taken: rerun with `--name`, or tell the skill another name.
-- git has no `user.name` or `user.email`.
+- git has no `user.name` or `user.email`: see "Set up the machine", step 2.
 - conda is not installed: install Miniconda, or rerun with `--no-conda`.
 - conda or pip fails partway (no network, for example): the project is still committed and pushed,
   and the error says the commands to run by hand.
@@ -376,7 +389,7 @@ own environment, not a new project's.
 1. Create the environment, once:
 
    ```bat
-   conda create -n sherpa python=3.12
+   conda create -n sherpa -c conda-forge --override-channels python=3.12
    ```
 
 2. Activate it and install the tools, once:
@@ -590,6 +603,10 @@ the suite):
   absolute Windows path), and `cat`, `grep`, `Get-Content` and `Select-String` through the
   PowerShell tool, were each refused. With both, Claude made no read. The Grep tool skips
   `config/.env`, because git ignores it, and `config/.env.example` stays readable.
+- D2, November 25, 2026: "Set up the machine" on a new user profile, with the skill from a fresh
+  clone, and two runs of `/project-init`. It found four faults, now repaired (`completion-plan.md`,
+  D2). After the repairs, the project got its conda environment from conda-forge, and
+  `python scripts/check.py` passed.
 - The edit hook: Claude wrote `import os` / `x=1` to `src/sample.py`. The hook removed the import,
   formatted the rest, and Claude got "Missing docstring in public module" as hook feedback. The
   first version reported through exit code 2, and Claude saw nothing: Claude Code ran the hook in

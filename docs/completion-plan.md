@@ -261,6 +261,7 @@ effort `medium` unless the step says otherwise.
   | B4 | `mutation.yml` passed and kept an empty list. mutmut 3 refuses a module whose name starts with `src.`, and the projects import `from src.<module>`; the config was written for mutmut 2; and `|| true` hid each error. It now runs `mutmut==2.5.1`, fails on a fatal error or when it makes no mutant, keeps the log on a failure, and keeps the change of each surviving mutant | "The mutation workflow runs mutmut 2.5.1, and a failed run fails (B4)" |
   | B4 | `/find-bugs` said that a bug whose test passes is a false alarm. The test of a gap in the tests (a surviving mutant) passes at once, because the code is right, and the runner accepts it. The skill now says both | "Record the GitHub run (B4), and correct /find-bugs about a test that passes" |
   | Hosted model | RUN-19: no rule and no deny rule stopped a session from reading `config/.env`. Option A, approved by the user on November 25, 2026: deny rules for the Read tool and the usual read commands, and a rule in Security and privacy. In real sessions with a fake key, the old deny rules let the Read tool and `Get-Content` put the key in the transcript; the new ones refused each of 5 reads, also with the new rule line removed | "A session may not read config/.env (RUN-19)" |
+  | D2 | On a new user profile, `conda create` failed on the terms of Anaconda, `SKILL.md` named a folder of one machine, and the README missed the git identity and Git. Repaired, and a second run of `/project-init` checked it (D2) | "Repair what a clean install found (D2)" |
   | ____ | ____ | ____ |
 
 ## D. Make sherpa itself ready for a release
@@ -281,11 +282,35 @@ effort `medium` unless the step says otherwise.
   - Done when: the workflow passes on Windows.
   - Estimate: 1 hour, plus the repairs of what a clean machine finds.
   - Done in commit: "Mark D1 done: the suite passes on a clean Windows machine of GitHub"
-- [ ] **D2. Install sherpa from a clean clone.** Do the steps of the README, "Set up the machine
+- [x] **D2. Install sherpa from a clean clone.** Do the steps of the README, "Set up the machine
   (once)", word for word on a second machine or a new user profile. Then run `/project-init`.
   - Done when: each step works as written, or the README is correct after the run.
   - Estimate: 1 hour.
-  - Done on: ____ Commit (if the README changed): ____
+  - How: a new user profile in a scratch folder. `HOME`, `USERPROFILE`, `APPDATA` and
+    `LOCALAPPDATA` named empty folders, and the skill came from a fresh clone of GitHub. Limits:
+    Git, the GitHub CLI and Miniconda were already on the machine (Miniconda was linked into the
+    new profile, the same version). The browser sign-ins of `gh auth login` and Claude Code were
+    replaced by tokens in the environment of the process, and `gh auth setup-git` did the git part
+    of `gh auth login`. `conda init cmd.exe` and the VS Code steps were not done, because they
+    change the registry and the editor of the user.
+  - Found and repaired:
+    1. `SKILL.md` named the Miniconda Python of the machine where the skill was written. It now
+       names the two places where the installer puts it, and a test refuses a user's folder in
+       any file of the skill.
+    2. `conda create` failed: the `defaults` channel of a new Miniconda refuses a script until the
+       user accepts the terms of Anaconda. The skill reported it correctly and accepted nothing.
+       Decided by the user on November 25, 2026: the skill creates the environment from
+       conda-forge only. The README of a new project and the setup of sherpa say the same.
+    3. The README gave no command for the git identity and no step to install Git, and did not say
+       to let `gh auth login` set up git. Its example folder and the old skill were of this
+       machine only.
+    4. `SKILL.md` did not say that the modules are separated by spaces, and the session first
+       tried commas.
+  - The first run of `/project-init` committed and pushed to a new private repository, and conda
+    failed (fault 2). The second run, with the repairs and `--no-github`, made the environment
+    from conda-forge and pinned the tools, and `python scripts/check.py` printed
+    `All checks passed.`
+  - Done on: November 25, 2026. Commit: "The skill names no user's folder (D2)" and "Repair what a clean install found (D2)"
 - [ ] **D3. Correct the old text that this plan found.**
   - `docs/unapproved-ideas.md`: the last line still said that Part 2 holds RUN-08 and RUN-09,
     which are decided, and a blank line was missing before section G. Corrected in the record

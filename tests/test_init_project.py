@@ -82,9 +82,12 @@ def test_failed_push_says_how_to_finish(sandbox: Sandbox, tmp_path: Path) -> Non
 
 
 def test_conda_environment_is_created_with_the_project_name(sandbox: Sandbox) -> None:
+    # D2: conda-forge only. The `defaults` channel of a new Miniconda refuses a script until the
+    # user accepts the terms of Anaconda, and a project needs only Python from conda.
     result = sandbox.init()
     assert result.returncode == 0, result.stderr
-    assert ["create", "-n", "demo", "python=3.12", "-y"] in sandbox.conda_calls()
+    channel = ["-c", "conda-forge", "--override-channels"]
+    assert ["create", "-n", "demo", *channel, "python=3.12", "-y"] in sandbox.conda_calls()
     assert "Conda environment: demo (created" in result.stdout
 
 
@@ -107,7 +110,7 @@ def test_failed_conda_create_says_how_to_finish(sandbox: Sandbox) -> None:
     sandbox.env["FAKE_CONDA_STATE"] = "fail"
     result = sandbox.init("--with", "python")
     assert result.returncode == 1
-    assert "`conda create -n demo python=3.12`" in result.stderr
+    assert "`conda create -n demo -c conda-forge --override-channels python=3.12`" in result.stderr
     assert sandbox.remote_head() == sandbox.git("rev-parse", "HEAD")
     assert [call for call in sandbox.conda_calls() if call[0] == "run"] == []
 

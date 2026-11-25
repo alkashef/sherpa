@@ -130,6 +130,9 @@ def github_tool(name: str) -> str:
     return gh
 
 
+CONDA_CHANNEL = ("-c", "conda-forge", "--override-channels")
+
+
 def find_conda() -> str:
     """Return the conda executable: $CONDA_EXE, conda on PATH, or Miniconda's default place."""
     candidates = [os.environ.get("CONDA_EXE", ""), shutil.which("conda") or ""]
@@ -152,13 +155,18 @@ def conda_env_exists(conda: str, name: str) -> bool:
 
 
 def create_env(conda: str, name: str) -> str:
-    """Create the project's conda environment. Return '' or the error that says how to finish."""
-    result = run([conda, "create", "-n", name, "python=3.12", "-y"])
+    """Create the project's conda environment. Return '' or the error that says how to finish.
+
+    Only conda-forge: the `defaults` channel of a new Miniconda refuses a script until the user
+    accepts the terms of Anaconda, and the project needs only Python from conda.
+    """
+    result = run([conda, "create", "-n", name, *CONDA_CHANNEL, "python=3.12", "-y"])
     if result.returncode == 0:
         return ""
     return (
         f"error: conda could not create the environment:\n{result.stderr.strip()}\n"
-        f"The project is set up and committed. Run `conda create -n {name} python=3.12` "
+        f"The project is set up and committed. Run "
+        f"`conda create -n {name} {' '.join(CONDA_CHANNEL)} python=3.12` "
         f"yourself, then `pip install {' '.join(python_tools())}` in it if the project uses "
         "Python, and pin their versions in requirements.txt."
     )

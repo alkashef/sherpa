@@ -42,8 +42,10 @@ To change what new projects get, edit `assets/`, not this file.
    and changes nothing if a check fails:
 
    ```powershell
-   python "<this skill's folder>\scripts\init_project.py" --name <name> --with <modules> --purpose "<purpose>" --test-writer <writer>
+   python "<this skill's folder>\scripts\init_project.py" --name <name> --with <module> <module> --purpose "<purpose>" --test-writer <writer>
    ```
+
+   The modules go after `--with`, separated by spaces, not by commas.
 
    Plain `python` on Windows can be the Microsoft Store stub. If it fails, use the Python of
    Miniconda: `$env:LOCALAPPDATA\miniconda3\python.exe` or `$env:USERPROFILE\miniconda3\python.exe`,
@@ -55,7 +57,8 @@ To change what new projects get, edit `assets/`, not this file.
    `.vscode`), git and its identity, the `gh` login, that no GitHub repository has that name, and
    that conda is installed; (2) runs `git init -b main` unless the folder is already a repository
    with no commits; (3) runs `build_instance.py`, which keeps any file that already exists;
-   (4) runs `conda create -n <name> python=3.12` unless that environment already exists and, with
+   (4) runs `conda create -n <name> -c conda-forge --override-channels python=3.12` (conda-forge
+   needs no acceptance of terms) unless that environment already exists and, with
    the `python` module, installs pytest, pytest-cov, hypothesis, mypy, ruff and python-dotenv into it and pins
    them in `requirements.txt`; (5) commits, then turns on the pre-commit hook
    (`git config core.hooksPath .githooks`); (6) runs `gh repo create` unless `origin` already
