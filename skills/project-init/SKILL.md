@@ -16,6 +16,11 @@ To change what new projects get, edit `assets/`, not this file.
 
 ## Steps
 
+Each step runs `python`. Plain `python` on Windows can be the Microsoft Store stub (it prints
+"Python was not found", exit code 9009). Before step 1, find a Python that works: `python`, else
+the Python of Miniconda, `$env:LOCALAPPDATA\miniconda3\python.exe` or
+`$env:USERPROFILE\miniconda3\python.exe`, whichever exists. Use it for each `python` below.
+
 1. **Ask**, in one message, and propose a default for each. Start by showing the folder you will
    set up (the current working directory). If it is not the project folder, stop and tell the user
    to open the right one.
@@ -47,9 +52,7 @@ To change what new projects get, edit `assets/`, not this file.
 
    The modules go after `--with`, separated by spaces, not by commas.
 
-   Plain `python` on Windows can be the Microsoft Store stub. If it fails, use the Python of
-   Miniconda: `$env:LOCALAPPDATA\miniconda3\python.exe` or `$env:USERPROFILE\miniconda3\python.exe`,
-   whichever exists. Options: `--public`, `--no-github`
+   Options: `--public`, `--no-github`
    (local repository only), `--remote-url <url>` (push to a repository that already exists),
    `--no-conda` (no conda environment), `--test-writer` (default `claude`).
 

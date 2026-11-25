@@ -250,7 +250,8 @@ effort `medium` unless the step says otherwise.
     and closed again in the commit of the repair: real sessions with the flags of the runner
     checked it.
   - Opened by B3 on November 25, 2026, before the interview: old personal copies of the project
-    skills (row B3 below). It closes when the B3 interview runs the project's own skills.
+    skills (row B3 below). It closes when the B3 interview runs the project's own skills. The
+    first run of `/project-init` in B3 found a second fault: plain `python` before the fallback.
 
   | Run | Fault | Commit |
   | --- | --- | --- |
@@ -266,6 +267,7 @@ effort `medium` unless the step says otherwise.
   | Hosted model | RUN-19: no rule and no deny rule stopped a session from reading `config/.env`. Option A, approved by the user on November 25, 2026: deny rules for the Read tool and the usual read commands, and a rule in Security and privacy. In real sessions with a fake key, the old deny rules let the Read tool and `Get-Content` put the key in the transcript; the new ones refused each of 5 reads, also with the new rule line removed | "A session may not read config/.env (RUN-19)" |
   | D2 | On a new user profile, `conda create` failed on the terms of Anaconda, `SKILL.md` named a folder of one machine, and the README missed the git identity and Git. Repaired, and a second run of `/project-init` checked it (D2) | "Repair what a clean install found (D2)" |
   | B3 | Before the interview: `%USERPROFILE%\.claude\skills\` had old personal copies of `sdd`, `write-spec`, `write-design`, `write-plan` and `write-tests` (of November 24, 141 to 332 changed lines each). Claude Code uses a personal skill before a project skill of the same name, so the interview would have run the old skills. With the user's approval, they moved to `%USERPROFILE%\.claude\skills-backup-2026-11-25\`, and the README install steps now say to remove such copies. The B3 interview checks it | "Remove the personal copies of the project skills before B3" |
+  | B3 | Step 1 of `SKILL.md` of `/project-init` ran plain `python` for `--list-modules`, and on this machine it is the Microsoft Store stub (exit code 9009). The fallback to the Python of Miniconda was written only in step 2. It is now before step 1, and a test checks the order | "/project-init finds a working Python before its first command (B3)" |
   | ____ | ____ | ____ |
 
 ## D. Make sherpa itself ready for a release

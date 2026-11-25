@@ -150,6 +150,15 @@ def test_no_file_of_the_skill_names_a_users_folder() -> None:
     assert found == []
 
 
+def test_the_skill_finds_a_working_python_before_its_first_python_command() -> None:
+    # B3: step 1 ran plain `python`, the Microsoft Store stub, and the fallback to the Python of
+    # Miniconda came only in step 2.
+    text = (bi.assets_dir().parent / "SKILL.md").read_text(encoding="utf-8")
+    first_command = text.index('`python "')
+    assert text.index("Microsoft Store stub") < first_command
+    assert text.index(r"miniconda3\python.exe") < first_command
+
+
 def test_the_spec_and_the_workflow_ask_before_an_edit() -> None:
     # An ask rule refuses when nobody can answer, so an unattended milestone cannot change the
     # requirements or the rules it works under (docs/workflow.md, Approval).
