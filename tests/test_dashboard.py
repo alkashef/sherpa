@@ -133,6 +133,9 @@ def test_the_page_shows_what_needs_you(project: Sandbox) -> None:
     )
     assert "Decisions in the runner logs (1) M1.log: keep the payments in a list" in text
     assert "Requirements in spec.md with no test (1) PAY-002" in text
+    # spec_coverage.py writes "milestone M1": the page names it without a second "milestone".
+    assert "in the Refs of milestone M1 in plan.md, but" in text
+    assert "milestone milestone" not in text
 
 
 def test_the_side_panel_links_to_each_section_and_part(project: Sandbox) -> None:

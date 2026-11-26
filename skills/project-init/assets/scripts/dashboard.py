@@ -50,6 +50,10 @@ ROOT = Path(__file__).resolve().parent.parent
 HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
 ANY_ID = re.compile(r"\b(?:[A-Z][A-Z0-9]*-\d{3,}|M\d+)\b")
+KIND_AND_ID = re.compile(
+    r"\b(?:(?:requirement|design decision|acceptance example|scenario|milestone)\s+)?"
+    rf"({ANY_ID.pattern})"
+)
 ROW_ID = re.compile(r"^\|\s*([A-Z][A-Z0-9]*-\d{3,})\s*\|")
 STATE_LINE = re.compile(r"^([A-Z][A-Z0-9]*-\d{3,})\s+(tested|manual|planned|missing)$")
 PLAN_ROW = re.compile(r"^\|\s*\*\*M(\d+)\*\*\s*([^|]*)\|")
@@ -100,8 +104,11 @@ def named(identifier: str) -> str:
 
 
 def with_names(text: str) -> str:
-    """Return a text in which each ID is named with its kind and its file."""
-    return ANY_ID.sub(lambda match: named(match[0]), text)
+    """Return a text in which each ID is named with its kind and its file.
+
+    A kind that the text already writes before the ID, such as "milestone M1", is not repeated.
+    """
+    return KIND_AND_ID.sub(lambda match: named(match[1]), text)
 
 
 def read(relative: str) -> list[str]:
