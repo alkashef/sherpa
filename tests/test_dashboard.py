@@ -2,13 +2,16 @@
 
 import html
 import http.client
+import importlib.util
 import re
 import socket
 import subprocess
 import sys
 import time
 from pathlib import Path
+from types import ModuleType
 
+import build_instance as bi
 import pytest
 from helpers import Sandbox, run
 
@@ -164,6 +167,50 @@ def fetch(port: int) -> str:
             time.sleep(0.2)
         finally:
             connection.close()
+
+
+def load_dashboard() -> ModuleType:
+    """Import the dashboard.py that new projects get."""
+    path = bi.assets_dir() / "scripts/dashboard.py"
+    spec = importlib.util.spec_from_file_location("dashboard", path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def held_port() -> socket.socket:
+    """Return a socket that listens on a port of 127.0.0.1, as the dashboard of another project.
+
+    It sets SO_REUSEADDR, as Python's HTTP servers do: on Windows, a second server that also sets
+    it binds the same port without an error.
+    """
+    holder = socket.socket()
+    holder.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    holder.bind(("127.0.0.1", 0))
+    holder.listen()
+    return holder
+
+
+def test_a_taken_default_port_falls_back_to_a_free_port(monkeypatch: pytest.MonkeyPatch) -> None:
+    dashboard = load_dashboard()
+    with held_port() as holder:
+        taken = holder.getsockname()[1]
+        monkeypatch.setattr(dashboard, "DEFAULT_PORT", taken)
+        server = dashboard.open_server(None)
+        try:
+            assert server.server_address[1] not in (0, taken)
+        finally:
+            server.server_close()
+
+
+def test_a_taken_port_given_stops_with_a_clear_message(capsys: pytest.CaptureFixture[str]) -> None:
+    dashboard = load_dashboard()
+    with held_port() as holder:
+        taken = holder.getsockname()[1]
+        assert dashboard.main(["--port", str(taken), "--no-browser"]) == 1
+    assert f"Port {taken} on 127.0.0.1 is not free" in capsys.readouterr().err
 
 
 def test_the_served_page_reads_the_files_again_on_refresh(project: Sandbox) -> None:

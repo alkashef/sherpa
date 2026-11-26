@@ -24,7 +24,8 @@ machine that ran the milestones.
 Run:
     python scripts/dashboard.py [--port N] [--no-browser]   # serves the page on 127.0.0.1
     python scripts/dashboard.py --out FILE   # saves the page to FILE, and serves nothing
-The Refresh button of the page reads the files again.
+The Refresh button of the page reads the files again. With no --port, the page is on port 8765,
+or on a free port that the system picks when another program holds 8765.
 """
 
 import argparse
@@ -560,13 +561,54 @@ class PageHandler(BaseHTTPRequestHandler):
         """Print nothing for each request."""
 
 
+class PageServer(ThreadingHTTPServer):
+    """Serves the page, and refuses a port that another program holds.
+
+    On Windows, SO_REUSEADDR lets a second socket bind a port that a program already listens on,
+    and the browser can then reach that program. So the server does not set it there.
+    """
+
+    allow_reuse_address = sys.platform != "win32"
+
+
+def open_server(port: int | None) -> PageServer:
+    """Bind the server to the port given; with none, to DEFAULT_PORT, or else to a free port.
+
+    Raises OSError when the port given is not free. Windows can report a port that another
+    program holds as WinError 10013 (access forbidden), not as "in use".
+    """
+    if port is not None:
+        return PageServer((HOST, port), PageHandler)
+    try:
+        return PageServer((HOST, DEFAULT_PORT), PageHandler)
+    except OSError:
+        return PageServer((HOST, 0), PageHandler)
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     """Read the command line."""
     parser = argparse.ArgumentParser(description="Show the state of the project on one page.")
     parser.add_argument("--out", type=Path, default=None, help="save the page to this file")
-    parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="the port on 127.0.0.1")
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=None,
+        help=f"the port on {HOST} (default: {DEFAULT_PORT}, or a free port if it is taken)",
+    )
     parser.add_argument("--no-browser", action="store_true", help="do not open the browser")
     return parser.parse_args(argv)
+
+
+def serve(server: PageServer, open_browser: bool) -> None:
+    """Print the URL, open the browser if asked, and serve the page until Ctrl+C."""
+    url = f"http://{HOST}:{server.server_address[1]}/"
+    sys.stdout.write(f"The dashboard is at {url} (Ctrl+C stops it).\n")
+    if open_browser:
+        webbrowser.open(url)
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        sys.stdout.write("Stopped.\n")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -575,15 +617,15 @@ def main(argv: list[str] | None = None) -> int:
     if args.out is not None:
         args.out.write_text(page(), encoding="utf-8")
         return 0
-    server = ThreadingHTTPServer((HOST, args.port), PageHandler)
-    url = f"http://{HOST}:{args.port}/"
-    sys.stdout.write(f"The dashboard is at {url} (Ctrl+C stops it).\n")
-    if not args.no_browser:
-        webbrowser.open(url)
     try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        sys.stdout.write("Stopped.\n")
+        server = open_server(args.port)
+    except OSError as error:
+        sys.stderr.write(
+            f"Port {args.port} on {HOST} is not free: another program holds it, or Windows "
+            f"reserves it ({error.strerror}). Give another port, or leave out --port.\n"
+        )
+        return 1
+    serve(server, open_browser=not args.no_browser)
     return 0
 
 
