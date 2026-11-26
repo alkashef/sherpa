@@ -48,6 +48,10 @@ BARE_ID = re.compile(r"\b(?:[A-Z][A-Z0-9]*-\d{3,}|M\d+)\b")
 KIND_BEFORE = re.compile(
     r"(?:requirement|design decision|acceptance example|scenario|milestone|Milestones)\s+$"
 )
+# A part whose heading names the kind and the file of its items, such as
+# "Requirements in spec.md with no test (2)", and the bare ID that can start each item.
+NAMING_PART = re.compile(r"<h3 id='[^']+'>[^<]* in [a-z-]+\.md[^<]*</h3><ul>.*?</ul>", re.DOTALL)
+LEADING_ID = re.compile(r"<li>(?:[A-Z][A-Z0-9]*-\d{3,}|M\d+)\b")
 
 
 def insert_after(path: Path, marker: str, text: str) -> None:
@@ -98,22 +102,49 @@ def finish_m2(sandbox: Sandbox) -> None:
     sandbox.git("commit", "--no-verify", "-am", "M2: Limit")
 
 
-def page_text(project: Sandbox) -> str:
-    """Run the dashboard with --out, and return the visible text of the page, on one line."""
+def page_html(project: Sandbox) -> str:
+    """Run the dashboard with --out, and return the page."""
     out = project.folder.parent / "page.html"
     done = run([sys.executable, "scripts/dashboard.py", "--out", str(out)], project.folder)
     assert done.returncode == 0, done.stderr
-    visible = re.sub(r"<style>.*?</style>|<[^>]+>", " ", out.read_text("utf-8"), flags=re.DOTALL)
-    return " ".join(html.unescape(visible).split())
+    return out.read_text("utf-8")
+
+
+def visible(page: str) -> str:
+    """Return the visible text of a page, on one line."""
+    text = re.sub(r"<style>.*?</style>|<[^>]+>", " ", page, flags=re.DOTALL)
+    return " ".join(html.unescape(text).split())
+
+
+def page_text(project: Sandbox) -> str:
+    """Run the dashboard with --out, and return the visible text of the page, on one line."""
+    return visible(page_html(project))
 
 
 def test_the_page_shows_what_needs_you(project: Sandbox) -> None:
     text = page_text(project)
     assert "The spec (spec.md) is a draft" in text
-    assert "design decision DEC-002 in design.md is Proposed" in text
-    assert "milestone M1 in plan.md is blocked: Needs a decision: which database for design" in text
-    assert "Decision of M1.log: keep the payments in a list" in text
-    assert "requirement PAY-002 in spec.md has no test." in text
+    assert (
+        "Proposed design decisions in design.md: confirm or replace each (2) DEC-002 DEC-001"
+        in text
+    )
+    assert (
+        "Blocked milestones in plan.md (1) M1: Needs a decision: which database for design" in text
+    )
+    assert "Decisions in the runner logs (1) M1.log: keep the payments in a list" in text
+    assert "Requirements in spec.md with no test (1) PAY-002" in text
+
+
+def test_the_side_panel_links_to_each_section_and_part(project: Sandbox) -> None:
+    page = page_html(project)
+    nav = page[page.index("<nav") : page.index("</nav>")]
+    targets = re.findall(r"href='#([^']+)'", nav)
+    assert "needs-you" in targets
+    assert "needs-you--requirements-in-spec-md-with-no-test-1" in targets
+    assert "code-map--classes" in targets
+    ids = set(re.findall(r" id='([^']+)'", page))
+    assert set(targets) <= ids
+    assert len(targets) == len(set(targets))
 
 
 def test_the_trace_follows_each_requirement(project: Sandbox) -> None:
@@ -134,7 +165,9 @@ def test_the_code_map_shows_files_imports_and_classes(project: Sandbox) -> None:
 
 
 def test_the_page_never_shows_a_bare_id(project: Sandbox) -> None:
-    text = page_text(project)
+    # An item of a part whose heading names the kind and the file can start with a bare ID.
+    page = NAMING_PART.sub(lambda part: LEADING_ID.sub("<li>", part[0]), page_html(project))
+    text = visible(page)
     named = (KIND_BEFORE.search(text[: match.start()]) for match in BARE_ID.finditer(text))
     log_names = (text[match.end() :].startswith(".log") for match in BARE_ID.finditer(text))
     bare = [
@@ -220,10 +253,10 @@ def test_the_served_page_reads_the_files_again_on_refresh(project: Sandbox) -> N
     try:
         first = fetch(port)
         assert "Refresh</button>" in first
-        assert "is Proposed" in first
+        assert "Proposed design decisions" in first
         design = project.folder / "docs" / "design.md"
         design.write_text(design.read_text("utf-8").replace("Proposed", "Decided"), "utf-8")
-        assert "is Proposed" not in fetch(port)
+        assert "Proposed design decisions" not in fetch(port)
     finally:
         server.terminate()
         server.wait(timeout=20)

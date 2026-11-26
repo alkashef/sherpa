@@ -17,9 +17,12 @@ with --out). It holds no fact of its own: each fact comes from its owner.
   the design's table "Module boundaries", each with whether the table permits it; and the class
   list, from the first line of each class docstring.
 
+A side panel links to each section and each part of it. Needs you puts the needs of one kind in
+one part, such as "Requirements in spec.md with no test (3)".
+
 The page never shows a bare ID: it names the kind and the file, such as "requirement PAY-001 in
-spec.md" or "milestone M4 in plan.md". The review findings exist only in the runner logs of the
-machine that ran the milestones.
+spec.md" or "milestone M4 in plan.md", or the heading of its part names them. The review findings
+exist only in the runner logs of the machine that ran the milestones.
 
 Run:
     python scripts/dashboard.py [--port N] [--no-browser]   # serves the page on 127.0.0.1
@@ -61,6 +64,9 @@ KINDS = {"EX": "acceptance example", "SCN": "scenario", "DEC": "design decision"
 FILES = {"EX": "spec.md", "SCN": "spec.md", "DEC": "design.md"}
 SECTIONS = ("Needs you", "Plan and releases", "Trace", "Code map")
 BOX_SCALE = 6  # pixels for the square root of one line of code
+
+type Group = tuple[str, list[str]]  # a heading that names the kind and file, and its items
+type Part = tuple[str, str]  # the subheading of a part of a section ('' for none), and its HTML
 
 
 @dataclass(frozen=True)
@@ -141,62 +147,11 @@ def section(lines: list[str], heading: re.Pattern[str]) -> list[str]:
 # --- needs you -----------------------------------------------------------------------------------
 
 
-def spec_needs() -> list[str]:
-    """Return what the spec needs from the user: an approval when it is a draft."""
+def single_needs() -> list[str]:
+    """Return the needs that come one at a time: a draft spec, uncommitted docs, waiting ideas."""
+    needs: list[str] = []
     if any(line.strip() == "Status: Draft" for line in read("docs/spec.md")):
-        return ["The spec (spec.md) is a draft: approve it, or go on with /write-spec."]
-    return []
-
-
-def design_needs() -> list[str]:
-    """Return each Proposed decision and each open question of the design."""
-    lines = read("docs/design.md")
-    needs = [
-        f"{named(match[1])} is Proposed: confirm it, or replace it."
-        for match in map(DEC_ROW.match, lines)
-        if match and match[2] == "Proposed"
-    ]
-    for line in section(lines, QUESTIONS_HEADING):
-        match = QUESTION_ROW.match(line)
-        if match and not set(match[2]) <= {"-", " "}:
-            needs.append(f"Open design question in design.md: {with_names(match[2])}")
-    return needs
-
-
-def plan_needs() -> list[str]:
-    """Return each blocked milestone of the plan with the first line of its Blocked entry."""
-    lines = read("docs/plan.md")
-    needs: list[str] = []
-    current = ""
-    for line in lines:
-        heading = re.match(r"^### (M\d+)\b", line)
-        current = heading[1] if heading else current
-        if line.startswith(BLOCKED_ENTRY):
-            question = with_names(line[len(BLOCKED_ENTRY) :].strip())
-            needs.append(f"{named(current)} is blocked: {question}")
-    return needs
-
-
-def log_needs() -> list[str]:
-    """Return the DECISION lines and the kept FINDING lines of the runner logs of this machine."""
-    logs = ROOT / ".claude" / "logs"
-    needs: list[str] = []
-    for path in sorted(logs.glob("M*.log")) if logs.is_dir() else []:
-        keeps_findings = path.stem.endswith("review-last")
-        for match in map(LOG_LINE.match, path.read_text(encoding="utf-8").splitlines()):
-            if match and (match[1] == "DECISION" or keeps_findings):
-                needs.append(f"{match[1].capitalize()} of {path.name}: {with_names(match[2])}")
-    return needs
-
-
-def other_needs(states: dict[str, str]) -> list[str]:
-    """Return the consistency problems, the untested requirements, uncommitted docs and ideas."""
-    consistency = script_output("spec_coverage.py", "--consistency")
-    problems = consistency.stdout if consistency is not None and consistency.returncode else ""
-    needs = [with_names(line) for line in problems.splitlines()]
-    needs += [
-        f"{named(spec_id)} has no test." for spec_id, state in states.items() if state == "missing"
-    ]
+        needs.append("The spec (spec.md) is a draft: approve it, or go on with /write-spec.")
     if run(["git", "status", "--porcelain", "--", "docs"]).stdout.strip():
         needs.append("docs/ has uncommitted changes: commit them before a run.")
     ideas = [
@@ -207,6 +162,73 @@ def other_needs(states: dict[str, str]) -> list[str]:
     if ideas:
         needs.append(f"{len(ideas)} unapproved ideas wait in unapproved-ideas.md.")
     return needs
+
+
+def design_needs() -> list[Group]:
+    """Return the Proposed decisions and the open questions of the design."""
+    lines = read("docs/design.md")
+    proposed = [match[1] for match in map(DEC_ROW.match, lines) if match and match[2] == "Proposed"]
+    questions = [
+        with_names(match[2])
+        for match in map(QUESTION_ROW.match, section(lines, QUESTIONS_HEADING))
+        if match and not set(match[2]) <= {"-", " "}
+    ]
+    return [
+        ("Proposed design decisions in design.md: confirm or replace each", proposed),
+        ("Open design questions in design.md", questions),
+    ]
+
+
+def plan_needs() -> list[Group]:
+    """Return each blocked milestone of the plan with the first line of its Blocked entry."""
+    blocked: list[str] = []
+    current = ""
+    for line in read("docs/plan.md"):
+        heading = re.match(r"^### (M\d+)\b", line)
+        current = heading[1] if heading else current
+        if line.startswith(BLOCKED_ENTRY):
+            blocked.append(f"{current}: {with_names(line[len(BLOCKED_ENTRY) :].strip())}")
+    return [("Blocked milestones in plan.md", blocked)]
+
+
+def spec_needs(states: dict[str, str]) -> list[Group]:
+    """Return the consistency problems of the spec and its requirements with no test."""
+    consistency = script_output("spec_coverage.py", "--consistency")
+    problems = consistency.stdout if consistency is not None and consistency.returncode else ""
+    return [
+        ("Consistency problems of the spec", [with_names(line) for line in problems.splitlines()]),
+        (
+            "Requirements in spec.md with no test",
+            [spec_id for spec_id, state in states.items() if state == "missing"],
+        ),
+    ]
+
+
+def log_needs() -> list[Group]:
+    """Return the DECISION lines and the kept FINDING lines of the runner logs of this machine."""
+    logs = ROOT / ".claude" / "logs"
+    found: dict[str, list[str]] = {"DECISION": [], "FINDING": []}
+    for path in sorted(logs.glob("M*.log")) if logs.is_dir() else []:
+        keeps_findings = path.stem.endswith("review-last")
+        for match in map(LOG_LINE.match, path.read_text(encoding="utf-8").splitlines()):
+            if match and (match[1] == "DECISION" or keeps_findings):
+                found[match[1]].append(f"{path.name}: {with_names(match[2])}")
+    return [
+        ("Decisions in the runner logs", found["DECISION"]),
+        ("Findings of the last reviews in the runner logs", found["FINDING"]),
+    ]
+
+
+def needs_parts(states: dict[str, str]) -> list[Part]:
+    """Return what needs the user: the single needs first, then one part for each kind of need.
+
+    The heading of a part names the kind and the file of its items, so an item can be a bare ID.
+    """
+    single = single_needs()
+    groups = design_needs() + plan_needs() + spec_needs(states) + log_needs()
+    parts = [("", items(single, ""))] if single else []
+    parts += [(f"{heading} ({len(lines)})", items(lines, "")) for heading, lines in groups if lines]
+    return parts or [("", items([], "Nothing needs you now."))]
 
 
 # --- the plan and the trace ----------------------------------------------------------------------
@@ -435,29 +457,22 @@ def table(header: list[str], rows: list[list[str]], empty: str) -> str:
     return f"<table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>"
 
 
-def plan_html() -> str:
+def plan_parts() -> list[Part]:
     """Render the plan table, the releases and the last milestone commits."""
-    plan = plan_rows()
     commits = [[with_names(subject)] for _, _, subject in milestone_commits()[:10]]
-    return (
-        "<h3>Milestones at a glance</h3>"
-        + table(
-            ["Milestone", "Description", "Model", "Effort", "Human test", "Status"],
-            plan,
-            "No milestone is planned.",
-        )
-        + "<h3>Releases</h3>"
-        + table(
-            ["Version", "Date", "Last milestone", "Milestones"],
-            [[with_names(c) for c in r] for r in release_rows()],
-            "No release yet.",
-        )
-        + "<h3>Last milestones done</h3>"
-        + table(["Commit"], commits, "No milestone is done yet.")
-    )
+    plan_header = ["Milestone", "Description", "Model", "Effort", "Human test", "Status"]
+    releases = [[with_names(c) for c in r] for r in release_rows()]
+    return [
+        ("Milestones at a glance", table(plan_header, plan_rows(), "No milestone is planned.")),
+        (
+            "Releases",
+            table(["Version", "Date", "Last milestone", "Milestones"], releases, "No release yet."),
+        ),
+        ("Last milestones done", table(["Commit"], commits, "No milestone is done yet.")),
+    ]
 
 
-def trace_html(requirements: list[Requirement]) -> str:
+def trace_parts(requirements: list[Requirement]) -> list[Part]:
     """Render the trace of each requirement as one table."""
     rows = [
         [
@@ -471,10 +486,10 @@ def trace_html(requirements: list[Requirement]) -> str:
         for item in requirements
     ]
     header = ["Requirement", "State", "Design", "Milestone", "Tests", "Code"]
-    return table(header, rows, "The spec has no requirement yet.")
+    return [("", table(header, rows, "The spec has no requirement yet."))]
 
 
-def code_html(files: list[SourceFile]) -> str:
+def code_parts(files: list[SourceFile]) -> list[Part]:
     """Render the floor plan of src/, the import graph against the table, and the class list."""
     boxes = "".join(
         f"<div class='box' style='width:{max(int(math.sqrt(f.lines) * BOX_SCALE), 40)}px;"
@@ -487,18 +502,46 @@ def code_html(files: list[SourceFile]) -> str:
         for a, b, ok in import_edges(files, boundary_table())
     ]
     classes = [[name, file.path, doc or "-"] for file in files for name, doc in file.classes]
-    return (
-        "<h3>Floor plan of src/ (box size by lines)</h3>"
-        + (
-            f"<div class='plan'>{boxes}</div>"
-            if boxes
-            else "<p class='quiet'>src/ holds no Python yet.</p>"
-        )
-        + "<h3>Imports between the modules of the design</h3>"
-        + table(["From", "To", "Permitted"], edges, "No import between the modules of the table.")
-        + "<h3>Classes</h3>"
-        + table(["Class", "File", "Responsibility"], classes, "No class yet.")
+    floor = (
+        f"<div class='plan'>{boxes}</div>"
+        if boxes
+        else "<p class='quiet'>src/ holds no Python yet.</p>"
     )
+    return [
+        ("Floor plan of src/ (box size by lines)", floor),
+        (
+            "Imports between the modules of the design",
+            table(
+                ["From", "To", "Permitted"], edges, "No import between the modules of the table."
+            ),
+        ),
+        ("Classes", table(["Class", "File", "Responsibility"], classes, "No class yet.")),
+    ]
+
+
+def anchor(*texts: str) -> str:
+    """Return an HTML id made of the texts, such as 'needs-you--blocked-milestones-in-plan-md-1'."""
+    return "--".join(re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-") for text in texts)
+
+
+def sections_html(sections: list[tuple[str, list[Part]]]) -> tuple[str, str]:
+    """Render the side panel of links, and the sections with their parts."""
+    links: list[str] = []
+    bodies: list[str] = []
+    for title, parts in sections:
+        sub_links = ""
+        body = f"<section id='{anchor(title)}'><h2>{escape(title)}</h2>"
+        for heading, part in parts:
+            if heading:
+                key = anchor(title, heading)
+                sub_links += f"<li><a href='#{key}'>{escape(heading)}</a></li>"
+                body += f"<h3 id='{key}'>{escape(heading)}</h3>"
+            body += part
+        sub_list = f"<ul>{sub_links}</ul>" if sub_links else ""
+        links.append(f"<li><a href='#{anchor(title)}'>{escape(title)}</a>{sub_list}</li>")
+        bodies.append(body + "</section>")
+    nav = f"<nav aria-label='Contents'><ul>{''.join(links)}</ul></nav>"
+    return nav, "".join(bodies)
 
 
 STYLE = """
@@ -506,8 +549,23 @@ STYLE = """
   --line: #d1d9e0; --box: #ddf4ff; }
 @media (prefers-color-scheme: dark) { :root { --fg: #e6edf3; --bg: #0d1117; --muted: #9198a1;
   --line: #3d444d; --box: #0c2d6b; } }
-body { margin: 0 auto; max-width: 1100px; padding: 16px; font: 15px/1.5 system-ui, sans-serif;
-  color: var(--fg); background: var(--bg); }
+html { scroll-behavior: smooth; }
+body { margin: 0; font: 15px/1.5 system-ui, sans-serif; color: var(--fg); background: var(--bg); }
+.layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 32px;
+  max-width: 1380px; margin: 0 auto; padding: 16px; }
+nav { position: sticky; top: 16px; align-self: start; max-height: calc(100vh - 32px);
+  overflow-y: auto; font-size: 14px; border-right: 1px solid var(--line); padding-right: 16px; }
+nav ul { list-style: none; margin: 0; padding: 0; }
+nav > ul > li { margin-bottom: 12px; font-weight: 600; }
+nav li li { font-weight: 400; margin: 4px 0 0 12px; }
+nav a { color: var(--fg); text-decoration: none; }
+nav li li a { color: var(--muted); }
+nav a:hover { text-decoration: underline; }
+main { min-width: 0; overflow-x: auto; }
+h2, h3 { scroll-margin-top: 16px; }
+@media (max-width: 760px) { .layout { grid-template-columns: minmax(0, 1fr); }
+  nav { position: static; max-height: none; border-right: 0; padding-right: 0;
+    border-bottom: 1px solid var(--line); padding-bottom: 8px; } }
 header { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
 table { border-collapse: collapse; width: 100%; margin: 8px 0 16px; }
 th, td { border: 1px solid var(--line); padding: 4px 8px; text-align: left; vertical-align: top; }
@@ -523,25 +581,23 @@ def page() -> str:
     """Read every owner of a fact, and return the whole page."""
     states = requirement_states()
     files = source_files()
-    needs = spec_needs() + design_needs() + plan_needs() + other_needs(states) + log_needs()
     parts = [
-        items(needs, "Nothing needs you now."),
-        plan_html(),
-        trace_html(trace(states, files)),
-        code_html(files),
+        needs_parts(states),
+        plan_parts(),
+        trace_parts(trace(states, files)),
+        code_parts(files),
     ]
-    sections = "".join(
-        f"<section><h2>{t}</h2>{body}</section>" for t, body in zip(SECTIONS, parts, strict=True)
-    )
+    nav, sections = sections_html(list(zip(SECTIONS, parts, strict=True)))
     note = "Review findings and decisions come from the runner logs of this machine only."
     return (
         "<!doctype html><html lang='en'><head><meta charset='utf-8'>"
         "<meta name='viewport' content='width=device-width, initial-scale=1'>"
         f"<title>Dashboard - {escape(ROOT.name)}</title><style>{STYLE}</style></head><body>"
+        f"<div class='layout'>{nav}<main>"
         f"<header><h1>{escape(ROOT.name)}</h1><form method='get' action='/'>"
         "<button type='submit' title='Read the files again'>Refresh</button></form></header>"
         f"<p class='quiet'>Read at {time.strftime('%Y-%m-%d %H:%M:%S')}. {note}</p>"
-        f"{sections}</body></html>"
+        f"{sections}</main></div></body></html>"
     )
 
 
