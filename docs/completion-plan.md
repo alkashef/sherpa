@@ -157,7 +157,9 @@ effort `medium` unless the step says otherwise.
     interview in a new VS Code window and notes each unclear question. The user allowed Claude to
     read the session transcripts of the B3 project folder, only to record the faults and the
     unclear questions. On November 25, 2026, before the interview, old personal copies of the
-    project skills were found and moved away (C1, row B3).
+    project skills were found and moved away (C1, row B3). On November 28, 2026, during the
+    spec interview, the user noted three faults (C1, rows B3). By the user's decision, they are
+    repaired after B3, so that the interview runs on one version of the skills.
   - Done on: ____ README record in commit: ____
 - [x] **B4. A real GitHub run: the two workflows, `/find-bugs` and a release.** Needs approval:
   it creates a private repository on the user's GitHub account. Push the project of B1 or B3 to
@@ -268,6 +270,11 @@ effort `medium` unless the step says otherwise.
   | D2 | On a new user profile, `conda create` failed on the terms of Anaconda, `SKILL.md` named a folder of one machine, and the README missed the git identity and Git. Repaired, and a second run of `/project-init` checked it (D2) | "Repair what a clean install found (D2)" |
   | B3 | Before the interview: `%USERPROFILE%\.claude\skills\` had old personal copies of `sdd`, `write-spec`, `write-design`, `write-plan` and `write-tests` (of November 24, 141 to 332 changed lines each). Claude Code uses a personal skill before a project skill of the same name, so the interview would have run the old skills. With the user's approval, they moved to `%USERPROFILE%\.claude\skills-backup-2026-11-25\`, and the README install steps now say to remove such copies. The B3 interview checks it | "Remove the personal copies of the project skills before B3" |
   | B3 | Step 1 of `SKILL.md` of `/project-init` ran plain `python` for `--list-modules`, and on this machine it is the Microsoft Store stub (exit code 9009). The fallback to the Python of Miniconda was written only in step 2. It is now before step 1, and a test checks the order | "/project-init finds a working Python before its first command (B3)" |
+  | B3 | `dashboard.py` stopped with WinError 10013 when another program held port 8765 (Windows reports a held port so, not as "in use"). With no `--port`, it now falls back to a free port; with `--port`, it stops with a clear message. It no longer sets `SO_REUSEADDR` on Windows, where that let it share a port that another dashboard held | "The dashboard falls back to a free port when 8765 is taken" |
+  | B3 | The consistency lines of the dashboard read "milestone milestone M1 in plan.md": `spec_coverage.py` writes "milestone M1", and the dashboard named the ID again with its kind | "The dashboard no longer writes "milestone milestone"" |
+  | B3 | The user's note of November 28, 2026: the interview put its questions all at once, not one at a time. `/write-spec` already says one question at a time, so the skill did not keep its own rule. Open: the user decided to repair it after B3 | ____ |
+  | B3 | The user's note of November 28, 2026: the replies to the user must be much more concise. Open: repaired after B3, by the user's decision | ____ |
+  | B3 | The user's note of November 28, 2026: the report at the end of a task (Files changed, Tests added or updated, Tests run, Assumptions and open questions, TLDR) keeps a section that is empty or "none". A section with nothing in it must not appear. Open: repaired after B3, by the user's decision | ____ |
   | ____ | ____ | ____ |
 
 ## D. Make sherpa itself ready for a release
